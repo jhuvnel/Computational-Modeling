@@ -1,0 +1,53 @@
+%this tests the properties of the sodium channel
+clear all;
+
+%parameters
+nd = 10e-6;     %node diameter
+nl = 10e-6;     %node length
+dt = 1e-6;      %time increment
+
+
+channel = F_SodiumChannel(nd, nl, dt);
+
+%first plot the alpha / beta curves for each gate
+
+dVm = [-.1:.001:.1];    %between -200 and 200 mV
+dAh = F_SodiumChannel.alpha_h(-.1);
+dBh = F_SodiumChannel.beta_h(-.1);
+for i=-.099:.001:.1
+    dAh = [dAh F_SodiumChannel.alpha_h(i)];
+    dBh = [dBh F_SodiumChannel.beta_h(i)];
+end
+hold on
+plot(dVm*1000, dAh,'-r', dVm*1000, dBh, '-g');
+title('dynamics of h, alpha in red, beta in green');
+uiwait;
+
+dVm = [-.1:.001:.1];    %between -200 and 200 mV
+dAm = F_SodiumChannel.alpha_m(-.1);
+dBm = F_SodiumChannel.beta_m(-.1);
+for i=-.099:.001:.1
+    dAm = [dAm F_SodiumChannel.alpha_m(i)];
+    dBm = [dBm F_SodiumChannel.beta_m(i)];
+end
+hold on
+plot(dVm*1000, dAm,'-r', dVm*1000, dBm, '-g');
+title('dynamics of m, alpha in red, beta in green');
+uiwait;
+
+dVm = [-.1:.001:.1];    %between -200 and 200 mV
+minf = -F_SodiumChannel.alpha_m(-.1)/(F_SodiumChannel.alpha_m(-.1)+F_SodiumChannel.beta_m(-.1));
+hinf = -F_SodiumChannel.alpha_h(-.1)/(F_SodiumChannel.alpha_h(-.1)+F_SodiumChannel.beta_h(-.1));
+for i=-.099:.001:.1
+    minf = [minf (-F_SodiumChannel.alpha_m(i)/(F_SodiumChannel.alpha_m(i)+F_SodiumChannel.beta_m(i)))];
+    hinf = [hinf (-F_SodiumChannel.alpha_h(i)/(F_SodiumChannel.alpha_h(i)+F_SodiumChannel.beta_h(i)))];
+end
+hold on
+plot(dVm*1000, minf,'-r', dVm*1000, hinf, '-g');
+title('Infinite time values of m (red) and h (green)');
+uiwait;
+
+t = [-10000:1e-6;10000];
+I = 0;
+for i =-10000:1e-6;10000
+    Ii = 

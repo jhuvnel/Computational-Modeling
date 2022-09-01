@@ -1,0 +1,41 @@
+%this file tests the compute function of Axon, it populates and then
+%submits an intracellular current injection to node 1
+%for a given time duration and current intensity
+clear all;
+
+%initialize parameters, meters and seconds
+dt = 1e-7;      %time increment
+num_dt = 50000;   %number of time steps
+iE = 1e-9;%-12; %4e-9;    %amount of current injected
+dtE = 100e-6;   %electrode current duration
+start = 5000;   %when the stimulus will begin (in number of iterations)
+nd = 3e-6;     %node diameter
+al = 1e-6;     %active node length
+pl = 175e-6;    %passive node length
+num_n = 5;    %number of nodes
+
+Vrest = -.0846;
+traj = [0 0 0; 100 0 0];   %axon will lie along the x axis, starting at the origin
+axon = SENN_AxonP(traj, dt, num_dt);
+axon.populate(num_n, al, pl, nd);
+
+
+%set external potential
+Ve = zeros(1, num_n);   %initialize
+
+
+%compute all of the time steps
+for i =0:(num_dt-2)         %minus 2 because the first data point is the initial condition
+    if (i>start && i<(start+(dtE/dt)))
+        axon.inject(iE);
+    else
+        axon.inject(0);
+    end
+    axon.compute(Ve);
+end
+
+qx = 1:(num_dt);
+temp = axon.V;
+plot(qx*10000, (temp(1,:)+Vrest)*1000, '-r',qx*10000, (temp(3,:)+Vrest)*1000, '-g');
+title('Time course of V for node 1 (red) and node 3 (green)');
+
