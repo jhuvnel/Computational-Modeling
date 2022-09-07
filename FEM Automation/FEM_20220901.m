@@ -38,7 +38,7 @@ model.component('comp1').geom('geom1').feature('imp1').set('selresult', true);
 model.component('comp1').geom('geom1').feature('imp1').set('selresultshow', 'all');
 model.component('comp1').geom('geom1').feature('imp1').set('selindividual', true);
 model.component('comp1').geom('geom1').feature('imp1').set('selindividualshow', 'all');
-model.component('comp1').geom('geom1').feature('imp1').set('filename', 'R:\Morris, Brian\Computational Modeling\Finished Monkey Geometry\Geometry Components\Assembly 2\Full Geometry - Split Nerves.SLDASM');
+model.component('comp1').geom('geom1').feature('imp1').set('filename', 'R:\Computational Modeling\Monkey Geometry as of 20220628\Full Geometry - Split Nerves.SLDASM');
 model.component('comp1').geom('geom1').feature('imp1').importData;
 model.component('comp1').geom('geom1').run('fin');
 model.component('comp1').geom('geom1').run('fin');
