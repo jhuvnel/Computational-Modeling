@@ -149,8 +149,7 @@ model.component('comp1').physics('cc3').feature('flow1').feature('out1').selecti
 
 %% Mesh
 model.component('comp1').mesh('mesh1').automatic(false);
-
-model.component('comp1').mesh('mesh1').run('ftet1');
+model.component('comp1').mesh('mesh1').feature('ftet1').selection.remaining;
 
 model_out = model;
 end

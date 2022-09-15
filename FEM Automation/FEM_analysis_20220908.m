@@ -5,16 +5,16 @@
 import com.comsol.model.*
 import com.comsol.model.util.*
 
-ModelUtil.showProgress(true); %activates progress bar
+
 
 [model, model_path] = FEM_create_20220908;
-
 
 %% Electric Currents Physics
 
 % electrodes1_2 - CC electrode, electrodes1_1 - Posterior 1, electrodes1_3
 % - Anterior 1, electrodes1_4 - Anterior 2, electrodes1_5 - Horizontal 1,
 % electrodes1_6 - Posterior 2, electrodes1_7 - Horizontal 2
+% ModelUtil.showProgress(true); %activates progress bar
 RefElectrodes = [{'electrodes1_2'}];
 RefElectrodeNames = [{'CC'}];
 StimElectrodes = [{'electrodes1_1'}, {'electrodes1_3'}, {'electrodes1_4'}, {'electrodes1_5'}, {'electrodes1_6'}, {'electrodes1_7'}];
@@ -41,6 +41,10 @@ for i = 1:nRef
     end
 end
 
+% not sure if it matters if the mesh is run before or after the physics
+% nodes are created - to be safe, run it after
+model.component('comp1').mesh('mesh1').run;
+
 % to remove a physics component
 % model.component('comp1').physics.remove(tag)
 %% Studies
@@ -50,11 +54,13 @@ model.study('std1').label('Study 1 - Facial CC');
 model.study('std1').feature('stat').setEntry('activate', 'cc2', false);
 model.study('std1').feature('stat').setEntry('activate', 'cc3', false);
 
+
 model.study.create('std2');
 model.study('std2').create('stat', 'Stationary');
 model.study('std2').label('Study 2 - Cochlear CC');
 model.study('std2').feature('stat').setEntry('activate', 'cc', false);
 model.study('std2').feature('stat').setEntry('activate', 'cc3', false);
+
 
 model.study.create('std3');
 model.study('std3').create('stat', 'Stationary');
@@ -78,31 +84,14 @@ for i = 1:nRef
     end
 end
 
-model.study('std1').setStoreSolution(true);
-model.study('std2').setStoreSolution(true);
-model.study('std3').setStoreSolution(true);
-model.study('std4').setStoreSolution(true);
+% run the studies. Since no solution nodes were created, it just uses the
+% default solver and computes results for each study
+model.study('std1').run;
+model.study('std2').run;
+model.study('std3').run;
+stdEC.run;
 
-%% From here on with studies and results and solutions and plot groups needs to be fixed
 %% Solutions and Plot Groups
-model.sol.create('sol1');
-model.sol('sol1').study('std1');
-
-model.study('std1').feature('stat').set('notlistsolnum', 1);
-model.study('std1').feature('stat').set('notsolnum', 'auto');
-model.study('std1').feature('stat').set('listsolnum', 1);
-model.study('std1').feature('stat').set('solnum', 'auto');
-
-model.sol('sol1').create('st1', 'StudyStep');
-model.sol('sol1').feature('st1').set('study', 'std1');
-model.sol('sol1').feature('st1').set('studystep', 'stat');
-model.sol('sol1').create('v1', 'Variables');
-model.sol('sol1').feature('v1').set('control', 'stat');
-model.sol('sol1').create('s1', 'Stationary');
-model.sol('sol1').feature('s1').create('fc1', 'FullyCoupled');
-model.sol('sol1').feature('s1').feature('fc1').set('linsolver', 'dDef');
-model.sol('sol1').feature('s1').feature.remove('fcDef');
-model.sol('sol1').attach('std1');
 
 model.result.create('pg1', 'PlotGroup3D');
 model.result('pg1').label('Vector Field (cc)');
@@ -133,26 +122,6 @@ model.result('pg2').label('Coordinate system (cc)');
 model.result('pg2').create('sys1', 'CoordSysVolume');
 model.result('pg2').feature('sys1').set('sys', 'cc_cs');
 
-
-model.sol.create('sol2');
-model.sol('sol2').study('std2');
-
-model.study('std2').feature('stat').set('notlistsolnum', 1);
-model.study('std2').feature('stat').set('notsolnum', 'auto');
-model.study('std2').feature('stat').set('listsolnum', 1);
-model.study('std2').feature('stat').set('solnum', 'auto');
-
-model.sol('sol2').create('st1', 'StudyStep');
-model.sol('sol2').feature('st1').set('study', 'std2');
-model.sol('sol2').feature('st1').set('studystep', 'stat');
-model.sol('sol2').create('v1', 'Variables');
-model.sol('sol2').feature('v1').set('control', 'stat');
-model.sol('sol2').create('s1', 'Stationary');
-model.sol('sol2').feature('s1').create('fc1', 'FullyCoupled');
-model.sol('sol2').feature('s1').feature('fc1').set('linsolver', 'dDef');
-model.sol('sol2').feature('s1').feature.remove('fcDef');
-model.sol('sol2').attach('std2');
-
 model.result.create('pg3', 'PlotGroup3D');
 model.result('pg3').label('Vector Field (cc2)');
 model.result('pg3').set('titlecolor', 'black');
@@ -181,25 +150,6 @@ model.result('pg4').set('data', 'dset2');
 model.result('pg4').label('Coordinate system (cc2)');
 model.result('pg4').create('sys1', 'CoordSysVolume');
 model.result('pg4').feature('sys1').set('sys', 'cc2_cs');
-
-model.sol.create('sol3');
-model.sol('sol3').study('std3');
-
-model.study('std3').feature('stat').set('notlistsolnum', 1);
-model.study('std3').feature('stat').set('notsolnum', 'auto');
-model.study('std3').feature('stat').set('listsolnum', 1);
-model.study('std3').feature('stat').set('solnum', 'auto');
-
-model.sol('sol3').create('st1', 'StudyStep');
-model.sol('sol3').feature('st1').set('study', 'std3');
-model.sol('sol3').feature('st1').set('studystep', 'stat');
-model.sol('sol3').create('v1', 'Variables');
-model.sol('sol3').feature('v1').set('control', 'stat');
-model.sol('sol3').create('s1', 'Stationary');
-model.sol('sol3').feature('s1').create('fc1', 'FullyCoupled');
-model.sol('sol3').feature('s1').feature('fc1').set('linsolver', 'dDef');
-model.sol('sol3').feature('s1').feature.remove('fcDef');
-model.sol('sol3').attach('std3');
 
 model.result.create('pg5', 'PlotGroup3D');
 model.result('pg5').label('Vector Field (cc3)');
@@ -230,62 +180,17 @@ model.result('pg6').label('Coordinate system (cc3)');
 model.result('pg6').create('sys1', 'CoordSysVolume');
 model.result('pg6').feature('sys1').set('sys', 'cc3_cs');
 
-model.study('std1').setStoreSolution(true);
-model.study('std2').setStoreSolution(true);
-model.study('std3').setStoreSolution(true);
-model.study('std1').run;
-model.study('std2').run;
-model.study('std3').run;
-
-%% Electric Currents Study
-% model.study('std4').feature.create('stat','stationary');
-
-solEC = model.sol.create('sol4');
-solEC.study('std4');
-
-model.study('std4').feature('stat').set('notlistsolnum', 1);
-model.study('std4').feature('stat').set('notsolnum', 'auto');
-model.study('std4').feature('stat').set('listsolnum', 1);
-model.study('std4').feature('stat').set('solnum', 'auto');
-
-solEC.create('st1', 'StudyStep');
-solEC.feature('st1').set('study', 'std4');
-solEC.feature('st1').set('studystep', 'stat');
-solEC.create('v1', 'Variables');
-solEC.feature('v1').set('control', 'stat');
-solEC.create('s1', 'Stationary');
-solEC.feature('s1').create('fc1', 'FullyCoupled');
-solEC.feature('s1').create('i1', 'Iterative');
-solEC.feature('s1').feature('i1').set('linsolver', 'cg');
-solEC.feature('s1').feature('i1').create('mg1', 'Multigrid');
-solEC.feature('s1').feature('i1').feature('mg1').set('prefun', 'amg');
-solEC.feature('s1').feature('i1').feature('mg1').set('coarseningmethod', 'classic');
-solEC.feature('s1').feature('fc1').set('linsolver', 'i1');
-solEC.feature('s1').feature.remove('fcDef');
-solEC.attach('std4');
-
-model.study('std4').run;
-
-% model.result.create('pg7', 'PlotGroup3D');
-% model.result('pg7').label('Electric Potential (ec)');
-% model.result('pg7').set('frametype', 'spatial');
-% model.result('pg7').set('showlegendsmaxmin', true);
-% model.result('pg7').set('data', 'dset4');
-% model.result('pg7').feature.create('vol1', 'Volume');
-% model.result('pg7').feature('vol1').set('showsolutionparams', 'on');
-% model.result('pg7').feature('vol1').set('solutionparams', 'parent');
-% model.result('pg7').feature('vol1').set('expr', 'V');
-% model.result('pg7').feature('vol1').set('colortable', 'Dipole');
-% model.result('pg7').feature('vol1').set('showsolutionparams', 'on');
-% model.result('pg7').feature('vol1').set('data', 'parent');
-
-
 %% Create Results Plots
+% creates a plotgroup for each EC study where just the electric potential
+% is shown
 for i = 1:nRef
     for j = 1:nStim
         pg{i,j} = model.result.create(['pg',RefElectrodes{i}(end),'_',StimElectrodes{j}(end)], 'PlotGroup3D');
         pg{i,j}.label(['Electrical Potential ',RefElectrodes{i}(end),'_',StimElectrodes{j}(end)]);
         pg{i,j}.set('data','dset4');
+        % specify which domains to display
+        pg{i,j}.selection.geom('geom1',3);
+        pg{i,j}.selection.set([5 7 9 10 11 12 13 14 15 16 17 18]);
 
         surf{i,j} = pg{i,j}.feature.create(['surf',RefElectrodes{i}(end),'_',StimElectrodes{j}(end)], 'Surface');
         surf{i,j}.set('expr',['V',RefElectrodes{i}(end),'_',StimElectrodes{j}(end)]);
@@ -348,12 +253,9 @@ end
 % model.result('pg8').feature('strmsl1').feature('col1').set('colorcalibration', -0.8);
 % model.result('pg8').feature('strmsl1').feature.create('filt1', 'Filter');
 % model.result('pg8').feature('strmsl1').feature('filt1').set('expr', '!isScalingSystemDomain');
-%%
-model.component('comp1').view('view1').hideEntities.create('hide1');
-model.component('comp1').view('view1').hideEntities('hide1').geom(3);
-model.component('comp1').view('view1').hideEntities('hide1').add([1 4 8]);
+%% Create Matlab figures of CC streamline plots
 
-model.sol('sol1').runAll;
+
 model.result('pg1').run;
 model.result('pg2').run;
 
@@ -365,7 +267,6 @@ f.Children.View = [-16.8946   58.8382];
 drawnow
 pause(.1)
 
-model.sol('sol2').runAll;
 model.result('pg3').run;
 model.result('pg4').run;
 f = figure;
@@ -375,7 +276,6 @@ f.Children.View = [62.7874   21.2297];
 drawnow
 pause(.1)
 
-model.sol('sol3').runAll;
 model.result('pg5').run;
 model.result('pg6').run;
 f = figure;
@@ -390,8 +290,9 @@ pause(.1)
 %CameraPosition -2.263851178121255,22.01258091423081,-109.4993852491663
 %0.138486451767768,83.580861013292292
 %-2.099179622124298,-12.203111052044948,112.7812814407596
-solEC.runAll;
-%%
+% solEC.runAll;
+%% Create Matlab figures of EC Plots
+
 for i = 1:nRef
     for j = 1:nStim
         pg{i,j}.run;
@@ -401,14 +302,15 @@ for i = 1:nRef
         f.Position = [1,41,1920,963];
         ax = f.Children;
 %         if contains(StimElectrodeNames(j),{'Post'})
-%             ax.View = [-1.796443704652980e+02,-78.917368147238932];
+%             ax.View = [-1.796443704652980e+02 -78.917368147238932];
 %         else
-%             ax.View = [0.138486451767768,83.580861013292292];
+%             ax.View = [0.138486451767768 83.580861013292292];
 %         end
+        title(ax(2),['Electrical Potential for ',StimElectrodeNames{j},' Stimulating, ',RefElectrodeNames{i},' Reference']);
         drawnow
         pause(.1)
     end
 end
 
 %% Save
-mphsave(model,[model_path,'FEM_20220908_solved'])
+mphsave(model,[model_path,'\FEM_20220908_solved'])
