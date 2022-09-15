@@ -313,4 +313,5 @@ for i = 1:nRef
 end
 
 %% Save
-mphsave(model,[model_path,'\FEM_20220908_solved'])
+save_path = 'R:\Computational Modeling\Model as of 20220908';
+mphsave(model,[save_path,'\FEM_20220908_solved'])
