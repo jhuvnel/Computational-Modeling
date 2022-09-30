@@ -295,9 +295,13 @@ pause(.1)
 
 for i = 1:nRef
     for j = 1:nStim
-        pg{i,j}.run;
-        f = figure; % plot in a matlab figure
-        mphplot(model,pg{i,j}.tag,'rangenum',1)
+        model.result(['pg',RefElectrodes{i}(end),'_',StimElectrodes{j}(end)]).run;
+        f = figure;
+        mphplot(model,['pg',RefElectrodes{i}(end),'_',StimElectrodes{j}(end)], 'rangenum',1);
+
+%         pg{i,j}.run;
+%         f = figure; % plot in a matlab figure
+%         mphplot(model,pg{i,j}.tag,'rangenum',1)
 
         f.Position = [1,41,1920,963];
         ax = f.Children;
