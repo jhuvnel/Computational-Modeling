@@ -1,0 +1,17 @@
+clear all
+
+load ParametersAndWaveform200uA
+load ch050506B_MonPost1_2500B7000N_DAniso2_HalfSCCSolution
+SCCThresholdScript2
+save 'ch050506B_MonPost1_2500B7000N_DAniso2_SCCAxonInsThr_200uA_GBnum1'
+clear all
+
+load ParametersAndWaveform200uA
+load ch050506A_BipHor2_2500B7000N_DAniso2_HalfSCCSolution
+SCCThresholdScript2
+save 'ch050506A_BipHor2_2500B7000N_DAniso2_SCCAxonInsThr_200uA_GBnum1'
+clear all
+
+
+
+

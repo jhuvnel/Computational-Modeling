@@ -1,0 +1,19 @@
+%this routine will plot a set of triangles
+
+%q adds to all of the indexes, in case your using java convention
+%modifiers are for the plot, like '-g' for a green trace
+function y = plotTriSurf(triangles, verts, q, m)
+    hold on;
+    for i = 1:size(triangles,2)
+        plot3([verts(1,triangles(1,i)+q) verts(1,triangles(2,i)+q)],...
+                [verts(2,triangles(1,i)+q) verts(2,triangles(2,i)+q)],...
+                    [verts(3,triangles(1,i)+q) verts(3,triangles(2,i)+q)], m);
+        plot3([verts(1,triangles(2,i)+q) verts(1,triangles(3,i)+q)],...
+                [verts(2,triangles(2,i)+q) verts(2,triangles(3,i)+q)],...
+                    [verts(3,triangles(2,i)+q) verts(3,triangles(3,i)+q)], m);
+        plot3([verts(1,triangles(3,i)+q) verts(1,triangles(1,i)+q)],...
+                [verts(2,triangles(3,i)+q) verts(2,triangles(1,i)+q)],...
+                    [verts(3,triangles(3,i)+q) verts(3,triangles(1,i)+q)], m);
+    end
+    return;
+                
