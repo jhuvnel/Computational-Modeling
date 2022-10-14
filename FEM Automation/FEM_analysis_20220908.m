@@ -317,5 +317,8 @@ for i = 1:nRef
 end
 
 %% Save
+% open Comsol window and open the new model
+mphlaunch(model)
+pause(5)
 save_path = 'R:\Computational Modeling\Model as of 20220908';
 mphsave(model,[save_path,'\FEM_20221013_solved'])
