@@ -11,7 +11,6 @@ function [verts, fiberType] = fiberGenComsol(V_nerve, V_crista, numGen)
 %   returned, not the variable's value), numGen: the total number of axons
 %   to generate. It returns verts: a cell array containing the vertices of
 %   the fiber trajectory, with each vertex being a node of Ranvier.
-%   October 2022, Evan Vesper, VNEL
 
 nStartBnd = size(V_crista.t,2); % number of triangles on the crista
 verts = cell(numGen,1); % preallocate size of verts
@@ -30,7 +29,7 @@ v3 = V_crista.p(:,indv(3,:));
 a = rand(1,numGen); b = rand(1,numGen);
 % generate starting point for streamline
 % equation for finding a random point on a triangle in 3D space
-p0 = (1-sqrt(a)).*v1 + (sqrt(a)*(1-b)).*v2 + (b*sqrt(a)).*v3;
+p0{i} = (1-sqrt(a)).*v1 + (sqrt(a)*(1-b)).*v2 + (b*sqrt(a)).*v3;
 
 % figure
 for i = 1:numGen

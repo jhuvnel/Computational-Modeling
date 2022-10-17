@@ -1,0 +1,19 @@
+function [traj] = stream3Comsol(X,Y,Z,U,V,W,p0,step)
+%stream3Comsol Generates a streamline given a vector field and starting
+%points as inputs. Outputs vertices of the trajectory with the given step
+%size. Uses Newton's method to generate the streamline.
+%   Detailed explanation goes here
+
+% Implement newton's method or something to create the streamline. Should
+% be pretty simple (I hope)
+nSteps = 1000;
+traj = zeros(3,nSteps);
+for i = 1:nSteps
+    % Steps to implement:
+    % 1) Find vector field direction at current point (interpolate)
+    % 2) Calculate distance of one step in the correct direction
+    % 3) Add 
+end
+
+traj = 0;
+end

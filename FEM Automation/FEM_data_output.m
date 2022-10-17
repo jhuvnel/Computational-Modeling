@@ -25,17 +25,12 @@ flow_crista = mpheval(model,{'cc3.vX','cc3.vY','cc3.vY'},'dataset',dset_vest,'se
 % should double check what units these vectors are in compared to global
 % axes
 
-% have coordinates on crista and simplex mesh from mpheval - just need to
-% figure out how to generate points on this simplex mesh that aren't just
-% the vertices already provided
+%% Plot vestibular domain flow and crista
+f = plotFlow(flow_vest,flow_crista);
 
-%% Plot vector field for visualization/testing
-figure
-quiver3(flow_vest.p(1,:),flow_vest.p(2,:),flow_vest.p(3,:),...
-    flow_vest.d1,flow_vest.d2,flow_vest.d3)
+%% Generate trajectory
 
-figure
-plot3(flow_crista.p(1,:),flow_crista.p(2,:),flow_crista.p(3,:),'.')
+[verts, fiberType] = fiberGenComsol(flow_vest,flow_crista,100)
 
 %%
 % c = mphgetcoords(model,<geomtag>,entitytype,<idx>)
@@ -53,3 +48,29 @@ streamline(verts); % plot streamline
 
 % u = mphgetu(model,'soltag','sol3');
 % solinfo = mphsolinfo(model,"soltag","sol3");
+
+%% Testing
+V_crista = flow_crista;
+V_vest = flow_vest;
+numGen = 500;
+
+nStartBnd = size(V_crista.t,2); % number of triangles on the crista
+verts = cell(numGen,1); % preallocate size of verts
+% p0 = verts;
+startBnd = randi(nStartBnd,numGen,1); % random starting triangle for each fiber
+step = 0.01;
+
+% get vertices of starting triangle
+% Comsol simplex returned with start index of 0, so must add 1 to work
+% with Matlab's start index of 1
+indv = flow_crista.t + int32(ones(3,nStartBnd));
+v1 = V_crista.p(:,indv(1,startBnd));
+v2 = V_crista.p(:,indv(2,startBnd));
+v3 = V_crista.p(:,indv(3,startBnd));
+% generate random numbers for placing axon on the starting triangle
+a = ones(3,1)*rand(1,numGen); b = ones(3,1)*rand(1,numGen);
+% generate starting point for streamline
+% equation for finding a random point on a triangle in 3D space
+p0 = (1-sqrt(a)).*v1 + (sqrt(a).*(1-b)).*v2 + (b.*sqrt(a)).*v3;
+
+plotFlow(V_vest,V_crista,'p0',p0,'plotV',false);
