@@ -14,23 +14,28 @@ function [verts, fiberType] = fiberGenComsol(V_nerve, V_crista, numGen)
 %   October 2022, Evan Vesper, VNEL
 
 nStartBnd = size(V_crista.t,2); % number of triangles on the crista
-verts = cell(numGen,1); % preallocate size of verts
-p0 = verts;
+% preallocation
+verts = cell(numGen,1);
+nStartBnd = size(V_crista.t,2);
+verts = cell(numGen,1);
+p0 = zeros(3,numGen); 
+
+
 startBnd = randi(nStartBnd,numGen,1); % random starting triangle for each fiber
-step = 0.01;
+step = 0.01; % make this an input argument at some point!!!!!!!!!!!!!!
 
 % get vertices of starting triangle
 % Comsol simplex returned with start index of 0, so must add 1 to work
 % with Matlab's start index of 1
 indv = flow_crista.t + int32(ones(3,nStartBnd));
-v1 = V_crista.p(:,indv(1,:));
-v2 = V_crista.p(:,indv(2,:));
-v3 = V_crista.p(:,indv(3,:));
+v1 = V_crista.p(:,indv(1,startBnd));
+v2 = V_crista.p(:,indv(2,startBnd));
+v3 = V_crista.p(:,indv(3,startBnd));
 % generate random numbers for placing axon on the starting triangle
-a = rand(1,numGen); b = rand(1,numGen);
+a = ones(3,1)*rand(1,numGen); b = ones(3,1)*rand(1,numGen);
 % generate starting point for streamline
 % equation for finding a random point on a triangle in 3D space
-p0 = (1-sqrt(a)).*v1 + (sqrt(a)*(1-b)).*v2 + (b*sqrt(a)).*v3;
+p0 = (1-sqrt(a)).*v1 + (sqrt(a).*(1-b)).*v2 + (b.*sqrt(a)).*v3;
 
 % figure
 for i = 1:numGen
