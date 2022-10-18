@@ -6,6 +6,8 @@
 % within each nerve. Must have the Matlab-Comsol API running and the solved
 % model open, with the modelClient saved in the worskpace variable model.
 % October 2022, Evan Vesper, VNEL
+
+%% Set tags and extract data from Comsol
 tic
 geom_tag = 'geom1';
 dset_vest = 'dset3'; % tag for the dataset containing vestibular nerve flow vector field
@@ -21,13 +23,12 @@ sel_utr_crista_bnd = 'geom1_sel11'; % utricle crista
 % tags for vector field data
 velTags = {'cc3.vX','cc3.vY','cc3.vY'}; % velocity field, but this doesn't generate proper trajectories
 vTags = {'cc3.e1x','cc3.e1y','cc3.e1z'}; % basis vector 1 (along the axon)
-% vTags2 = {'cc3.e1X','cc3.e1Y','cc3.e1Z'}; % basis vector 1 (along the axon) but with capital letters...
+
 
 % get flow vector field values for vestibular nerve
 % selection argument pair means fxn will only return vector field data 
 % within the selection specified (also the only volume it was actually calculated for)
 flow_vest = mpheval(model,vTags,'dataset',dset_vest,'selection',sel_vest_dom); % lowercase
-% flow_vest2 = mpheval(model,vTags2,'dataset',dset_vest,'selection',sel_vest_dom); % uppercase
 
 flow_post_crista = mpheval(model,vTags,'dataset',dset_vest,'selection',sel_post_crista_bnd);
 flow_lat_crista = mpheval(model,vTags,'dataset',dset_vest,'selection',sel_lat_crista_bnd);
@@ -76,13 +77,26 @@ f6 = plotFlow(flow_vest,flow_sacc_crista,traj_sacc_crista);
 title(gca,'Sacc. Crista Origin')
 f7 = plotFlow(flow_vest,flow_utr_crista,traj_utr_crista);
 title(gca,'Utr. Crista Origin')
-% Plot all the crista trajectories together
-flows_crista = {flow_post_crista,flow_lat_crista,flow_ant_crista,flow_sacc_crista,flow_utr_crista};
+%% Plot all the crista trajectories together
+flows_crista = {flow_vestinlet,flow_post_crista,flow_lat_crista,flow_ant_crista,flow_sacc_crista,flow_utr_crista};
 trajs_crista = {traj_post_crista,traj_lat_crista,traj_ant_crista,traj_sacc_crista,traj_utr_crista};
-f8 = plotMultiFlow(flow_vest,flows_crista,trajs_crista);
+f8 = plotMultiFlow(flow_vest,flows_crista,trajs_crista,'plotFlow',false);
+title(gca,'Specific Crista Innervations')
 
 %%
 toc
 
-figure
+%%
+% plot with mesh of vestibular nerve
+% f9 = plotFlow(flow_vest,flow_vestinlet,traj_vestinlet,'plotNerveMesh',true);
+% title(gca,'Vest. Inlet Origin')
+
+%% Save figures
+figs = {f1, f3, f4, f5, f6, f7, f8};
+for i = 1:7
+    saveas(figs{i},['R:\Computational Modeling\Model as of 20220908\nerveTrajTest',num2str(i)])
+    saveas(figs{i},['R:\Computational Modeling\Model as of 20220908\nerveTrajTest',num2str(i)],'png')
+end
+
 %% 
+f = plotflow(flow_vest,flow_post_crista)

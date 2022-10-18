@@ -32,9 +32,6 @@ function [fOut] = plotMultiFlow(flow_vest,flow_crista,varargin)
 %           false.
 %   October 2022, Evan Vesper, VNEL
 
-% TO DO
-% Add functionality to plot multiple crista meshes and sets of trajectories
-% at once
 
 % Parse inputs
 p = inputParser;

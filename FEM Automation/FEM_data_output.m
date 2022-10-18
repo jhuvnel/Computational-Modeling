@@ -97,3 +97,6 @@ for i = 1:7
     saveas(figs{i},['R:\Computational Modeling\Model as of 20220908\nerveTrajTest',num2str(i)])
     saveas(figs{i},['R:\Computational Modeling\Model as of 20220908\nerveTrajTest',num2str(i)],'png')
 end
+
+%% 
+f = plotFlow(flow_vest,flow_post_crista,'p0',p0_test_post_crista,'plotFlow',false)
