@@ -97,7 +97,7 @@ model.component('comp1').geom('geom1').run('sel8');
 model.component('comp1').geom('geom1').create('sel9', 'ExplicitSelection');
 model.component('comp1').geom('geom1').feature('sel9').label('Anterior Canal Crista');
 model.component('comp1').geom('geom1').feature('sel9').selection('selection').init(2);
-model.component('comp1').geom('geom1').feature('sel9').selection('selection').set('fin', [30760	30761	30804	30805	30936	31007	31008	31013	31014	31078	31079	31193	31195	31196	31370	31371	31514	31516	31781	31782	31816	31849	31850	32061	32062	32063	32064	32130	54883]);
+model.component('comp1').geom('geom1').feature('sel9').selection('selection').set('fin', [30760	30761	30804	30805	30936	31007	31008	31013	31014	31078	31079	31193	31195	31196	31370	31371	31514	31516	31781	31782	31816	31849	31850	32061	32062	32063	32064	32130]);
 model.component('comp1').geom('geom1').run('sel9');
 % Saccule Crista
 model.component('comp1').geom('geom1').create('sel10', 'ExplicitSelection');

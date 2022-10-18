@@ -1,16 +1,21 @@
-function [verts, fiberType] = fiberGenComsol(V_nerve, V_crista, numGen)
+function [verts, fiberType, p0] = fiberGenComsol(V_nerve, V_crista, numGen)
 %FIBERGENCOMSOL This function generates the vertices (nodes) of axons given
 %a comsol model and the vector field defining flow along a nerve and the
 %crista to start from. It will randomly distribute the axons evenly along
 %the crista surface. It uses the stream3() Matlab function to generate a
 %streamline using the vector field.
-%   The function takes as arguments V_nerve:
-%   the post data output from mpheval for the vector field within a nerve,
-%   V_crista: the post data output from mpheval for any variable on the
-%   desired crista (this function only uses the coordinates and simpleces
-%   returned, not the variable's value), numGen: the total number of axons
-%   to generate. It returns verts: a cell array containing the vertices of
-%   the fiber trajectory, with each vertex being a node of Ranvier.
+%   The function takes as arguments: 
+%       V_nerve: the post data output from mpheval for the vector field
+%           within a nerve
+%       V_crista: the post data output from mpheval for any variable on the
+%           desired crista (this function only uses the coordinates and 
+%           simpleces returned, not the variable's value)
+%       numGen: the total number of axons to generate. 
+%   Returns:
+%       verts: a cell array containing the vertices of
+%           the fiber trajectory, with each vertex being a node of Ranvier.
+%       fiberType: indicates which fiberType each generated axon is
+%       p0: starting points on the crista for each generated axon
 %   October 2022, Evan Vesper, VNEL
 
 nStartBnd = size(V_crista.t,2); % number of triangles on the crista
@@ -25,9 +30,10 @@ startBnd = randi(nStartBnd,numGen,1); % random starting triangle for each fiber
 step = 0.01; % make this an input argument at some point!!!!!!!!!!!!!!
 
 % get vertices of starting triangle
+
 % Comsol simplex returned with start index of 0, so must add 1 to work
 % with Matlab's start index of 1
-indv = flow_crista.t + int32(ones(3,nStartBnd));
+indv = V_crista.t + int32(ones(3,nStartBnd));
 v1 = V_crista.p(:,indv(1,startBnd));
 v2 = V_crista.p(:,indv(2,startBnd));
 v3 = V_crista.p(:,indv(3,startBnd));
@@ -37,7 +43,7 @@ a = ones(3,1)*rand(1,numGen); b = ones(3,1)*rand(1,numGen);
 % equation for finding a random point on a triangle in 3D space
 p0 = (1-sqrt(a)).*v1 + (sqrt(a).*(1-b)).*v2 + (b.*sqrt(a)).*v3;
 
-% figure
+% To do - put streamline function inside here
 for i = 1:numGen
 
 
