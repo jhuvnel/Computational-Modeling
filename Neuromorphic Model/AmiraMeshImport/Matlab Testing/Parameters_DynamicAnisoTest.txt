@@ -1,0 +1,33 @@
+%CH050506B Simulation Parameters (only Posterior Electrodes)			
+Material Name Index			
+ID#	Name	Subdomain Type	Subdomain Parameter(s)
+1	Box	iso	1000
+2	Nerves	d_aniso	1000
+
+
+d_aniso Conductivities (long trans)			
+2000	10		
+
+d_aniso Contour Files			
+
+snakeCont_DynamicAnisoTest.txt			
+horseShoeCont_DynamicAnisoTest.txt			
+fan1Cont_DynamicAnisoTest.txt			
+fan2Cont_DynamicAnisoTest.txt			
+fan3Cont_DynamicAnisoTest.txt				
+fan4Cont_DynamicAnisoTest.txt				
+fan5Cont_DynamicAnisoTest.txt				
+
+
+Boundary Group Assignment				
+ID#	Name	Boundary Group Parameter(s)		
+1	Exterior	nJ0		
+2	Interior	cont		
+
+
+Boundary Group Matrix				
+	Box	Nerves	d_Lumped	Exterior
+Box				
+Nerves	2			
+d_Lumped	2	2		
+Exterior	1	1	1

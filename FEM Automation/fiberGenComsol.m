@@ -1,4 +1,4 @@
-function [verts, fiberType, p0] = fiberGenComsol(V_nerve, V_crista, numGen)
+function [traj, fiberType, p0] = fiberGenComsol(V_nerve, V_crista, numGen)
 %FIBERGENCOMSOL This function generates the vertices (nodes) of axons given
 %a comsol model and the vector field defining flow along a nerve and the
 %crista to start from. It will randomly distribute the axons evenly along
@@ -18,11 +18,12 @@ function [verts, fiberType, p0] = fiberGenComsol(V_nerve, V_crista, numGen)
 %       p0: starting points on the crista for each generated axon
 %   October 2022, Evan Vesper, VNEL
 
+% returns a cell of {loc index, 1xNumNodes array of internode distances, 3xNumNodes trajectory array}
+
 nStartBnd = size(V_crista.t,2); % number of triangles on the crista
 % preallocation
-verts = cell(numGen,1);
+traj = cell(numGen,1);
 nStartBnd = size(V_crista.t,2);
-verts = cell(numGen,1);
 p0 = zeros(3,numGen); 
 
 
@@ -43,9 +44,10 @@ a = ones(3,1)*rand(1,numGen); b = ones(3,1)*rand(1,numGen);
 % equation for finding a random point on a triangle in 3D space
 p0 = (1-sqrt(a)).*v1 + (sqrt(a).*(1-b)).*v2 + (b.*sqrt(a)).*v3;
 
+% verts = stream3Comsol(V_nerve.p,V_nerve.t,V_nerve.d1,V_nerve.d2,...
+%     V_nerve.d3,p0,step);
 % To do - put streamline function inside here
 for i = 1:numGen
-
 
     
 %     plot3([v1(1) v2(1) v3(1) v1(1)],[v1(2) v2(2) v3(2) v1(2)],[v1(3) v2(3) v3(3) v1(3)],'b')
@@ -79,7 +81,7 @@ for i = 1:numGen
 
     
     % not yet implemented
-    verts = 0;
+    traj = 0;
     fiberType{i} = 0;
 
 end

@@ -21,15 +21,18 @@ StimElectrodes = [{'electrodes1_1'}, {'electrodes1_3'}, {'electrodes1_4'}, {'ele
 StimElectrodeNames = [{'Posterior1'}, {'Anterior1'}, {'Anterior2'},{'Horizontal1'},{'Posterior2'},{'Horizontal2'}];
 nRef = length(RefElectrodes);
 nStim = length(StimElectrodes);
-
+voltageTags = cell(1,nStim*nRef);
 ECs = cell(length(RefElectrodes),length(StimElectrodes));
 
+kk = 0;
 for i = 1:nRef
     for j = 1:nStim
+        kk = kk + 1;
+        voltageTags{kk} = ['V',RefElectrodes{i}(end),'_',StimElectrodes{j}(end)];
         % create ec physics for each electrode combination. Naming is
         % 'ec#_#' where first # is ref electrode, 2nd # is stim electrode
         ECs{i,j} = model.component('comp1').physics.create(['ec',RefElectrodes{i}(end),'_',StimElectrodes{j}(end)], 'ConductiveMedia', 'geom1');
-        ECs{i,j}.field('electricpotential').field(['V',RefElectrodes{i}(end),'_',StimElectrodes{j}(end)]); % name output variable
+        ECs{i,j}.field('electricpotential').field(voltageTags{kk}); % name output variable
         ECs{i,j}.label(['Electric Currents ',StimElectrodeNames{j},' ',RefElectrodeNames{i},' ref']);
         % Set stimulating electrode as voltage source
         ECs{i,j}.create('pot1', 'ElectricPotential', 2);
@@ -316,7 +319,7 @@ for i = 1:nRef
     end
 end
 
-%% Save
+%% Save Model
 % open Comsol window and open the new model
 mphlaunch(model)
 pause(5)

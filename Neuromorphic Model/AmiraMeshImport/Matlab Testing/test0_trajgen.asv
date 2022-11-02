@@ -1,0 +1,38 @@
+%this file tests findUniqueVert routin in class FiberTrajGen
+clear all;
+javaaddpath('D:\Programming\Java Workspace Eclipse\AmiraMeshImport');
+clear java      %reload the class, incase we messed with it
+
+offset = 0.5;
+step = 0.25;
+locIndex = 10;
+endDist = 0.25;
+nominalRadius = 1;
+
+
+vMatrix = [1 1 1 0;...
+           0 1 0 0;...
+           0 0 1 0];
+
+tMatrix = [1;...
+           2;...
+           3;...
+           4];
+
+       
+contMatrix =     [2     1   -1;...
+              (1/3) (1/3) (1/3);...
+              (1/3) (1/3) (1/3)];
+       
+       
+bndMatrix = [1;...
+             2;...
+             3];
+
+
+g = FiberTrajGen(vMatrix, tMatrix, bndMatrix, bndMatrix,contMatrix);
+
+r = g.generateTrajectory;
+
+r
+

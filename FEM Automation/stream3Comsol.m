@@ -1,5 +1,5 @@
 % function [traj] = stream3Comsol(model,dataset,vTags,p0,step)
-function [traj, insideTet] = stream3Comsol(XYZ,tets,u,v,w,p0,step)
+function [verts, insideTet] = stream3Comsol(XYZ,tets,u,v,w,p0,step)
 %stream3Comsol Generates a streamline given a vector field and starting
 %points as inputs. Outputs vertices of the trajectory with the given step
 %size. Uses Newton's method to generate the streamline.
@@ -26,16 +26,16 @@ nTet = size(tets,1);
 % create triangulation object for the vector field's mesh
 TR = triangulation(double(tets) + ones(nTet,4), XYZ);
 
-traj = cell(np0,1);
-insideTet = traj;
+verts = cell(np0,1);
+insideTet = verts;
 
 for i = 1:np0
     % can't preallocate size of traj with while loop. Maybe could make an
     % estimate of the needed number of points in traj based on the step size
     % and expected path if this is increasing time a lot
-    traj{i} = zeros(3,1); 
+    verts{i} = zeros(3,1); 
     p = p0(:,i);
-    traj{i}(:,1) = p;
+    verts{i}(:,1) = p;
     insideTet{i} = pointLocation(TR,p');
     k = 1;
     % while condition is that the last point was inside the vector field's mesh
@@ -50,7 +50,7 @@ for i = 1:np0
 
         % Advance one step
         p = p + step*vecq;
-        traj{i}(:,k) = p;
+        verts{i}(:,k) = p;
 
         % Test if the new point is within the nerve domain/mesh where
         % vector field is defined

@@ -1,0 +1,14 @@
+%test AxonSimulate
+clear all;
+javaaddpath('D:\Programming\Java Workspace Eclipse\AmiraMeshImport');
+javaaddpath('D:\Programming\Java Workspace Eclipse\AxonModel');
+clear java      %reload the class, incase we messed with it
+
+%get the info to set up the solver
+load solutionsCell;
+load parameterCell;
+
+simObject = AxonSimulate_SENN_AxonP();
+simObject = initAxonSimulate(parameterCell, solutionsCell, simObject);
+
+result = simObject.
