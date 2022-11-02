@@ -1,4 +1,4 @@
-function [traj, fiberType, p0] = fiberGenComsol(V_nerve, V_crista, numGen)
+function [traj, fiberType, p0] = fiberGenComsol(V_nerve, V_crista, numGen, step)
 %FIBERGENCOMSOL This function generates the vertices (nodes) of axons given
 %a comsol model and the vector field defining flow along a nerve and the
 %crista to start from. It will randomly distribute the axons evenly along
@@ -11,6 +11,9 @@ function [traj, fiberType, p0] = fiberGenComsol(V_nerve, V_crista, numGen)
 %           desired crista (this function only uses the coordinates and 
 %           simpleces returned, not the variable's value)
 %       numGen: the total number of axons to generate. 
+%       step: column vector of internode distances for each node of
+%       Ranvier. To only set first two and fill the rest, use format 
+%       [3.05e-6; 3.00e-6 ;-1]
 %   Returns:
 %       verts: a cell array containing the vertices of
 %           the fiber trajectory, with each vertex being a node of Ranvier.
@@ -22,13 +25,11 @@ function [traj, fiberType, p0] = fiberGenComsol(V_nerve, V_crista, numGen)
 
 nStartBnd = size(V_crista.t,2); % number of triangles on the crista
 % preallocation
-traj = cell(numGen,1);
+traj = cell(numGen,3);
 nStartBnd = size(V_crista.t,2);
 p0 = zeros(3,numGen); 
 
-
 startBnd = randi(nStartBnd,numGen,1); % random starting triangle for each fiber
-step = 0.01; % make this an input argument at some point!!!!!!!!!!!!!!
 
 % get vertices of starting triangle
 
@@ -47,14 +48,17 @@ p0 = (1-sqrt(a)).*v1 + (sqrt(a).*(1-b)).*v2 + (b.*sqrt(a)).*v3;
 % verts = stream3Comsol(V_nerve.p,V_nerve.t,V_nerve.d1,V_nerve.d2,...
 %     V_nerve.d3,p0,step);
 % To do - put streamline function inside here
-for i = 1:numGen
 
     
-%     plot3([v1(1) v2(1) v3(1) v1(1)],[v1(2) v2(2) v3(2) v1(2)],[v1(3) v2(3) v3(3) v1(3)],'b')
-%     hold on
-%     plot3(p0(1),p0(2),p0(3),'r.')
+verts = stream3Comsol(V_nerve.p,V_nerve.t,V_nerve.d1,V_nerve.d2,...
+    V_nerve.d3,p0,step);
 
-    % trying my own streamline function...
+traj{:,3} = verts;
+
+
+% not yet implemented
+traj = 0;
+fiberType{i} = 0;
 
     % the number of points returned in the vestibular nerve domain is way
     % too big - meshgrid would create a massive (TB size) array with this
@@ -79,11 +83,6 @@ for i = 1:numGen
 %         disp('Error in stream3\n')
 %     end
 
-    
-    % not yet implemented
-    traj = 0;
-    fiberType{i} = 0;
 
-end
 end
 

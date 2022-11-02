@@ -25,6 +25,10 @@ np0 = size(p0,2);
 nTet = size(tets,1);
 % create triangulation object for the vector field's mesh
 TR = triangulation(double(tets) + ones(nTet,4), XYZ);
+stepFillFlag = 0;
+if step(end) == -1
+    stepFillFlag = 1;
+end
 
 verts = cell(np0,1);
 insideTet = verts;
@@ -49,7 +53,11 @@ for i = 1:np0
         vecq = [uq; vq; wq];
 
         % Advance one step
-        p = p + step*vecq;
+        if stepFillFlag && ((length(step)-1) <= k)
+            p = p + step(k)*vecq;
+        else
+            p = p + step(end-1)*vecq;
+        end
         verts{i}(:,k) = p;
 
         % Test if the new point is within the nerve domain/mesh where
