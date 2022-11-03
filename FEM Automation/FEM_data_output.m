@@ -8,9 +8,9 @@
 % Should also have the voltage tags saved as a cell array in case the
 % number of electrode pairs is not always the same.
 % October 2022, Evan Vesper, VNEL
-
-%% Set tags and extract data from Comsol
 tic
+
+%% Define Comsol tags
 geom_tag = 'geom1';
 dset_vest = 'dset3'; % tag for the dataset containing vestibular nerve flow vector field
 sel_vest_dom = 'geom1_imp1_Vestibular_Nerve1_dom'; % selection for vestibular nerve domain
@@ -27,82 +27,158 @@ sel_ant_crista_bnd = 'geom1_sel9'; % anterior canal crista
 sel_sacc_crista_bnd = 'geom1_sel10'; % saccule crista
 sel_utr_crista_bnd = 'geom1_sel11'; % utricle crista
 % tags for vector field data
-velTags = {'cc3.vX','cc3.vY','cc3.vY'}; % velocity field, but this doesn't generate proper trajectories
-vTags = {'cc3.e1x','cc3.e1y','cc3.e1z'}; % basis vector 1 (along the axon)
-vTagsFac = {'cc2.e1x','cc2.e1y','cc2.e1z'}; % facial nerve
-vTagsCoch = {'cc.e1x','cc.e1y','cc.e1z'}; % cochlear nerve
+% velTags = {'cc3.vX','cc3.vY','cc3.vY'}; % velocity field, but this doesn't generate proper trajectories
+basisVecTags = {'cc3.e1x','cc3.e1y','cc3.e1z'}; % basis vector 1 (along the axon)
+basisVecTagsFac = {'cc2.e1x','cc2.e1y','cc2.e1z'}; % facial nerve
+basisVecTagsCoch = {'cc.e1x','cc.e1y','cc.e1z'}; % cochlear nerve
 dset_facial = 'dset2';
 dset_coch = 'dset1';
-% tags for electric currents
-ectags = {'V2_1','V2_3','V2_4','V2_5','V2_6','V2_7',...
-    'ec.Jx','ec.Jy','ec.Jz',...
-    'ec2.Jx','ec2.Jy','ec2.Jz',...
-    'ec3.Jx','ec3.Jy','ec3.Jz',...
-    'ec4.Jx','ec4.Jy','ec4.Jz',...
-    'ec5.Jx','ec5.Jy','ec5.Jz',...
-    'ec6.Jx','ec6.Jy','ec6.Jz'};
+% tags for electric potential and currents
+vTags = {'V2_1','V2_3','V2_4','V2_5','V2_6','V2_7'};
+% JTags = {'ec.Jx','ec.Jy','ec.Jz',...
+%     'ec2.Jx','ec2.Jy','ec2.Jz',...
+%     'ec3.Jx','ec3.Jy','ec3.Jz',...
+%     'ec4.Jx','ec4.Jy','ec4.Jz',...
+%     'ec5.Jx','ec5.Jy','ec5.Jz',...
+%     'ec6.Jx','ec6.Jy','ec6.Jz'};
+
+% tags for electrical currents physics nodes
+ecTags = {'ec','ec2','ec3','ec4','ec5','ec6'};
 dset_ec = 'dset4'; % dataset for electric currents
 
+%% Create parameter cell... TO DO
 
+%% Extract flow information
 % get flow vector field values for vestibular nerve
 % selection argument pair means fxn will only return vector field data 
 % within the selection specified (also the only volume it was actually calculated for)
-flow_vest = mpheval(model,vTags,'dataset',dset_vest,'selection',sel_vest_dom); % lowercase
+flow_vest = mpheval(model,basisVecTags,'dataset',dset_vest,'selection',sel_vest_dom); % lowercase
 
-flow_post_crista = mpheval(model,vTags,'dataset',dset_vest,'selection',sel_post_crista_bnd);
-flow_lat_crista = mpheval(model,vTags,'dataset',dset_vest,'selection',sel_lat_crista_bnd);
-flow_ant_crista = mpheval(model,vTags,'dataset',dset_vest,'selection',sel_ant_crista_bnd);
-flow_sacc_crista = mpheval(model,vTags,'dataset',dset_vest,'selection',sel_sacc_crista_bnd);
-flow_utr_crista = mpheval(model,vTags,'dataset',dset_vest,'selection',sel_utr_crista_bnd);
-flow_vestinlet = mpheval(model,vTags,'dataset',dset_vest,'selection',sel_vest_inlet_bnd);
+flow_post_crista = mpheval(model,basisVecTags,'dataset',dset_vest,'selection',sel_post_crista_bnd);
+flow_lat_crista = mpheval(model,basisVecTags,'dataset',dset_vest,'selection',sel_lat_crista_bnd);
+flow_ant_crista = mpheval(model,basisVecTags,'dataset',dset_vest,'selection',sel_ant_crista_bnd);
+flow_sacc_crista = mpheval(model,basisVecTags,'dataset',dset_vest,'selection',sel_sacc_crista_bnd);
+flow_utr_crista = mpheval(model,basisVecTags,'dataset',dset_vest,'selection',sel_utr_crista_bnd);
+flow_vestinlet = mpheval(model,basisVecTags,'dataset',dset_vest,'selection',sel_vest_inlet_bnd);
 % get voltage and electric current density values for all node points
 % within vestibular nerve, for all electrode combinations
-ec_vest = mpheval(model,ectags,'dataset',dset_ec,'selection',sel_vest_dom);
+% ec_vest = mpheval(model,ecTags,'dataset',dset_ec,'selection',sel_vest_dom);
 
-%% Generate starting points on crista
-[verts1, fiberType1, p0_test_inlet] = fiberGenComsol(flow_vest,flow_vestinlet,50);
+% reverese direction of flow since we want it going from crista towards
+% brain
+flow_vest_fixed = flow_vest;
+flow_vest_fixed.d1 = -1*flow_vest.d1;
+flow_vest_fixed.d2 = -1*flow_vest.d2;
+flow_vest_fixed.d3 = -1*flow_vest.d3;
 
-[verts1, fiberType1, p0_test_post_crista] = fiberGenComsol(flow_vest,flow_post_crista,50);
-[verts1, fiberType1, p0_test_lat_crista] = fiberGenComsol(flow_vest,flow_lat_crista,50);
-[verts1, fiberType1, p0_test_ant_crista] = fiberGenComsol(flow_vest,flow_ant_crista,50);
-[verts1, fiberType1, p0_test_sacc_crista] = fiberGenComsol(flow_vest,flow_sacc_crista,50);
-[verts1, fiberType1, p0_test_utr_crista] = fiberGenComsol(flow_vest,flow_utr_crista,50);
+%% Generate trajectories for all vestibular divisions
+step = [301e-3; 300.5e-3; -1];
+numAxons = 50;
 
-%% Generate streamlines/axon trajectories
-step_test = 0.1;
-traj_vestinlet = stream3Comsol(flow_vest.p,flow_vest.t,flow_vest.d1,flow_vest.d2,flow_vest.d3,p0_test_inlet,step_test); % with lowercase basis vector
-% traj2 = stream3Comsol(flow_vest2.p,flow_vest2.t,flow_vest2.d1,flow_vest2.d2,flow_vest2.d3,p0_test,step_test); % with uppercase basis vector
-d1fixed = -1*flow_vest.d1;
-d2fixed = -1*flow_vest.d2;
-d3fixed = -1*flow_vest.d3;
-traj_post_crista = stream3Comsol(flow_vest.p,flow_vest.t,d1fixed,d2fixed,d3fixed,p0_test_post_crista,step_test);
-traj_lat_crista = stream3Comsol(flow_vest.p,flow_vest.t,d1fixed,d2fixed,d3fixed,p0_test_lat_crista,step_test);
-traj_ant_crista = stream3Comsol(flow_vest.p,flow_vest.t,d1fixed,d2fixed,d3fixed,p0_test_ant_crista,step_test);
-traj_sacc_crista = stream3Comsol(flow_vest.p,flow_vest.t,d1fixed,d2fixed,d3fixed,p0_test_sacc_crista,step_test);
-traj_utr_crista = stream3Comsol(flow_vest.p,flow_vest.t,d1fixed,d2fixed,d3fixed,p0_test_utr_crista,step_test);
+[traj_vestinlet_pre, fiberType1, p0_test_inlet] = fiberGenComsol(flow_vest_fixed,flow_vestinlet,numAxons*5,step);
+
+[traj_post_pre, fiberType1, p0_post_crista] = fiberGenComsol(flow_vest_fixed,flow_post_crista,numAxons,step);
+[traj_lat_pre, fiberType1, p0_lat_crista] = fiberGenComsol(flow_vest_fixed,flow_lat_crista,numAxons,step);
+[traj_ant_pre, fiberType1, p0_ant_crista] = fiberGenComsol(flow_vest_fixed,flow_ant_crista,numAxons,step);
+[traj_sacc_pre, fiberType1, p0_sacc_crista] = fiberGenComsol(flow_vest_fixed,flow_sacc_crista,numAxons,step);
+[traj_utr_pre, fiberType1, p0_utr_crista] = fiberGenComsol(flow_vest_fixed,flow_utr_crista,numAxons,step);
+
+% remove all the trajectories that aren't long enough (hit the wall of the
+% nerve). In the future I need to fix the flow to avoid this happening, or
+% change the fiberGenComsol/strream3Comsol function(s) to keep trying new
+% starting points until I get the desired number of axons (like a Monte
+% Carlo method).
+all_trajs = {traj_vestinlet_pre,traj_post_pre,traj_lat_pre,traj_ant_pre,traj_sacc_pre,traj_utr_pre};
+for i = 1:length(all_trajs)
+    toKeep =[];
+    for j = 1:size(all_trajs{i},1)
+        if length(all_trajs{i}{j,2}) > 20
+            toKeep = [toKeep, j];
+        end
+    end
+    all_trajs{i} = all_trajs{i}(toKeep,:);
+    disp([num2str(size(all_trajs{i},1)),' axons succesfully generated in nerve ',num2str(i),'.'])
+end
+traj_vestinlet = all_trajs{1};
+traj_post = all_trajs{2};
+traj_lat = all_trajs{3};
+traj_ant = all_trajs{4};
+traj_sacc = all_trajs{5};
+traj_utr = all_trajs{6};
+
+save("trajs_20221103","traj_vestinlet","traj_post","traj_lat","traj_ant","traj_sacc","traj_utr")
+
+%% Testing fiberGenComsol with interpolation to node points
+step_vec_test = [301e-3; 300.5e-3; -1]; % units are mm - [301 um; 300.5 um; -1]
+
+[traj_test2, fiberType2, p0_test2] = fiberGenComsol(flow_vest_fixed,flow_ant_crista,50,step_vec_test);
+
+for j = 1:size(traj_test2,1)
+    if length(traj_test2{j,2}) > 20
+        toKeep = [toKeep, j];
+    end
+end
+traj_test2 = traj_test2(toKeep,:);
+plotFlow(flow_vest_fixed, flow_ant_crista,traj_test2(:,3));
+disp([num2str(size(traj_test2,1)),' axons succesfully generated.'])
+title('Succesful test\_traj2 axons')
+
+%% Extract Ve at node points
+% testing mphinterp alone
+[var1, curr1] = mphinterp(model,{'V2_7','ec.Jx'},'coord', traj_test2{1,3}, 'dataset', dset_ec);
+
+%% Testing sampleFEM
+tic
+[solutionBigCell] = sampleFEM(model,vTags,ecTags,dset_ec,traj_test2);
+toc
+%% Generate streamlines/axon trajectories straight from stream3Comsol
+% step_test = 0.1;
+% traj_vestinlet = stream3Comsol(flow_vest.p,flow_vest.t,flow_vest.d1,flow_vest.d2,flow_vest.d3,p0_test_inlet,step_test); % with lowercase basis vector
+% % traj2 = stream3Comsol(flow_vest2.p,flow_vest2.t,flow_vest2.d1,flow_vest2.d2,flow_vest2.d3,p0_test,step_test); % with uppercase basis vector
+% d1fixed = -1*flow_vest.d1;
+% d2fixed = -1*flow_vest.d2;
+% d3fixed = -1*flow_vest.d3;
+% traj_post = stream3Comsol(flow_vest.p,flow_vest.t,d1fixed,d2fixed,d3fixed,p0_post_crista,step_test);
+% traj_lat = stream3Comsol(flow_vest.p,flow_vest.t,d1fixed,d2fixed,d3fixed,p0_lat_crista,step_test);
+% traj_ant = stream3Comsol(flow_vest.p,flow_vest.t,d1fixed,d2fixed,d3fixed,p0_ant_crista,step_test);
+% traj_sacc = stream3Comsol(flow_vest.p,flow_vest.t,d1fixed,d2fixed,d3fixed,p0_sacc_crista,step_test);
+% traj_utr = stream3Comsol(flow_vest.p,flow_vest.t,d1fixed,d2fixed,d3fixed,p0_utr_crista,step_test);
+%% Testing step vector stream3 function
+% step_vec_test = [301e-3; 300.5e-3; -1]; % units are mm
+% traj_post_test = stream3Comsol(flow_vest.p,flow_vest.t,d1fixed,d2fixed,d3fixed,p0_post_crista,step_vec_test);
+% figure
+% plotFlow(flow_vest,flow_post_crista,traj_post_test,'plotFlow',false)
+
+%% interparc testing
+% this is a function I found online that should let me interpolate a curve
+% and then choose points along it (based on arclength). This would be for
+% having a very small step size to generate the intial streamline for each
+% axon and then sample along the streamline to choose nodes. Might result
+% in a less zig-zaggy axon.
+
+% interparcTest = interparc(0:0.3:1,traj_lat_crista{1}(1,:),traj_lat_crista{1}(2,:),traj_lat_crista{1}(3,:));
+% figure
+% plot3(interparcTest(:,1),interparcTest(:,2),interparcTest(:,3),'o-')
 %% Plot everything
-% lowercase basis vector results
-f1 = plotFlow(flow_vest,flow_vestinlet,traj_vestinlet);
+% plot vestibular inlet results
+f1 = plotFlow(flow_vest,flow_vestinlet,traj_vestinlet(:,3));
 title(gca,'Vest. Inlet Origin')
-% uppercase basis vector results
-% f2 = plotFlow(flow_vest2,flow_crista,traj2);
-% title(gca,'Vest. Inlet Origin with uppercase basis vector')
 
 % plot crista origin results
-f3 = plotFlow(flow_vest,flow_post_crista,traj_post_crista);
+f2 = plotFlow(flow_vest_fixed,flow_post_crista,traj_post(:,3));
 title(gca,'Post. Crista Origin')
-f4 = plotFlow(flow_vest,flow_lat_crista,traj_lat_crista);
+f3 = plotFlow(flow_vest_fixed,flow_lat_crista,traj_lat(:,3));
 title(gca,'Lat. Crista Origin')
-f5 = plotFlow(flow_vest,flow_ant_crista,traj_ant_crista);
+f4 = plotFlow(flow_vest_fixed,flow_ant_crista,traj_ant(:,3));
 title(gca,'Ant. Crista Origin')
-f6 = plotFlow(flow_vest,flow_sacc_crista,traj_sacc_crista);
+f5 = plotFlow(flow_vest_fixed,flow_sacc_crista,traj_sacc(:,3));
 title(gca,'Sacc. Crista Origin')
-f7 = plotFlow(flow_vest,flow_utr_crista,traj_utr_crista);
+f6 = plotFlow(flow_vest_fixed,flow_utr_crista,traj_utr(:,3));
 title(gca,'Utr. Crista Origin')
 %% Plot all the crista trajectories together
 flows_crista = {flow_vestinlet,flow_post_crista,flow_lat_crista,flow_ant_crista,flow_sacc_crista,flow_utr_crista};
-trajs_crista = {traj_post_crista,traj_lat_crista,traj_ant_crista,traj_sacc_crista,traj_utr_crista};
-f8 = plotMultiFlow(flow_vest,flows_crista,trajs_crista,'plotFlow',false);
+trajs_crista = {traj_post(:,3),traj_lat(:,3),traj_ant(:,3),traj_sacc(:,3),traj_utr(:,3)};
+f7 = plotMultiFlow(flow_vest_fixed,flows_crista,trajs_crista,'plotFlow',false);
 title(gca,'Specific Crista Innervations')
 
 %%

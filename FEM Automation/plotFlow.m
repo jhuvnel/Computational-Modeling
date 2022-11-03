@@ -108,5 +108,9 @@ if ~sum(strcmp(p.UsingDefaults{1},'traj'))
     end
 end
 
+xlabel('x [mm]')
+ylabel('y [mm]')
+zlabel('z [mm]')
+
 fOut = f;
 end

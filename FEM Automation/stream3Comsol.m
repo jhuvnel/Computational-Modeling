@@ -1,5 +1,5 @@
 % function [traj] = stream3Comsol(model,dataset,vTags,p0,step)
-function [verts, insideTet] = stream3Comsol(XYZ,tets,u,v,w,p0,step)
+function [verts, step_out, insideTet] = stream3Comsol(XYZ,tets,u,v,w,p0,step)
 %stream3Comsol Generates a streamline given a vector field and starting
 %points as inputs. Outputs vertices of the trajectory with the given step
 %size. Uses Newton's method to generate the streamline.
@@ -30,7 +30,9 @@ if step(end) == -1
     stepFillFlag = 1;
 end
 
+maxIter = 1000; % max number of steps per fiber
 verts = cell(np0,1);
+step_out = verts;
 insideTet = verts;
 
 for i = 1:np0
@@ -38,12 +40,14 @@ for i = 1:np0
     % estimate of the needed number of points in traj based on the step size
     % and expected path if this is increasing time a lot
     verts{i} = zeros(3,1); 
+    step_out{i} = [];
     p = p0(:,i);
     verts{i}(:,1) = p;
     insideTet{i} = pointLocation(TR,p');
     k = 1;
     % while condition is that the last point was inside the vector field's mesh
-    while ~isnan(insideTet{i}(k))
+    stepFlag = 1;
+    while stepFlag
         k = k+1;
 
         % Evaluate interpolation function
@@ -53,17 +57,25 @@ for i = 1:np0
         vecq = [uq; vq; wq];
 
         % Advance one step
-        if stepFillFlag && ((length(step)-1) <= k)
+        if stepFillFlag && ((length(step)-1) >= k) % autofill condition based on step vector
             p = p + step(k)*vecq;
+            step_out{i}(k,1) = step(k);
         else
             p = p + step(end-1)*vecq;
+            step_out{i}(k,1) = step(end-1);
         end
-        verts{i}(:,k) = p;
+        
+        % check if new point is within the nerve domain
+        inside  = pointLocation(TR,p');
+        stepFlag = (~isnan(inside)) && (k<maxIter);
+        
+        % Don't save last point if it leaves the nerve domain
+        if stepFlag
+            verts{i}(:,k) = p;
+            insideTet{i}(k) = inside;
+        end
 
-        % Test if the new point is within the nerve domain/mesh where
-        % vector field is defined
-        insideTet{i}(k) = pointLocation(TR,p');
-    end
-end
+    end % while stepFlag
+end % for 1:np0
 
-end
+end % stream3Comsol
