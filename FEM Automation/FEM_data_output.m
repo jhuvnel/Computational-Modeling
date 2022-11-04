@@ -46,8 +46,6 @@ vTags = {'V2_1','V2_3','V2_4','V2_5','V2_6','V2_7'};
 ecTags = {'ec','ec2','ec3','ec4','ec5','ec6'};
 dset_ec = 'dset4'; % dataset for electric currents
 
-%% Create parameter cell... TO DO
-
 %% Extract flow information
 % get flow vector field values for vestibular nerve
 % selection argument pair means fxn will only return vector field data 
@@ -119,8 +117,8 @@ for j = 1:size(traj_test2,1)
     end
 end
 traj_test2 = traj_test2(toKeep,:);
-plotFlow(flow_vest_fixed, flow_ant_crista,traj_test2(:,3));
 disp([num2str(size(traj_test2,1)),' axons succesfully generated.'])
+plotFlow(flow_vest_fixed, flow_ant_crista,traj_test2(:,3));
 title('Succesful test\_traj2 axons')
 
 %% Extract Ve at node points
@@ -131,6 +129,34 @@ title('Succesful test\_traj2 axons')
 tic
 [solutionBigCell] = sampleFEM(model,vTags,ecTags,dset_ec,traj_test2);
 toc
+% normalize by total current delivered
+for i = 1:length(solutionBigCell)
+    for j = 1:size(solutionBigCell{i},1)
+        solutionBigCell{i}{j,3} = solutionBigCell{i}{j,3}/current;
+    end
+end
+
+%% Create parameter cell
+% NOTE: the java Axon models expect everything in meters, not mm so make
+% sure to convert internode distances, diameters, etc...
+numActualAxons = size(solutionBigCell{1},1);
+Vthresh = 0.085; % aactivation threshold relative to resting membrane potential, V
+
+parameterTest = cell(9,1);
+parameterTest{1} = [numActualAxons; 1; numActualAxons];
+parameterTest{2} = 1e-7; % timestep, s
+parameterTest{3} = [2e-6; 1e-6;-1]; % active node (nodes of Ranvier) lengths, m
+parameterTest{4} = [300e-6; -1]; % passive node (internode) lengths, m
+parameterTest{5} = ones(numActualAxons,1)*[1.4e-6, -1]; % fiber diameters at each node, m
+parameterTest{6} = rand(numActualAxons,1); % initial state array
+parameterTest{7} = Vthresh; % activation threshold voltage
+parameterTest{8} = [100; 300]; % limit on fine threshold
+parameterTest{9} = 0.01; % precision for finding thresholds, i.e. 0.01 = 1%
+
+
+%% Save parameter cell, trajectory cell, solution cell, waveform, and total current for simulation...
+save("testSolution20221104",'parameterTest','traj_test2','solutionBigCell','waveForm','current')
+
 %% Generate streamlines/axon trajectories straight from stream3Comsol
 % step_test = 0.1;
 % traj_vestinlet = stream3Comsol(flow_vest.p,flow_vest.t,flow_vest.d1,flow_vest.d2,flow_vest.d3,p0_test_inlet,step_test); % with lowercase basis vector
@@ -175,7 +201,7 @@ f5 = plotFlow(flow_vest_fixed,flow_sacc_crista,traj_sacc(:,3));
 title(gca,'Sacc. Crista Origin')
 f6 = plotFlow(flow_vest_fixed,flow_utr_crista,traj_utr(:,3));
 title(gca,'Utr. Crista Origin')
-%% Plot all the crista trajectories together
+% plot all the crista trajectories together
 flows_crista = {flow_vestinlet,flow_post_crista,flow_lat_crista,flow_ant_crista,flow_sacc_crista,flow_utr_crista};
 trajs_crista = {traj_post(:,3),traj_lat(:,3),traj_ant(:,3),traj_sacc(:,3),traj_utr(:,3)};
 f7 = plotMultiFlow(flow_vest_fixed,flows_crista,trajs_crista,'plotFlow',false);

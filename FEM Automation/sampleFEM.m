@@ -36,10 +36,10 @@ for i = 1:nVars
         % extract current density data
         [Jx, Jy, Jz] = mphinterp(model, JTags,'coord', traj{j,3},'dataset',dsetTag);
         solution{i}{j,1} = traj{j,1}; % locIndex
-        solution{i}{j,2} = traj{j,2}; % internode distance vestor
+        solution{i}{j,2} = traj{j,2}*1e-3; % internode distance vector (and convert from mm to m!)
         solution{i}{j,3} = var; % extracellular voltage vector
         solution{i}{j,4} = [Jx; Jy; Jz]; % current density vector array
-        solution{i}{j,5} = traj{j,3}; % node coordinates
+        solution{i}{j,5} = traj{j,3}*1e-3; % node coordinates (and convert from mm to m!)
     end
     fprintf('Sampling %d of %d done!\n',i,nVars)
 end % for i = 1:nVars
