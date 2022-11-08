@@ -111,6 +111,7 @@ step_vec_test = [301e-3; 300.5e-3; -1]; % units are mm - [301 um; 300.5 um; -1]
 
 [traj_test2, fiberType2, p0_test2] = fiberGenComsol(flow_vest_fixed,flow_ant_crista,50,step_vec_test);
 
+toKeep = [];
 for j = 1:size(traj_test2,1)
     if length(traj_test2{j,2}) > 20
         toKeep = [toKeep, j];
@@ -124,18 +125,30 @@ title('Succesful test\_traj2 axons')
 %% Extract Ve at node points
 % testing mphinterp alone
 [var1, curr1] = mphinterp(model,{'V2_7','ec.Jx'},'coord', traj_test2{1,3}, 'dataset', dset_ec);
+var1 = var1';
 
 %% Testing sampleFEM
 tic
-[solutionBigCell] = sampleFEM(model,vTags,ecTags,dset_ec,traj_test2);
+[solutionBigCell] = sampleFEM(model,vTags,ecTags,dset_ec,traj_test2,current);
 toc
-% normalize by total current delivered
+% current normalization has been added to sampleFEM function
+% % normalize by total current delivered
+% for i = 1:length(solutionBigCell)
+%     for j = 1:size(solutionBigCell{i},1)
+%         solutionBigCell{i}{j,3} = solutionBigCell{i}{j,3}/current;
+%     end
+% end
+%% Testing sampleFEM with one variable
+clear solutionBigCell
+tic
+[solutionBigCell] = sampleFEM(model,vTags(1),ecTags,dset_ec,traj_test2,current);
+toc
+%% normalize by total current delivered
 for i = 1:length(solutionBigCell)
     for j = 1:size(solutionBigCell{i},1)
-        solutionBigCell{i}{j,3} = solutionBigCell{i}{j,3}/current;
+        solutionBigCell{i}{j,3} = -1*solutionBigCell{i}{j,3}/current/2;
     end
 end
-
 %% Create parameter cell
 % NOTE: the java Axon models expect everything in meters, not mm so make
 % sure to convert internode distances, diameters, etc...
@@ -148,7 +161,7 @@ parameterTest{2} = 1e-7; % timestep, s
 parameterTest{3} = [2e-6; 1e-6;-1]; % active node (nodes of Ranvier) lengths, m
 parameterTest{4} = [300e-6; -1]; % passive node (internode) lengths, m
 parameterTest{5} = ones(numActualAxons,1)*[1.4e-6, -1]; % fiber diameters at each node, m
-parameterTest{6} = rand(numActualAxons,1); % initial state array
+parameterTest{6} = rand(150,1); % initial state array
 parameterTest{7} = Vthresh; % activation threshold voltage
 parameterTest{8} = [100; 300]; % limit on fine threshold
 parameterTest{9} = 0.01; % precision for finding thresholds, i.e. 0.01 = 1%

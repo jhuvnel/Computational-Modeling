@@ -1,4 +1,4 @@
-function solution = sampleFEM(model, vTags, ecTags, dsetTag, traj)
+function solution = sampleFEM(model, vTags, ecTags, dsetTag, traj, current)
 %sampleFEM extracts FEM solution data (extracellular voltage) along given
 %axon trajectories. It can get an arbitrary number of dependent variables
 %from the Comsol model as provided as the vTags argument.
@@ -15,8 +15,10 @@ function solution = sampleFEM(model, vTags, ecTags, dsetTag, traj)
 %       dsetTag: char vector of the dataset tag to pull solution data from.
 %       traj: nAxonx3 trajectory cell array containing {locInd, 
 %           internodeDist, nodeCoords} with a row for each axon.
+%       current: total current delivered by electrode (double scalar, Amps)
 %   Returns
-%       solutionCell: an nAxonx5 cell array containing solution data.
+%       solutionCell: A 1xlength(vTags) cell where cell contains
+%           an nAxonx5 cell array containing solution data.
 %           Format is {locInd, internodeDist, dependentVariable,
 %           currentVector, nodeCoords}. locInd, internodeDist, and
 %           nodeCoords are copied directly from traj. The number of outputs
@@ -37,7 +39,7 @@ for i = 1:nVars
         [Jx, Jy, Jz] = mphinterp(model, JTags,'coord', traj{j,3},'dataset',dsetTag);
         solution{i}{j,1} = traj{j,1}; % locIndex
         solution{i}{j,2} = traj{j,2}*1e-3; % internode distance vector (and convert from mm to m!)
-        solution{i}{j,3} = var; % extracellular voltage vector
+        solution{i}{j,3} = (var')/current; % extracellular voltage vector, also transpose so it is a column vector
         solution{i}{j,4} = [Jx; Jy; Jz]; % current density vector array
         solution{i}{j,5} = traj{j,3}*1e-3; % node coordinates (and convert from mm to m!)
     end

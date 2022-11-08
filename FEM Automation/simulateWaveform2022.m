@@ -19,5 +19,10 @@ simClassTest = AxonSimulate_G_AHPAxon_CVStar0265();
 
 %% Run one waveform simulation
 tic
-resultsTest = simulateWaveform(parameterTest,solutionBigCell{2},waveForm,traj_test2,simClassTest,errorFileTest);
+resultsTest = simulateWaveform(parameterTest,solutionBigCell{1},waveForm,traj_test2,simClassTest,errorFileTest);
 toc
+
+%% Testing Abder's saved data
+clear simClass1
+simClass1 = AxonSimulate_G_AHPAxon_CVStar0265();
+horSCC_SimCell{1} = simulateWaveform(parameterCellSCC_1to3,horSCC_PE1_LI1to3_SolutionCell,waveForm, traj, simClass1,0);

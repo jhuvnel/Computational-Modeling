@@ -39,10 +39,9 @@ for i = 1:np0
     % can't preallocate size of traj with while loop. Maybe could make an
     % estimate of the needed number of points in traj based on the step size
     % and expected path if this is increasing time a lot
-    verts{i} = zeros(3,1); 
-    step_out{i} = [];
     p = p0(:,i);
     verts{i}(:,1) = p;
+    step_out{i}(1) = step(1);
     insideTet{i} = pointLocation(TR,p');
     k = 1;
     % while condition is that the last point was inside the vector field's mesh
