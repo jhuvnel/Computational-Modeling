@@ -23,6 +23,8 @@ resultsTest = simulateWaveform(parameterTest,solutionBigCell{1},waveForm,traj_te
 toc
 
 %% Testing Abder's saved data
-clear simClass1
-simClass1 = AxonSimulate_G_AHPAxon_CVStar0265();
-horSCC_SimCell{1} = simulateWaveform(parameterCellSCC_1to3,horSCC_PE1_LI1to3_SolutionCell,waveForm, traj, simClass1,0);
+clear simClassRecreate
+simClassRecreate = AxonSimulate_G_AHPAxon_CVStar0265();
+% for some reason runs into an error if no errorFile is provided? Just
+% input one for now
+horSCC_SimCell{1} = simulateWaveform(parameterCellSCC_1to3,horSCC_PE1_LI1to3_SolutionCell,waveForm, traj, simClassRecreate,errorFileTest);
