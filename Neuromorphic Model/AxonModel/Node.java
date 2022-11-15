@@ -5,6 +5,7 @@
  * Nodes will take the ion current values from channel, and balance kirkoff's current law
  * within the node in order to solve for the membran potential
  */
+import java.io.PrintWriter;
 
 public abstract class Node implements GlobalConstants {
 	
@@ -13,6 +14,8 @@ public abstract class Node implements GlobalConstants {
 	public double nodeDiameter;		//size of node diameter
 	public double nodeLength;		//length of node
 	public double deltaT;			//time step increment of the simulation
+	
+	public PrintWriter errLog; // error log for debugging
 	
 	//this constructor requires the diameter, length, and inital extracellular voltage
 	//along with the time step of the simulation

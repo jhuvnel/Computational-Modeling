@@ -38,6 +38,7 @@ import static java.lang.Math.pow;
 		channel_G = new G_AHPChannel_CVStar0265(diam, len, t_increment);
 		Cm = Cm_u*PI*nodeDiameter*nodeLength;		//calc membrane capacitance
 		Gl = Gl_u*PI*nodeDiameter*nodeLength;		//leakage conductance
+		errLog.println("Created new node with Cm = "+Cm+", Gl = "+Gl);
 	}
 
 	public double compute(double Ve, double Ve_L, double Ve_R, double V,
@@ -54,6 +55,8 @@ import static java.lang.Math.pow;
 		double I_ind = Ga_L*(V + Ve - V_L - Ve_L) + Ga_R*(V + Ve - V_R - Ve_R);
 		//now find the voltage derivative
 		double dV = (-1/Cm)*(I_ion + I_leak + I_ind);
+		
+		errLog.println("dV = "+dV+", Ve = "+Ve+", Ve_L = "+Ve_L+", Ve_R = "+Ve_R+ "distL = "+distL+", distR = "+distR+", diamL = "+diamL+", diamR = "+diamR);
 		return (V + dV*deltaT);		//Euler's method, deltaT in seconds!
 	}
 

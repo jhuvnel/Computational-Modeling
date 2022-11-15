@@ -9,6 +9,7 @@
  * CV: 0.11128
  * CV*: 0.1255
 */
+import java.io.PrintWriter;
 
 public class G_AHPAxon_CVStar1483 extends Axon {
 
@@ -19,9 +20,9 @@ public class G_AHPAxon_CVStar1483 extends Axon {
 
 	public G_AHPAxon_CVStar1483(double[] step, double[] nodeDiam,
 						double[] nodeLength_A, double[] nodeLength_P, int numNodes,
-							double timeIncrement, int numTimeSteps) throws Exception {
+							double timeIncrement, int numTimeSteps, PrintWriter errLog) throws Exception {
 		super(step, nodeDiam, nodeLength_A, nodeLength_P, numNodes,
-											timeIncrement, numTimeSteps);
+											timeIncrement, numTimeSteps, errLog);
 	}
 
 	public G_AHPAxon_CVStar1483() {

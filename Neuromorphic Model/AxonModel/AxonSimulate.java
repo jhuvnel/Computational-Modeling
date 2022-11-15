@@ -90,7 +90,7 @@ public abstract class AxonSimulate implements GlobalConstants, KillJavaEventList
 	public abstract void initAxonArray(int numIterations, int[] numNodes) throws Exception;
 	
 	//override this one also, used for finding thresholds
-	public abstract Axon initOneAxon(int numIterations, int numNodes, double[] nodeDiameter) throws Exception;
+	public abstract Axon initOneAxon(int numIterations, int numNodes, double[] nodeDiameter, PrintWriter errLog) throws Exception;
 	
 	//this function should be encapsulated by a matlab m-file
 	//see uploadVe.m
@@ -140,7 +140,8 @@ public abstract class AxonSimulate implements GlobalConstants, KillJavaEventList
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		Date date = new Date();
 		errLog.println(dateFormat.format(date));
-		errLog.println("Error log not yet implemented for method compute of Class AxonSimulate");
+		errLog.write("Write method test");
+		//errLog.println("Error log not yet implemented for method compute of Class AxonSimulate");
 		//simulate each nerve, apply it to the result array, and then clear it from memory
 		for (int i = (startInd-1); i < stopInd; i++)	{
 			//take care of user exit
@@ -157,16 +158,19 @@ public abstract class AxonSimulate implements GlobalConstants, KillJavaEventList
 			outputWindow.text = "Number of axons completed: " + (i+1-startInd);
 			outputWindow.forceRepaint();
 			//do a full simulation of one nerve at a time
-			Axon a = initOneAxon(numIterations, numNodes[i], nodeDiam[i]);
+			errLog.println("Creating axon "+i);
+			Axon a = initOneAxon(numIterations, numNodes[i], nodeDiam[i], errLog);
 			//now for the initial condition contingency
 			if (flagInitialConditions)
 				a.setInitialCondition(a.accessStateArray(initialCondition[i]));
+			errLog.println("Starting compute method for axon "+i);
 			for (int j = 0; j < waveform.length; j++)	{
 				//scale Ve to the waveform
 				double[] temp = Ve[i].clone();		//must clone here or you'll loose Ve
 				for (int k = 0; k < temp.length; k++)	{
 					temp[k] = temp[k] * waveform[j];
 				}
+
 				a.compute(temp);
 			}
 			//store the axon's info
@@ -293,8 +297,9 @@ public abstract class AxonSimulate implements GlobalConstants, KillJavaEventList
 					errLog.close();
 					throw new Exception("User manually killed the java process.");
 				}
+				errLog.println("Creating axon "+i);
 				//create the nerve
-				Axon a = initOneAxon(numIterations, numNodes[i], nodeDiam[i]);
+				Axon a = initOneAxon(numIterations, numNodes[i], nodeDiam[i], errLog);
 				//now for the initial condition contingency
 				if (flagInitialConditions)
 					a.setInitialCondition(a.accessStateArray(initialCondition[i]));
@@ -304,6 +309,7 @@ public abstract class AxonSimulate implements GlobalConstants, KillJavaEventList
 				//2% of all nerves simulated, so I manage these as if they were in 
 				//refractory (probably are) and assign them a value of zero), everything
 				//is logged in the file name specified
+				errLog.println("Starting threshold finding for axon "+i);
 				try	{
 					//simulate the nerve
 					for (int j = 0; j < waveform.length; j++)	{

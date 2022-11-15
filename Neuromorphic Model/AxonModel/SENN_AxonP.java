@@ -2,6 +2,7 @@
 /*this class implements a basic SENN axon (based off of Frijns 1994 and Darren Whiten),
  * the myelin is modelled as a passive node
  */
+import java.io.PrintWriter;
 
 public class SENN_AxonP extends Axon implements GlobalConstants {
 
@@ -10,8 +11,8 @@ public class SENN_AxonP extends Axon implements GlobalConstants {
 		super(traj, timeIncrement, numTimeSteps);
 	}
 	public SENN_AxonP(double[] step, double[] nodeDiam, double[] nodeLength_A, double[] nodeLength_P,
-			int numNodes, double timeIncrement, int numTimeSteps)	throws Exception	{
-		super(step, nodeDiam, nodeLength_A, nodeLength_P, numNodes, timeIncrement, numTimeSteps);
+			int numNodes, double timeIncrement, int numTimeSteps, PrintWriter errLog)	throws Exception	{
+		super(step, nodeDiam, nodeLength_A, nodeLength_P, numNodes, timeIncrement, numTimeSteps, errLog);
 	}
 	public SENN_AxonP()	{
 		super();

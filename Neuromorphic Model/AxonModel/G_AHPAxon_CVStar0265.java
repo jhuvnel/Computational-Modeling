@@ -9,6 +9,7 @@
  * CV: 0.076716
  * CV*: 0.084082  --best I could do, still a regular afferent though (cut off at 0.1)
  */
+import java.io.PrintWriter;
 
 public class G_AHPAxon_CVStar0265 extends Axon {
 
@@ -19,9 +20,9 @@ public class G_AHPAxon_CVStar0265 extends Axon {
 
 	public G_AHPAxon_CVStar0265(double[] step, double[] nodeDiam,
 						double[] nodeLength_A, double[] nodeLength_P, int numNodes,
-							double timeIncrement, int numTimeSteps) throws Exception {
+							double timeIncrement, int numTimeSteps, PrintWriter errLog) throws Exception {
 		super(step, nodeDiam, nodeLength_A, nodeLength_P, numNodes,
-											timeIncrement, numTimeSteps);
+											timeIncrement, numTimeSteps, errLog);
 	}
 
 	public G_AHPAxon_CVStar0265() {

@@ -1,6 +1,7 @@
 /*this class implements AxonSimulate for the Axon class G_AHPAxon_CVStar1483
  * 
  */
+import java.io.PrintWriter;
 
 public class AxonSimulate_G_AHPAxon_CVStar1483 extends AxonSimulate {
 
@@ -13,11 +14,11 @@ public class AxonSimulate_G_AHPAxon_CVStar1483 extends AxonSimulate {
 		axons = new Axon[Ve.length];
 		for (int i = 0; i < axons.length; i++)	{
 			//intialize each axon object
-			axons[i] = new G_AHPAxon_CVStar1483(step, nodeDiam[i], nodeLength_A, nodeLength_P, numNodes[i], timeIncrement, numIterations);
+			axons[i] = new G_AHPAxon_CVStar1483(step, nodeDiam[i], nodeLength_A, nodeLength_P, numNodes[i], timeIncrement, numIterations, null);
 		}
 	}
-	public Axon initOneAxon(int numIterations, int numNodes, double[] nodeDiameter)	throws Exception {
-		Axon r = new G_AHPAxon_CVStar1483(step, nodeDiameter, nodeLength_A, nodeLength_P, numNodes, timeIncrement, numIterations);
+	public Axon initOneAxon(int numIterations, int numNodes, double[] nodeDiameter, PrintWriter errLog)	throws Exception {
+		Axon r = new G_AHPAxon_CVStar1483(step, nodeDiameter, nodeLength_A, nodeLength_P, numNodes, timeIncrement, numIterations, errLog);
 		return r;
 	}
 }

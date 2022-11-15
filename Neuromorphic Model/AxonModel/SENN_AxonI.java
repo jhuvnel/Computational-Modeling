@@ -2,6 +2,8 @@
  * the myelin modelled as a perfect insulator
  * NOTE: this one works best for the Frijns SENN type of axon
  */
+import java.io.PrintWriter;
+
 public class SENN_AxonI extends Axon implements GlobalConstants {
 
 	//need to rewrite them here for matlab use
@@ -9,8 +11,8 @@ public class SENN_AxonI extends Axon implements GlobalConstants {
 		super(traj, timeIncrement, numTimeSteps);
 	}
 	public SENN_AxonI(double[] step, double[] nodeDiam, double[] nodeLength_A, double[] nodeLength_P,
-			int numNodes, double timeIncrement, int numTimeSteps)	throws Exception	{
-		super(step, nodeDiam, nodeLength_A, nodeLength_P, numNodes, timeIncrement, numTimeSteps);
+			int numNodes, double timeIncrement, int numTimeSteps, PrintWriter errLog)	throws Exception	{
+		super(step, nodeDiam, nodeLength_A, nodeLength_P, numNodes, timeIncrement, numTimeSteps, errLog);
 	}
 	public SENN_AxonI()	{
 		super();

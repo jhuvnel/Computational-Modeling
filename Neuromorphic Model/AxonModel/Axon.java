@@ -7,6 +7,7 @@
  */
 
 import static java.lang.Math.*;
+import java.io.PrintWriter;
 
 import java.util.ArrayList;
 
@@ -27,6 +28,8 @@ public abstract class Axon implements GlobalConstants {
 											//note, this includes the starting initial condition!
 	public int timeIter;					//the iterator that traverses V
 	public double injectionCurrent;		//amount of current injected into the first node
+	
+	public PrintWriter errLog; // error log for debugging
 	
 	//this constructor defines an empty Axon with the given trajectory (may be a piece wise linear approx to a cubic spline)
 	//there is no default constructor, otherwise we would have to repopulate the 
@@ -52,7 +55,7 @@ public abstract class Axon implements GlobalConstants {
 	//nodeLength_A and nodeLength_P are the node lengths of the active and passive nodes
 	//use -1 here to also indicate a fill condition
 	public Axon(double[] step, double[] nodeDiam, double[] nodeLength_A, double[] nodeLength_P,
-					int numNodes, double timeIncrement, int numTimeSteps)	throws Exception	{
+					int numNodes, double timeIncrement, int numTimeSteps, PrintWriter errLog)	throws Exception	{
 		//initializations
 		injectionCurrent = 0;
 		deltaT = timeIncrement;
@@ -264,8 +267,10 @@ public abstract class Axon implements GlobalConstants {
 				V[i][timeIter] = newVoltage;		//save space with floats
 			}
 			//check to make sure there is no overload condition (if euler's method diverged)
-			if (Double.isNaN(newVoltage) || Double.isInfinite(newVoltage))
-				throw new Exception("Error: Euler's method diverged while simulating an axon.  Check input parameters.");
+			if (Double.isNaN(newVoltage))
+				throw new Exception("Error: Euler's method diverged (NaN) while simulating an axon.  Check input parameters.");
+			if (Double.isInfinite(newVoltage))
+				throw new Exception("Error: Euler's method diverged (Inf) while simulating an axon.  Check input parameters.");
 		}
 		simulateFlag = true;		//don't allow any manipulation after simulation begun
 	}

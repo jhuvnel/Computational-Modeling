@@ -1,0 +1,6 @@
+Error log for method compute of Class AxonSimulate.
+2022/11/11 14:20:55
+Error log not yet implemented for method compute of Class AxonSimulate
+End of session.
+
+

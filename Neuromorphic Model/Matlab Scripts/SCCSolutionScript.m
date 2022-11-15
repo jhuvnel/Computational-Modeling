@@ -24,6 +24,7 @@ simClass1 = AxonSimulate_G_AHPAxon_CVStar0265();
 horSCC_SimCell{1} = simulateWaveform(parameterCellSCC_1to3,horSCC_PE1_LI1to3_SolutionCell,waveForm, traj, simClass1,0);
 clear simClass1;
 clear traj;
+%%
 load('MRIFE_HorSCC_100Traj_LocInd_3to5.mat');
 traj = traj(1:(size(traj,1)/2),:);
 simClass2 = AxonSimulate_G_AHPAxon_CVStar0265();
