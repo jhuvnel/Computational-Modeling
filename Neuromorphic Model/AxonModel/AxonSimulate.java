@@ -158,12 +158,12 @@ public abstract class AxonSimulate implements GlobalConstants, KillJavaEventList
 			outputWindow.text = "Number of axons completed: " + (i+1-startInd);
 			outputWindow.forceRepaint();
 			//do a full simulation of one nerve at a time
-			errLog.println("Creating axon "+i);
+			errLog.println(String.format("Creating axon %d",i));
 			Axon a = initOneAxon(numIterations, numNodes[i], nodeDiam[i], errLog);
 			//now for the initial condition contingency
 			if (flagInitialConditions)
 				a.setInitialCondition(a.accessStateArray(initialCondition[i]));
-			errLog.println("Starting compute method for axon "+i);
+			errLog.println(String.format("Starting compute method for axon %d",i));
 			for (int j = 0; j < waveform.length; j++)	{
 				//scale Ve to the waveform
 				double[] temp = Ve[i].clone();		//must clone here or you'll loose Ve

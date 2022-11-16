@@ -10,12 +10,13 @@
 % For this to work, you must have no java objects in the Matlab workspace
 % and also run javaclasspath(javaPath) to reset the dynamic path. This will
 % grab the current version of the .class files in the javaPath location.
-% Remember to build the newest version of your java class (using your java
-% IDE) before running this.
 javaPath = 'C:\Users\Evan\Documents\GitHub\Computational-Modeling\Neuromorphic Model\AxonModel';
-javaclasspath('-v1') % set to diplay where javaclasspath is looking for classes (optional)
-javaclasspath(javaPath) % set dynamic path (necessary if you changed the java classes)
-javaclasspath('-dynamic') % display dynamic path (optional)
+javaclasspath('-v1') % set to diplay where javaclasspath is looking for classes
+javaclasspath(javaPath)
+
+% javaaddpath([javaPath,'/AxonSimulate_G_AHPAxon_CVStar0265.class'])
+
+javaclasspath('-dynamic')
 
 % load parameters, FEM solutions, trajectories, waveform, and current
 slnFile = 'testSolution16-Nov-2022.mat';

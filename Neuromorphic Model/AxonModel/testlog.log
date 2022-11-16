@@ -1,8 +1,8 @@
-Nov 11, 2022 5:15:05 PM LoggerExample main
+Nov 16, 2022 3:17:50 PM LoggerExample main
 CONFIG: Configuration done.
-Nov 11, 2022 5:15:05 PM LoggerExample main
+Nov 16, 2022 3:17:50 PM LoggerExample main
 FINE: Finer test log.
-Nov 11, 2022 5:15:05 PM LoggerExample main
+Nov 16, 2022 3:17:50 PM LoggerExample main
 CONFIG: index is set to 2
-Nov 11, 2022 5:15:05 PM LoggerExample main
+Nov 16, 2022 3:17:50 PM LoggerExample main
 FINE: Index = 2, a[index] = 3

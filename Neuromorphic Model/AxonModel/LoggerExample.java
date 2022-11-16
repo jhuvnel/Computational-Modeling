@@ -3,6 +3,7 @@
  */
 import java.io.IOException;
 import java.util.logging.*;
+import java.io.PrintWriter;
 
 /**
  * @author Evan
@@ -51,6 +52,10 @@ public class LoggerExample {
 		}catch(ArrayIndexOutOfBoundsException ex) {
 			LOGGER.log(Level.SEVERE, "Exception occur", ex);
 		}
+		
+		
+		String str = String.format("Testing string formatter %d %s", 7, "hi");
+		System.out.println(str);
 	}
 
 }

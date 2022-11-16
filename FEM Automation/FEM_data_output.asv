@@ -147,7 +147,7 @@ clear solutionBigCell
 tic
 [solutionBigCell] = sampleFEM(model,vTags(1),ecTags,dset_ec,traj_test2,current);
 toc
-% normalize by total current delivered
+%% normalize by total current delivered
 for i = 1:length(solutionBigCell)
     for j = 1:size(solutionBigCell{i},1)
         solutionBigCell{i}{j,3} = -1*solutionBigCell{i}{j,3}/current/2;
