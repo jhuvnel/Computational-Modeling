@@ -55,8 +55,9 @@ public abstract class Axon implements GlobalConstants {
 	//nodeLength_A and nodeLength_P are the node lengths of the active and passive nodes
 	//use -1 here to also indicate a fill condition
 	public Axon(double[] step, double[] nodeDiam, double[] nodeLength_A, double[] nodeLength_P,
-					int numNodes, double timeIncrement, int numTimeSteps, PrintWriter errLog)	throws Exception	{
+					int numNodes, double timeIncrement, int numTimeSteps, PrintWriter errorLog)	throws Exception	{
 		//initializations
+		errLog = errorLog;
 		injectionCurrent = 0;
 		deltaT = timeIncrement;
 		maxTimeSteps = numTimeSteps;

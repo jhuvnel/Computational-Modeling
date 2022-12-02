@@ -41,7 +41,7 @@ public class SENN_AxonI extends Axon implements GlobalConstants {
 				if (currLocation == null)	//we filled up the trajectory trace!
 					throw new Exception("Trajectory end reached.  Need longer trajectory to fill with given number of nodes.");
 				//create the node
-				n = new SENN_ActiveNode(nodeDiam, nodeLength_A, deltaT);
+				n = new SENN_ActiveNode(nodeDiam, nodeLength_A, deltaT, errLog);
 				nodes[0] = n;	//add into master list
 				//now set the other member parameters which were inherited from Axon
 				position[0] = currLocation.clone();		//store its location
@@ -55,31 +55,31 @@ public class SENN_AxonI extends Axon implements GlobalConstants {
 					throw new Exception("Trajectory end reached.  Need longer trajectory to fill with given number of nodes.");
 				//find out if it should be a passive or active node
 				if ((numNodes-1)%2 == 0)	{	//even number means active node
-					n = new SENN_ActiveNode(nodeDiam, nodeLength_A, deltaT);
+					n = new SENN_ActiveNode(nodeDiam, nodeLength_A, deltaT, errLog);
 					//now implement the endNodes
 					for (int e = 0; e < numEndNodes; e++)	{
 						//find out if it should be a passive or active node
 						if (e%2 == 0)	{	//even number means passive node
-							Node eT = new InsulatedNode(nodeDiam, nodeLength_P, deltaT);
+							Node eT = new InsulatedNode(nodeDiam, nodeLength_P, deltaT, errLog);
 							endNodes[e] = eT;
 						}
 						else	{
-							Node eT = new SENN_ActiveNode(nodeDiam, nodeLength_A, deltaT);
+							Node eT = new SENN_ActiveNode(nodeDiam, nodeLength_A, deltaT, errLog);
 							endNodes[e] = eT;
 						}
 					}
 				}
 				else	{
-					n = new InsulatedNode(nodeDiam, nodeLength_P, deltaT);
+					n = new InsulatedNode(nodeDiam, nodeLength_P, deltaT, errLog);
 					//now implement the endNodes
 					for (int e = 0; e < numEndNodes; e++)	{
 						//find out if it should be a passive or active node
 						if (e%2 == 0)	{	//even number means active node
-							Node eT = new SENN_ActiveNode(nodeDiam, nodeLength_A, deltaT);
+							Node eT = new SENN_ActiveNode(nodeDiam, nodeLength_A, deltaT, errLog);
 							endNodes[e] = eT;
 						}
 						else	{
-							Node eT = new InsulatedNode(nodeDiam, nodeLength_P, deltaT);
+							Node eT = new InsulatedNode(nodeDiam, nodeLength_P, deltaT, errLog);
 							endNodes[e] = eT;
 						}
 					}
@@ -97,11 +97,11 @@ public class SENN_AxonI extends Axon implements GlobalConstants {
 					throw new Exception("Trajectory end reached.  Need longer trajectory to fill with given number of nodes.");
 				//find out if it should be a passive or active node
 				if (i%2 == 0)	{	//even number means active node
-					n = new SENN_ActiveNode(nodeDiam, nodeLength_A, deltaT);
+					n = new SENN_ActiveNode(nodeDiam, nodeLength_A, deltaT, errLog);
 				}
 				else	{
 					//main difference with SENN_AxonP
-					n = new InsulatedNode(nodeDiam, nodeLength_P, deltaT);
+					n = new InsulatedNode(nodeDiam, nodeLength_P, deltaT, errLog);
 				}
 				nodes[i] = n;	//add into master list
 				//now set the other member parameters which were inherited from Axon
@@ -148,7 +148,7 @@ public class SENN_AxonI extends Axon implements GlobalConstants {
 			//take care of the boundaries
 			if (i == 0)	{
 				//create the node
-				n = new SENN_ActiveNode(nodeDiam[0], nodeLength_A[0], deltaT);
+				n = new SENN_ActiveNode(nodeDiam[0], nodeLength_A[0], deltaT, errLog);
 				iteratorA = iteratorA + incrementorA;
 				nodes[0] = n;	//add into master list
 				//initialize V
@@ -157,32 +157,32 @@ public class SENN_AxonI extends Axon implements GlobalConstants {
 			else if (i == numNodes-1)	{	//final node
 				//find out if it should be a passive or active node
 				if ((numNodes-1)%2 == 0)	{	//even number means active node
-					n = new SENN_ActiveNode(nodeDiam[iteratorD], nodeLength_A[iteratorA], deltaT);
+					n = new SENN_ActiveNode(nodeDiam[iteratorD], nodeLength_A[iteratorA], deltaT, errLog);
 					//now implement the endNodes
 					for (int e = 0; e < numEndNodes; e++)	{
 						//find out if it should be a passive or active node
 						if (e%2 == 0)	{	//even number means passive node
-							Node eT = new InsulatedNode(nodeDiam[iteratorD], nodeLength_P[iteratorP], deltaT);
+							Node eT = new InsulatedNode(nodeDiam[iteratorD], nodeLength_P[iteratorP], deltaT, errLog);
 							endNodes[e] = eT;
 						}
 						else	{
-							Node eT = new SENN_ActiveNode(nodeDiam[iteratorD], nodeLength_A[iteratorA], deltaT);
+							Node eT = new SENN_ActiveNode(nodeDiam[iteratorD], nodeLength_A[iteratorA], deltaT, errLog);
 							endNodes[e] = eT;
 						}
 					}
 					iteratorA = iteratorA + incrementorA;
 				}
 				else	{
-					n = new InsulatedNode(nodeDiam[iteratorD], nodeLength_P[iteratorP], deltaT);
+					n = new InsulatedNode(nodeDiam[iteratorD], nodeLength_P[iteratorP], deltaT, errLog);
 					//now implement the endNodes
 					for (int e = 0; e < numEndNodes; e++)	{
 						//find out if it should be a passive or active node
 						if (e%2 == 0)	{	//even number means active node
-							Node eT = new SENN_ActiveNode(nodeDiam[iteratorD], nodeLength_A[iteratorP], deltaT);
+							Node eT = new SENN_ActiveNode(nodeDiam[iteratorD], nodeLength_A[iteratorP], deltaT, errLog);
 							endNodes[e] = eT;
 						}
 						else	{
-							Node eT = new InsulatedNode(nodeDiam[iteratorD], nodeLength_P[iteratorA], deltaT);
+							Node eT = new InsulatedNode(nodeDiam[iteratorD], nodeLength_P[iteratorA], deltaT, errLog);
 							endNodes[e] = eT;
 						}
 					}
@@ -195,12 +195,12 @@ public class SENN_AxonI extends Axon implements GlobalConstants {
 			else	{		//node that is in the middle
 				//find out if it should be a passive or active node
 				if (i%2 == 0)	{	//even number means active node
-					n = new SENN_ActiveNode(nodeDiam[iteratorD], nodeLength_A[iteratorA], deltaT);
+					n = new SENN_ActiveNode(nodeDiam[iteratorD], nodeLength_A[iteratorA], deltaT, errLog);
 					iteratorA = iteratorA + incrementorA;
 				}
 				else	{
 					//main difference with SENN_AxonP
-					n = new InsulatedNode(nodeDiam[iteratorD], nodeLength_P[iteratorP], deltaT);
+					n = new InsulatedNode(nodeDiam[iteratorD], nodeLength_P[iteratorP], deltaT, errLog);
 					iteratorP = iteratorP + incrementorP;
 				}
 				nodes[i] = n;	//add into master list

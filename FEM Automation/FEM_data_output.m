@@ -89,7 +89,9 @@ numAxons = 50;
 % change the fiberGenComsol/strream3Comsol function(s) to keep trying new
 % starting points until I get the desired number of axons (like a Monte
 % Carlo method).
-all_trajs = {traj_vestinlet_pre,traj_post_pre,traj_lat_pre,traj_ant_pre,traj_sacc_pre,traj_utr_pre};
+% all_trajs = {raj_post_pre,traj_lat_pre,traj_ant_pre,traj_sacc_pre,traj_utr_pre,traj_vestinlet_pret};
+all_trajs = {traj_post_pre,traj_lat_pre,traj_ant_pre,traj_sacc_pre,traj_utr_pre};
+numActualAxonsAll = zeros(length(all_trajs),1);
 for i = 1:length(all_trajs)
     toKeep =[];
     for j = 1:size(all_trajs{i},1)
@@ -98,37 +100,43 @@ for i = 1:length(all_trajs)
         end
     end
     all_trajs{i} = all_trajs{i}(toKeep,:);
-    disp([num2str(size(all_trajs{i},1)),' axons succesfully generated in nerve ',num2str(i),'.'])
+    numActualAxonsAll(i) = size(all_trajs{i},1);
+    disp([num2str(numActualAxonsAll(i)),' axons succesfully generated in nerve ',num2str(i),'.'])
 end
-traj_vestinlet = all_trajs{1};
-traj_post = all_trajs{2};
-traj_lat = all_trajs{3};
-traj_ant = all_trajs{4};
-traj_sacc = all_trajs{5};
-traj_utr = all_trajs{6};
 
-save(['trajs_',fileDate],"traj_vestinlet","traj_post","traj_lat","traj_ant","traj_sacc","traj_utr")
+traj_post = all_trajs{1};
+traj_lat = all_trajs{2};
+traj_ant = all_trajs{3};
+traj_sacc = all_trajs{4};
+traj_utr = all_trajs{5};
+% traj_vestinlet = all_trajs{6};
+clear all_trajs
+
+%%
+% save(['trajs_',fileDate],"traj_vestinlet","traj_post","traj_lat","traj_ant","traj_sacc","traj_utr")
+save(['trajs_',fileDate],"traj_post","traj_lat","traj_ant","traj_sacc","traj_utr")
+
 
 %% Testing fiberGenComsol with interpolation to node points
-step_vec_test = [301e-3; 300.5e-3; -1]; % units are mm - [301 um; 300.5 um; -1]
-
-[traj_test2, fiberType2, p0_test2] = fiberGenComsol(flow_vest_fixed,flow_ant_crista,50,step_vec_test);
-
-toKeep = [];
-for j = 1:size(traj_test2,1)
-    if length(traj_test2{j,2}) > 20
-        toKeep = [toKeep, j];
-    end
-end
-traj_test2 = traj_test2(toKeep,:);
-disp([num2str(size(traj_test2,1)),' axons succesfully generated.'])
-plotFlow(flow_vest_fixed, flow_ant_crista,traj_test2(:,3));
-title('Succesful test\_traj2 axons')
+% step_vec_test = [301e-3; 300.5e-3; -1]; % units are mm - [301 um; 300.5 um; -1]
+% 
+% [traj_test2, fiberType2, p0_test2] = fiberGenComsol(flow_vest_fixed,flow_ant_crista,50,step_vec_test);
+% 
+% toKeep = [];
+% for j = 1:size(traj_test2,1)
+%     if length(traj_test2{j,2}) > 20
+%         toKeep = [toKeep, j];
+%     end
+% end
+% traj_test2 = traj_test2(toKeep,:);
+% disp([num2str(size(traj_test2,1)),' axons succesfully generated.'])
+% plotFlow(flow_vest_fixed, flow_ant_crista,traj_test2(:,3));
+% title('Succesful test\_traj2 axons')
 
 %% Extract Ve at node points
-% testing mphinterp alone
-[var1, curr1] = mphinterp(model,{'V2_7','ec.Jx'},'coord', traj_test2{1,3}, 'dataset', dset_ec);
-var1 = var1';
+% % testing mphinterp alone
+% [var1, curr1] = mphinterp(model,{'V2_7','ec.Jx'},'coord', traj_test2{1,3}, 'dataset', dset_ec);
+% var1 = var1';
 
 %% Testing sampleFEM
 current = 200e-6; % 200 uA
@@ -145,14 +153,52 @@ toc
 %% Testing sampleFEM with one variable
 clear solutionBigCell
 tic
-[solutionBigCell] = sampleFEM(model,vTags(1),ecTags,dset_ec,traj_test2,current);
+[solutionBigCell] = sampleFEM(model,vTags,ecTags,dset_ec,traj_test2,current);
 toc
-% normalize by total current delivered
+% make stim anodic and scale by 1/2 to be more similar to Abder's
+% simulations
 for i = 1:length(solutionBigCell)
     for j = 1:size(solutionBigCell{i},1)
-        solutionBigCell{i}{j,3} = -1*solutionBigCell{i}{j,3}/current/2;
+        solutionBigCell{i}{j,3} = -1*solutionBigCell{i}{j,3}/2;
     end
 end
+%% Full FEM sampling along all trajectories
+sol_post = []; sol_lat = []; sol_ant = []; sol_sacc = []; sol_utr = [];
+
+sol_post = sampleFEM(model,vTags,ecTags,dset_ec,traj_post,current);
+sol_lat = sampleFEM(model,vTags,ecTags,dset_ec,traj_lat,current);
+sol_ant = sampleFEM(model,vTags,ecTags,dset_ec,traj_ant,current);
+% sol_sacc = sampleFEM(model,vTags,ecTags,dset_ec,traj_sacc,current);
+% sol_utr = sampleFEM(model,vTags,ecTags,dset_ec,traj_utr,current);
+
+%% Generate Parameter cells for each nerve
+Vthresh = 0.085; % aactivation threshold relative to resting membrane potential, V
+
+param_post = cell(9,1);
+param_post{1} = [numActualAxonsAll(1); 1; numActualAxonsAll(1)]; % [number of axons, first axon, last axon]
+param_post{2} = 1e-7; % timestep, s
+param_post{3} = [2e-6; 1e-6;-1]; % active node (nodes of Ranvier) lengths, m
+param_post{4} = [300e-6; -1]; % passive node (internode) lengths, m
+param_post{5} = ones(numAxons,1)*[1.4e-6, -1]; % fiber diameters at each node, m
+param_post{6} = rand(150,1); % initial state array
+param_post{7} = Vthresh; % activation threshold voltage, V
+param_post{8} = [100; 300]; % limit on fine threshold
+param_post{9} = 0.01; % precision for finding thresholds, i.e. 0.01 = 1%
+
+% This copies the same parameters for all nerves, except it makes sure 
+param_lat = param_post;
+param_lat{1} = [numActualAxonsAll(2); 1; numActualAxonsAll(2)];
+param_lat{6} = rand(150,1);
+param_ant = param_post;
+param_ant{1} = [numActualAxonsAll(3); 1; numActualAxonsAll(3)];
+param_ant{6} = rand(150,1);
+param_sacc = param_post;
+param_sacc{1} = [numActualAxonsAll(4); 1; numActualAxonsAll(4)];
+param_sacc{6} = rand(150,1);
+param_utr = param_post;
+param_utr{1} = [numActualAxonsAll(5); 1; numActualAxonsAll(5)];
+param_utr{6} = rand(150,1);
+
 %% Create parameter cell
 % NOTE: the java Axon models expect everything in meters, not mm so make
 % sure to convert internode distances, diameters, etc...
@@ -173,6 +219,12 @@ parameterTest{9} = 0.01; % precision for finding thresholds, i.e. 0.01 = 1%
 
 %% Save parameter cell, trajectory cell, solution cell, waveform, and total current for simulation...
 save(['testSolution',fileDate],'parameterTest','traj_test2','solutionBigCell','waveForm','current')
+
+
+%% Save parameter cell, solution cells, waveform, and total current for simulation...
+save(['fullSolution',fileDate],'param_post','param_lat','param_ant',...
+    'param_sacc','param_utr','sol_post','sol_lat','sol_ant','sol_sacc',...
+    'sol_utr','waveForm','current')
 
 %% Generate streamlines/axon trajectories straight from stream3Comsol
 % step_test = 0.1;

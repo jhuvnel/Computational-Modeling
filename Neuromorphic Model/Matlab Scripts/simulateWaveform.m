@@ -19,8 +19,8 @@ function y = simulateWaveform(parameter, solutions, waveform, traj, simClass, er
         resultCell{1} = parameter;
         resultCell{2} = traj;
         resultCell{3} = waveform;
-        resultCell{5} = simClass.AP;    %store action potential info
         resultCell{4} = result;
+        resultCell{5} = simClass.AP;    %store action potential info
         disp('Returning full result cell structure.')
     else
         %short result

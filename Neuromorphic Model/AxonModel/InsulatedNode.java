@@ -1,6 +1,8 @@
 import static java.lang.Math.PI;
 import static java.lang.Math.pow;
 
+import java.io.PrintWriter;
+
 /*This class implements a perfectly insulated node, like for situations when
  * you want to model the myelin as a perfect insulator
  * Although this would be simple to implement in Axon, its provided as 
@@ -11,8 +13,9 @@ public class InsulatedNode extends Node implements GlobalConstants {
 	private double Ra_u = 0.7;	//(ohm*m)unit axoplasmic resistivity
 
 	//nothing to do in this constructor yet
-	public InsulatedNode(double diam, double len, double t_increment) {
-		super(diam, len, t_increment);
+	public InsulatedNode(double diam, double len, double t_increment, PrintWriter errorLog) {
+		super(diam, len, t_increment, errorLog);
+		errLog.println("Created new InsulatedNode");
 	}
 
 	public double compute(double Ve, double Ve_L, double Ve_R, double V,

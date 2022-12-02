@@ -6,6 +6,8 @@
 import static java.lang.Math.PI;
 import static java.lang.Math.pow;
 
+import java.io.PrintWriter;
+
  class G_AHPNode_CVStar1483 extends Node {
 
 	private double Cm_u = 0.02;	//(F/m^2)unit area leak membrane capacitance
@@ -29,8 +31,8 @@ import static java.lang.Math.pow;
 	}
 
 
-	public G_AHPNode_CVStar1483(double diam, double len, double t_increment) {
-		super(diam, len, t_increment);
+	public G_AHPNode_CVStar1483(double diam, double len, double t_increment, PrintWriter errorLog) {
+		super(diam, len, t_increment, errorLog);
 		//initialize channels and variables
 		channel_K = new F_PotassiumChannel(diam, len, t_increment);
 		//implement a slightly modified sodium channel to allow for easier AP generation
@@ -38,6 +40,7 @@ import static java.lang.Math.pow;
 		channel_G = new G_AHPChannel_CVStar1483(diam, len, t_increment);
 		Cm = Cm_u*PI*nodeDiameter*nodeLength;		//calc membrane capacitance
 		Gl = Gl_u*PI*nodeDiameter*nodeLength;		//leakage conductance
+		errLog.println(String.format("Created new G_AHPNode_CVStar1483 with Cm = %e Gl = %e", Cm, Gl));
 	}
 
 	public double compute(double Ve, double Ve_L, double Ve_R, double V,
@@ -54,6 +57,7 @@ import static java.lang.Math.pow;
 		double I_ind = Ga_L*(V + Ve - V_L - Ve_L) + Ga_R*(V + Ve - V_R - Ve_R);
 		//now find the voltage derivative
 		double dV = (-1/Cm)*(I_ion + I_leak + I_ind);
+		//errLog.println(String.format("dV = %e, Ve = %e, Ve_L = %e, Ve_R = %e, distL = %e, distR = %e, diamL = %e, diamR = %e",dV,Ve,Ve_L,Ve_R,distL,distR,diamR,diamL));
 		return (V + dV*deltaT);		//Euler's method, deltaT in seconds!
 	}
 

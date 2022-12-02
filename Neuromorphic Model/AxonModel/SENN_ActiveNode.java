@@ -3,6 +3,9 @@
  */
 
 import static java.lang.Math.pow;
+
+import java.io.PrintWriter;
+
 import static java.lang.Math.PI;
 
 public class SENN_ActiveNode extends Node implements GlobalConstants {
@@ -19,13 +22,14 @@ public class SENN_ActiveNode extends Node implements GlobalConstants {
 	private Channel	channel_Na;		//sodium channel
 
 	//units in volts, seconds, meters
-	public SENN_ActiveNode(double diam, double len, double t_increment) {
-		super(diam, len, t_increment);
+	public SENN_ActiveNode(double diam, double len, double t_increment, PrintWriter errorLog) {
+		super(diam, len, t_increment, errorLog);
 		//initialize channels and variables
 		channel_K = new F_PotassiumChannel(diam, len, t_increment);
 		channel_Na = new F_SodiumChannel(diam, len, t_increment);
 		Cm = Cm_u*PI*nodeDiameter*nodeLength;		//calc membrane capacitance
 		Gl = Gl_u*PI*nodeDiameter*nodeLength;		//leakage conductance
+		errLog.println(String.format("Created new SENN_ActiveNode with Cm = %.12f Gl = %.12f", Cm, Gl));
 	}
 
 	//note, currents due to membrane capacitance and leakage are computed here

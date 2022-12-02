@@ -19,8 +19,9 @@ public abstract class Node implements GlobalConstants {
 	
 	//this constructor requires the diameter, length, and inital extracellular voltage
 	//along with the time step of the simulation
-	public Node(double diam, double len, double t_increment){
+	public Node(double diam, double len, double t_increment, PrintWriter errorLog){
 		//initialize variables
+		errLog = errorLog;
 		nodeDiameter = diam;			//in meters
 		nodeLength = len;				//in meters
 		deltaT = t_increment;			//in seconds

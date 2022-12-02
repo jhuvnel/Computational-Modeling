@@ -1,6 +1,8 @@
 import static java.lang.Math.PI;
 import static java.lang.Math.pow;
 
+import java.io.PrintWriter;
+
 /*this class implements a passive node which just has leakage  and a membrane capacitance,
  * exactly the way Darren Whiten did it in his PhD dissertation, if one wants to model the
  * myelin as a perfect conductor then only use SENN_Active with large spacing
@@ -16,10 +18,11 @@ public class SENN_PassiveNode extends Node implements GlobalConstants {
 	public double Gl;			//(1/ohm)total leak conductance
 	private double Vl = Vrest;	//(Volts)leakage voltage
 
-	public SENN_PassiveNode(double diam, double len, double t_increment) {
-		super(diam, len, t_increment);
+	public SENN_PassiveNode(double diam, double len, double t_increment, PrintWriter errorLog) {
+		super(diam, len, t_increment, errorLog);
 		Cm = Cm_u*PI*nodeDiameter*nodeLength;		//calc membrane capacitance
 		Gl = Gl_u*PI*nodeDiameter*nodeLength;		//leakage conductance
+		errLog.println(String.format("Created new SENN_PassiveNode with Cm = %.12f Gl = %.12f", Cm, Gl));
 	}
 
 	//compute the new V, look to Node.java for documentation

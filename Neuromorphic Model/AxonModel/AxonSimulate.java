@@ -27,15 +27,20 @@ public abstract class AxonSimulate implements GlobalConstants, KillJavaEventList
 	public double[] initialCondition;		//holds random numbers [0,1] for indexing into the state array of a given axon
 	
 	public AxonSimulate()	{
-		//create an output window
-		outputWindow = new JavaWindow("AxonSimulate", false);
-		//show information
-		outputWindow.displayProgress = true;
-		outputWindow.memFlag = true;
-		outputWindow.displayText = true;
-		flagError = false;
-		//register with outputWindow
-		outputWindow.addKillJavaEventListener(this);
+		try {
+			//create an output window
+			outputWindow = new JavaWindow("AxonSimulate", false);
+			//show information
+			outputWindow.displayProgress = true;
+			outputWindow.memFlag = true;
+			outputWindow.displayText = true;
+			flagError = false;
+			//register with outputWindow
+			outputWindow.addKillJavaEventListener(this);
+		} catch (Exception e) {
+		} finally {
+		 flagError = false;
+		}
 	}
 	//user interface stuff
 	public void handleKillJavaEvent(KillJavaEvent e)	{
@@ -140,7 +145,6 @@ public abstract class AxonSimulate implements GlobalConstants, KillJavaEventList
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		Date date = new Date();
 		errLog.println(dateFormat.format(date));
-		errLog.write("Write method test");
 		//errLog.println("Error log not yet implemented for method compute of Class AxonSimulate");
 		//simulate each nerve, apply it to the result array, and then clear it from memory
 		for (int i = (startInd-1); i < stopInd; i++)	{
@@ -266,9 +270,9 @@ public abstract class AxonSimulate implements GlobalConstants, KillJavaEventList
 		AP = new int[numAxons][2];		
 		boolean flagFinished;
 		//prepare output window
-		outputWindow.progress = 0;
-		outputWindow.text = "Initializing...";
-		outputWindow.setVisible(true);
+		//outputWindow.progress = 0;
+		//outputWindow.text = "Initializing...";
+		//outputWindow.setVisible(true);
 		//open up the error log
 		PrintWriter errLog = new PrintWriter(new FileOutputStream(fileLog, true));
 		//output current information
@@ -284,9 +288,9 @@ public abstract class AxonSimulate implements GlobalConstants, KillJavaEventList
 			int currentNumIter = 0;				//to prevent iterations beyond maxIter
 			flagFinished = false;
 			//update the output window
-			outputWindow.progress = ((double)(i+1-startInd)/((double)(stopInd-startInd+1)));
-			outputWindow.text = "Number of axons completed: " + (i+1-startInd);
-			outputWindow.forceRepaint();
+			//outputWindow.progress = ((double)(i+1-startInd)/((double)(stopInd-startInd+1)));
+			//outputWindow.text = "Number of axons completed: " + (i+1-startInd);
+			//outputWindow.forceRepaint();
 			while (!flagFinished)	{
 				//take care of user exit
 				if (flagError)	{
@@ -396,7 +400,7 @@ public abstract class AxonSimulate implements GlobalConstants, KillJavaEventList
 		errLog.println("");errLog.println("");
 		errLog.close();
 		//hide the window
-		outputWindow.setVisible(false);
+		//outputWindow.setVisible(false);
 		return result;
 	}
 	
