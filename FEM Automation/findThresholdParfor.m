@@ -28,9 +28,10 @@ load(slnTestFile)
 slnFullFile = 'fullSolution18-Nov-2022.mat';
 load(slnFullFile)
 
-% choose an error file
-errorFileTest = 'C:\Users\Evan\Documents\GitHub\Computational-Modeling\Neuromorphic Model\ErrorFileThresh20221202.txt';
-
+% choose a save location for .mat files and error log
+% saveDir = 'C:\Users\Evan\OneDrive - Johns Hopkins\VNEL1DRV\_Vesper\Modeling Results\Matlab Data'; % Matlab can't access 1Drive I think
+saveDir = 'C:\Users\Evan\Documents\';
+errorFileTest = [sasveDir,'\ErrorFileThresh20221206.txt'];
 
 %% Testing for one FEM solution
 parameterTestThresh = parameterTest;
@@ -157,22 +158,23 @@ parfor i = 1:nSol*nNerve
     resultsThresh_all{i} = findThresholdWaveform(param_all{i},sol_all{i},waveForm,[],simClass_all{i},errorFileTest); 
 end
 %%
-resultsThresh_post = resultsThresh_all(1:6);
-resultsThresh_lat = resultsThresh_all(7:12);
-resultsThresh_ant = resultsThresh_all(13:18);
-% resultsThresh_sacc = 
-% resultsThresh_utr = 
+resultsThresh_post = resultsThresh_all(1:nSol);
+resultsThresh_lat = resultsThresh_all(1+nSol:2*nSol);
+resultsThresh_ant = resultsThresh_all(1+2*nSol:3*nSol);
+% resultsThresh_sacc = resultsThresh_all(1+3*nSol:4*nSol);
+% resultsThresh_utr = resultsThresh_all(1+4*nSol:5*nSol);
 
 toc
+% clear aggregate cells since they are just copies and pretty big
 % clear simClass_all sol_all param_all resultsThresh_all
 delete(poolobj); % shut down parallel pool
 %% Save results
 fileDate = date;
-save(['threshResultsTest_',fileDate],'resultsTestThresh','resultsThresh','parameterTestThresh')
+save([saveDir,'threshResultsTest_',fileDate],'resultsTestThresh','resultsThresh','parameterTestThresh')
 
 %% Save results
 fileDate = date;
-save(['threshResultsFull_',fileDate],'resultsThresh_post','resultsThresh_lat','resultsThresh_ant','resultsThresh_sacc','resultsThresh_utr')
+save([saveDir,'threshResultsFull_',fileDate],'resultsThresh_post','resultsThresh_lat','resultsThresh_ant','resultsThresh_sacc','resultsThresh_utr')
 
 %% For just testing
 

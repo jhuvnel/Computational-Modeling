@@ -29,7 +29,7 @@ public class SENN_ActiveNode extends Node implements GlobalConstants {
 		channel_Na = new F_SodiumChannel(diam, len, t_increment);
 		Cm = Cm_u*PI*nodeDiameter*nodeLength;		//calc membrane capacitance
 		Gl = Gl_u*PI*nodeDiameter*nodeLength;		//leakage conductance
-		errLog.println(String.format("Created new SENN_ActiveNode with Cm = %.12f Gl = %.12f", Cm, Gl));
+		//errLog.println(String.format("Created new SENN_ActiveNode with Cm = %.12f Gl = %.12f", Cm, Gl));
 	}
 
 	//note, currents due to membrane capacitance and leakage are computed here

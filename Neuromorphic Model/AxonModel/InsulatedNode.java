@@ -15,7 +15,7 @@ public class InsulatedNode extends Node implements GlobalConstants {
 	//nothing to do in this constructor yet
 	public InsulatedNode(double diam, double len, double t_increment, PrintWriter errorLog) {
 		super(diam, len, t_increment, errorLog);
-		errLog.println("Created new InsulatedNode");
+		//errLog.println("Created new InsulatedNode");
 	}
 
 	public double compute(double Ve, double Ve_L, double Ve_R, double V,

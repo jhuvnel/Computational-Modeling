@@ -40,7 +40,7 @@ import java.io.PrintWriter;
 		channel_G = new G_AHPChannel_CVStar1483(diam, len, t_increment);
 		Cm = Cm_u*PI*nodeDiameter*nodeLength;		//calc membrane capacitance
 		Gl = Gl_u*PI*nodeDiameter*nodeLength;		//leakage conductance
-		errLog.println(String.format("Created new G_AHPNode_CVStar1483 with Cm = %e Gl = %e", Cm, Gl));
+		//errLog.println(String.format("Created new G_AHPNode_CVStar1483 with Cm = %e Gl = %e", Cm, Gl));
 	}
 
 	public double compute(double Ve, double Ve_L, double Ve_R, double V,

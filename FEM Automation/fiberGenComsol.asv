@@ -30,10 +30,7 @@ nStartBnd = size(V_crista.t,2);
 p0 = zeros(3,numGen); 
 
 %% find centroid of the surface
-v1 = V_crista.p(:,1);
-v2 = V_crista.p(:,2);
-v3 = V_crista.p(:,3);
-areas = abs(cross(v2 - v1, v3 - v1))/2;
+areas = 
 
 
 %%

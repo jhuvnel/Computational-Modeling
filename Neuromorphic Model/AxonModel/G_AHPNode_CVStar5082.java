@@ -40,7 +40,7 @@ class G_AHPNode_CVStar5082 extends Node {
 		channel_G = new G_AHPChannel_CVStar5082(diam, len, t_increment);
 		Cm = Cm_u*PI*nodeDiameter*nodeLength;		//calc membrane capacitance
 		Gl = Gl_u*PI*nodeDiameter*nodeLength;		//leakage conductance
-		errLog.println(String.format("Created new G_AHPNode_CVStar5082 with Cm = %e Gl = %e", Cm, Gl));
+		//errLog.println(String.format("Created new G_AHPNode_CVStar5082 with Cm = %e Gl = %e", Cm, Gl));
 	}
 
 	public double compute(double Ve, double Ve_L, double Ve_R, double V,

@@ -29,6 +29,8 @@ sel_utr_crista_bnd = 'geom1_sel11'; % utricle crista
 % tags for vector field data
 % velTags = {'cc3.vX','cc3.vY','cc3.vY'}; % velocity field, but this doesn't generate proper trajectories
 basisVecTags = {'cc3.e1x','cc3.e1y','cc3.e1z'}; % basis vector 1 (along the axon)
+basisVec2Tags = {'cc3.e2x','cc3.e2y','cc3.e2z'}; % basis vector 2 (orthogonal to other two vectors)
+basisVec3Tags = {'cc3.e3x','cc3.e3y','cc3.e3z'}; % basis vector 3 (orthogonal to other two vectors)
 basisVecTagsFac = {'cc2.e1x','cc2.e1y','cc2.e1z'}; % facial nerve
 basisVecTagsCoch = {'cc.e1x','cc.e1y','cc.e1z'}; % cochlear nerve
 dset_facial = 'dset2';
@@ -66,7 +68,7 @@ flow_vestinlet = mpheval(model,basisVecTags,'dataset',dset_vest,'selection',sel_
 % ec_vest = mpheval(model,ecTags,'dataset',dset_ec,'selection',sel_vest_dom);
 
 % reverese direction of flow since we want it going from crista towards
-% brain
+% brainstem
 flow_vest_fixed = flow_vest;
 flow_vest_fixed.d1 = -1*flow_vest.d1;
 flow_vest_fixed.d2 = -1*flow_vest.d2;
