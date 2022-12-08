@@ -1,3 +1,11 @@
+close all
+
+%% Fiber generation parameters
+numGen = 50;
+% locIndex probably should be a different distribution based on type of
+% fiber. This is just for testing!!!
+locIndex = 10*rand(numGen,1);
+
 %% find centroid of the surface
 
 V_crista = flow_ant_crista;
@@ -27,13 +35,13 @@ surfCentroid = centroids*areas'/sum(areas);
 
 %% Extract x-component of curvilinear coordinates at centroid
 % mpheval(model,basisVecTags,'dataset',dset_vest,'selection',sel_vest_inlet_bnd);
-[n1, n2, n3, e21, e22, e23, e11, e12, e13] = mphinterp(model, [basisVecTags, basisVec2Tags, basisVec3Tags], 'coord', surfCentroid, 'dataset', dset_vest);
+[b11, b12, b13, b21, b22, b23, b31, b22, b33] = mphinterp(model, [basisVecTags, basisVec2Tags, basisVec3Tags], 'coord', surfCentroid, 'dataset', dset_vest);
 % note: it shouldn't really change anything, but I rearranged the basis
 % vectors so that the surface is projected onto x and y (e1 and e2) of new
 % plane, just to look nice. Mathematically it doesn't change anything
-normVec = -1*[n1; n2; n3]; % normal vector to plane (z')
-e1 = [e11; e12; e13]; % basis vector 1 of plane (x')
-e2 = [e21; e22; e23]; % basis vector 2 of plane (y')
+normVec = -1*[b11; b12; b13]; % normal vector to plane (z')
+e1 = [b31; b22; b33]; % basis vector 1 of plane (x')
+e2 = [b21; b22; b23]; % basis vector 2 of plane (y')
 %% Plot 3d crista and centroids
 f1 = plotFlow(flow_vest_fixed, flow_ant_crista, 'p0', centroids, 'plotFlow', false);
 hold on
@@ -59,6 +67,7 @@ t1 = dot(e1*ones(1,nVerts), verts3d - surfCentroid); % coordinate 1 for projecte
 t2 = dot(e2*ones(1,nVerts), verts3d - surfCentroid); % coordinate 2 for projected points
 verts2d = [t1; t2];
 
+
 %% Plot flattened crista surface
 f2 = figure;
 
@@ -77,9 +86,123 @@ axis equal
 title('Flattened Crista Mesh')
 %% Find the outer edge of the flattened surface
 
-for i = 1:nVerts
+indSimplexOuterEdge = []; % refers to indeces of the original/2d verts for each edge
+
+for i = 1:nTri
     
+    vertA = indv(1,i);
+    vertB = indv(2,i);
+    vertC = indv(3,i);
+
+    adjacent = edgeNeighbors(vertA,vertB,indv);
+    if (adjacent(1) == -1 || adjacent(2) == -1)
+        indSimplexOuterEdge  = [indSimplexOuterEdge, [vertA; vertB]];
+    end
+    adjacent = edgeNeighbors(vertA,vertC,indv);
+    if (adjacent(1) == -1 || adjacent(2) == -1)
+        indSimplexOuterEdge  = [indSimplexOuterEdge, [vertA; vertC]];
+    end
+    adjacent = edgeNeighbors(vertB,vertC,indv);
+    if (adjacent(1) == -1 || adjacent(2) == -1)
+        indSimplexOuterEdge  = [indSimplexOuterEdge, [vertB; vertC]];
+    end
 end
+
+%% Extract and sort vertices along perimeter of flattened crista
+% convert from "simplex" indeces for each edge to just the indeces of all the outer edge verts
+[indEdgeVerts, ia, ic] = unique(indSimplexOuterEdge(:)); 
+edgeVerts2d = verts2d(:,indEdgeVerts);
+
+% put outer edge vertices into clockwise order
+theta = atan2(edgeVerts2d(2,:), edgeVerts2d(1,:));
+[theta, sortedInds] = sort(theta);
+edgeVerts2d = edgeVerts2d(:,sortedInds);
+
+%% Plot outer edge
+
+% using the "simplex" mapping
+% f3 = figure;
+% for i = 1:size(indSimplexOuterEdge,2)
+%     plot([t1(indSimplexOuterEdge(1,i)), t1(indSimplexOuterEdge(2,i))], [t2(indSimplexOuterEdge(1,i)), t2(indSimplexOuterEdge(2,i))],'.-b');
+%     if i == 1
+%         hold on
+%     end
+% end
+% title('Outer edge (flattened)')
+
+% using sorted edge vertices
+% f3 = figure;
+% plot(edgeVerts2d(1,[1:end,1]),edgeVerts2d(2,[1:end,1]),'.-b')
+
+
+%% Choose outer edge segment to place seed on
+% calculate cumulative sum of the length of each edge segment for weighting
+
+% simplex mapping
+% edgeLengths = cumsum( sqrt( (verts2d(1,indSimplexOuterEdge(1,:))-verts2d(1,indSimplexOuterEdge(2,:))).^2 + (verts2d(2,indSimplexOuterEdge(1,:))-verts2d(2,indSimplexOuterEdge(2,:))).^2 ));
+
+% sorted mapping
+% since we know this shape is a closed loop, just match last vert to first
+% vert to close the shape
+edgeLengths = cumsum( sqrt( (edgeVerts2d(1,:)-edgeVerts2d(1,[2:end, 1])).^2 + (edgeVerts2d(2,:)-edgeVerts2d(2,[2:end, 1])).^2 ) );
+perimeter = edgeLengths(end);
+
+% randomly generate position along perimeter
+edgeArcLen = perimeter*rand(numGen,1); % random length along perimeter
+edgeLogic = cumsum(edgeLengths >= edgeArcLen,2) == 1; % determine which edge segment each length is on
+[edgeSeedInd, ~] = find(edgeLogic');
+% edgeSeedInd = edgeSeedInd - 1; % shift indeces back 1 so that 
+edgeSeedPos = edgeLengths(edgeSeedInd)' - edgeArcLen; % length along each edge segment to place the seed vertice
+
+% simplex mapping
+% edgeVectors =  verts2d(:,indSimplexOuterEdge(1,edgeSeedInd)) - verts2d(:,indSimplexOuterEdge(2,edgeSeedInd)); 
+% edgeVectors = edgeVectors./([1;1] * (sqrt((edgeVectors(1,:).^2 + edgeVectors(2,:).^2)))); % normalize into unit vectors
+% edgeSeedVerts = verts2d(:,indSimplexOuterEdge(1,edgeSeedInd)) + edgeVectors.*([1;1]*edgeSeedPos');
+
+% sorted mapping
+edgeVectors =  edgeVerts2d(:,:)-edgeVerts2d(:,[2:end, 1]); 
+edgeVectors = edgeVectors./([1;1] * (sqrt((edgeVectors(1,:).^2 + edgeVectors(2,:).^2)))); % normalize into unit vectors
+edgeSeedVerts = edgeVerts2d(:,edgeSeedInd) - edgeVectors(:,edgeSeedInd).*([1;1]*edgeSeedPos'); % reverse from the clockwise-most point on the edge
+
+
+
+%% Generate final seed point on flattened crista
+% the centroid is already the origin of the coordinate system, so
+% edgeSeedVerts is already a ray from the centroid to the outer edge
+
+seedNodes2d = edgeSeedVerts.*([1;1]*locIndex')/10;
+
+%% Plot outer edge of the crista and generated seed nodes
+f4 = figure;
+tempEdgeVerts2d = edgeVerts2d(:,[1:end,1]);
+for i = 1:size(edgeVerts2d,2)
+    if i == 1
+        plot(tempEdgeVerts2d(1,i),tempEdgeVerts2d(2,i),'*k')
+        hold on
+        plot(tempEdgeVerts2d(1,i:i+1),tempEdgeVerts2d(2,i:i+1),'-k')
+        title('Crista and seeds (flattened)')
+    else
+        plot(tempEdgeVerts2d(1,i:i+1),tempEdgeVerts2d(2,i:i+1),'.-b')
+    end
+    pause(0.1)
+    thisEdgeSeeds = find(edgeSeedInd==i);
+    plot(edgeSeedVerts(1,thisEdgeSeeds),edgeSeedVerts(2,thisEdgeSeeds),'.m')
+    pause(0.1)
+end
+axis equal
+
+% to just plot all the edgeSeedVerts at once
+% plot(edgeSeedVerts(1,:),edgeSeedVerts(2,:),'.r')
+
+for i = 1:size(edgeVerts2d,2)
+    thisEdgeSeeds = find(edgeSeedInd==i);
+    for j = 1:length(thisEdgeSeeds)
+        plot([edgeSeedVerts(1,thisEdgeSeeds(j)), 0], [edgeSeedVerts(2,thisEdgeSeeds(j)), 0],'--m')
+        plot(seedNodes2d(1,thisEdgeSeeds(j)),seedNodes2d(2,thisEdgeSeeds(j)),'*r');
+        pause(0.1)
+    end
+end
+
 
 
 %% Function definitions
@@ -87,14 +210,18 @@ end
 % double check if this works as intended. Should it be comparing every
 % edge, or should it stick with comparing vertices?
 function result = edgeNeighbors(v1Ind, v2Ind, indv)
+    % This function returns the indices of the triangles bordering an edge
+    % defined by two inputted vertices. The inputted vertices should
+    % actually be connected on an edge. Returns result = [-1; x] if it is
+    % on the edge of a surface/
     result = [-1; -1]; % if this edge is on the outside of the surface, then one of these will stay -1
 	% cycle through all of the triangles
 	for i = 1:size(indv,2)
 		if any(indv(:,i) == v1Ind)
 			if any(indv(:,i) == v2Ind)
 				% found one, add it to the list
-				result(1) = result(0);
-				result(0) = i;
+				result(2) = result(1);
+				result(1) = i;
             end
         end
     end
