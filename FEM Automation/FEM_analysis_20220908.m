@@ -5,9 +5,17 @@
 import com.comsol.model.*
 import com.comsol.model.util.*
 
+% model_path = 'R:\Morris, Brian\Computational Modeling\FEM Models\Model as of 20220908'; % original model
+geom_file = 'R:\Computational Modeling\Monkey Geometry as of 20230104\Full Geometry - Split Nerves - Otolith Edit V2.SLDASM'; % model with updated otolith nerves
+model_path = 'R:\Computational Modeling\Model as of 20230104';
 
 
-[model, model_path] = FEM_create_20220908;
+ModelUtil.showProgress(true); %activates progress bar
+model = ModelUtil.create('NewModel');
+% model_path = 'R:\Morris, Brian\Computational Modeling\FEM Models\Model as of 20220908';
+model.modelPath(model_path);
+
+[model] = FEM_create_20220908(model, geom_file);
 
 %% Electric Currents Physics
 

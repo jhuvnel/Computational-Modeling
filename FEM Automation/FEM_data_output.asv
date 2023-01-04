@@ -87,21 +87,13 @@ flow_vestinlet = mpheval(model,basisVecTagsVest,'dataset',dset_vest,'selection',
 %%
 % reverese direction of flow since we want it going from crista towards
 % brainstem - double check how you defined it in Comsol first!!!
-flow_fac_fixed = flow_fac;
-flow_fac_fixed.d1 = -1*flow_fac.d1;
-flow_fac_fixed.d2 = -1*flow_fac.d2;
-flow_fac_fixed.d3 = -1*flow_fac.d3;
-
-flow_coch_fixed = flow_coch;
-flow_coch_fixed.d1 = -1*flow_coch.d1;
-flow_coch_fixed.d2 = -1*flow_coch.d2;
-flow_coch_fixed.d3 = -1*flow_coch.d3;
-
 flow_vest_fixed = flow_vest;
 flow_vest_fixed.d1 = -1*flow_vest.d1;
 flow_vest_fixed.d2 = -1*flow_vest.d2;
 flow_vest_fixed.d3 = -1*flow_vest.d3;
 
+flow_coch_fixed = flow_coch;
+flow_coch_fixed.d1 = -1*flow_coch.d1;
 % %%
 % flow_vest_tocrista = flow_vest;
 % %%
@@ -110,9 +102,9 @@ flow_vest_fixed.d3 = -1*flow_vest.d3;
 step = [301e-3; 300.5e-3; -1];
 % step = [.0001; -1];
 numAxons = 50;
-[traj_fac_pre, fiberType1, p0_fac] = fiberGenComsol(flow_fac,flow_facial_inlet,numAxons*10,step); % facial nerve fibers generate better when originating axially
-[traj_coch_pre, fiberType1, p0_coch] = fiberGenComsol(flow_coch_fixed,flow_coch_outlet,numAxons*10,step); % unclear whether axial or distal origin is better
-[traj_vestinlet_pre, fiberType1, p0_inlet] = fiberGenComsol(flow_vest,flow_vestinlet,numAxons*5,step); % axial vestibular origin
+[traj_fac_pre, fiberType1, p0_fac] = fiberGenComsol(flow_fac,flow_facial_inlet,numAxons,step);
+[traj_coch_pre, fiberType1, p0_coch] = fiberGenComsol(flow_coch,flow_coch_inlet,numAxons,step);
+[traj_vestinlet_pre, fiberType1, p0_test_inlet] = fiberGenComsol(flow_vest,flow_vestinlet,numAxons*5,step);
 
 [traj_post_pre, fiberType1, p0_post_crista] = fiberGenComsol(flow_vest_fixed,flow_post_crista,numAxons,step);
 [traj_lat_pre, fiberType1, p0_lat_crista] = fiberGenComsol(flow_vest_fixed,flow_lat_crista,numAxons,step);
@@ -122,14 +114,13 @@ numAxons = 50;
 
 % remove all the trajectories that aren't long enough (hit the wall of the
 % nerve). In the future I need to fix the flow to avoid this happening, or
-% change the fiberGenComsol/stream3Comsol function(s) to keep trying new
+% change the fiberGenComsol/strream3Comsol function(s) to keep trying new
 % starting points until I get the desired number of axons (like a Monte
 % Carlo method).
 % all_trajs = {raj_post_pre,traj_lat_pre,traj_ant_pre,traj_sacc_pre,traj_utr_pre,traj_vestinlet_pret};
 all_trajs = {traj_post_pre,traj_lat_pre,traj_ant_pre,traj_sacc_pre,traj_utr_pre, traj_fac_pre, traj_coch_pre, traj_vestinlet_pre};
 numActualAxonsAll = zeros(length(all_trajs),1);
 toKeep = cell(length(all_trajs),1);
-all_trajs_out = toKeep;
 for i = 1:length(all_trajs)
     toKeep{i} = false(numAxons,1);
     for j = 1:size(all_trajs{i},1)
@@ -139,21 +130,20 @@ for i = 1:length(all_trajs)
             toKeep{i}(j) = true;
         end
     end
-    all_trajs_out{i} = all_trajs{i}(toKeep{i},:);
-    numActualAxonsAll(i) = size(all_trajs_out{i},1);
-    disp([num2str(numActualAxonsAll(i)),'/',num2str(size(all_trajs{i},1)),' axons succesfully generated in nerve ',num2str(i),'.'])
+    all_trajs{i} = all_trajs{i}(toKeep{i},:);
+    numActualAxonsAll(i) = size(all_trajs{i},1);
+    disp([num2str(numActualAxonsAll(i)),' axons succesfully generated in nerve ',num2str(i),'.'])
 end
-disp('----------------------------------------------')
 
-traj_post = all_trajs_out{1};
-traj_lat = all_trajs_out{2};
-traj_ant = all_trajs_out{3};
-traj_sacc = all_trajs_out{4};
-traj_utr = all_trajs_out{5};
-traj_fac = all_trajs_out{6};
-traj_coch = all_trajs_out{7};
-traj_vestinlet = all_trajs_out{8};
-clear all_trajs all_trajs_out
+traj_post = all_trajs{1};
+traj_lat = all_trajs{2};
+traj_ant = all_trajs{3};
+traj_sacc = all_trajs{4};
+traj_utr = all_trajs{5};
+traj_fac = all_trajs{6};
+traj_coch = all_trajs{7};
+traj_vestinlet = all_trajs{8};
+clear all_trajs
 beep
 
 %%
@@ -272,7 +262,7 @@ save(['fullSolution',fileDate],'param_post','param_lat','param_ant',...
 
 %% Generate streamlines/axon trajectories straight from stream3Comsol
 % step_test = 0.1;
-% traj_vestinlet = stream3Comsol(flow_vest.p,flow_vest.t,flow_vest.d1,flow_vest.d2,flow_vest.d3,p0_inlet,step_test); % with lowercase basis vector
+% traj_vestinlet = stream3Comsol(flow_vest.p,flow_vest.t,flow_vest.d1,flow_vest.d2,flow_vest.d3,p0_test_inlet,step_test); % with lowercase basis vector
 % % traj2 = stream3Comsol(flow_vest2.p,flow_vest2.t,flow_vest2.d1,flow_vest2.d2,flow_vest2.d3,p0_test,step_test); % with uppercase basis vector
 % d1fixed = -1*flow_vest.d1;
 % d2fixed = -1*flow_vest.d2;
@@ -337,13 +327,13 @@ for i = 1:sum(~toKeep{6})
     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
 end
 title(gca,'Facial Nerve')
-f72 = plotFlow(flow_coch_fixed,flow_coch_outlet,traj_coch_pre(toKeep{7},3));
+f72 = plotFlow(flow_coch,flow_coch_inlet,traj_coch_pre(toKeep{7},3));
 badTraj = traj_coch_pre(~toKeep{7},3);
 for i = 1:sum(~toKeep{7})
     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
 end
 title(gca,'Cochlear Nerve')
-f82 = plotFlow(flow_vest,flow_vestinlet,traj_vestinlet_pre(toKeep{8},3));
+f82 = plotFlow(flow_vest_fixed,flow_vestinlet,traj_vestinlet_pre(toKeep{8},3));
 badTraj = traj_vestinlet_pre(~toKeep{8},3);
 for i = 1:sum(~toKeep{8})
     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')

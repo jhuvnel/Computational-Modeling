@@ -30,7 +30,7 @@ if step(end) == -1
     stepFillFlag = 1;
 end
 
-maxIter = 1000; % max number of steps per fiber
+maxIter = 1000000; % max number of steps per fiber
 verts = cell(np0,1);
 step_out = verts;
 insideTet = verts;

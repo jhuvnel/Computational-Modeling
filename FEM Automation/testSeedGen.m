@@ -7,9 +7,7 @@ numGen = 50;
 locIndex = 10*rand(numGen,1);
 
 %% find centroid of the surface
-
 V_crista = flow_ant_crista;
-
 
 % get vertices of starting triangle
 
@@ -38,7 +36,7 @@ surfCentroid = centroids*areas'/sum(areas);
 [b11, b12, b13, b21, b22, b23, b31, b32, b33] = mphinterp(model, [basisVecTags, basisVec2Tags, basisVec3Tags], 'coord', surfCentroid, 'dataset', dset_vest);
 % note: it shouldn't really change anything, but I rearranged the basis
 % vectors so that the surface is projected onto x and y (e1 and e2) of new
-% plane, just to look nice. Mathematically it doesn't change anything
+% plane, just to look nice
 normVec = -1*[b11; b12; b13]; % normal vector to plane (z')
 e1 = [b31; b32; b33]; % basis vector 1 of plane (x')
 e2 = [b21; b22; b23]; % basis vector 2 of plane (y')
@@ -165,7 +163,6 @@ edgeVectors = edgeVectors./([1;1] * (sqrt((edgeVectors(1,:).^2 + edgeVectors(2,:
 edgeSeedVerts = edgeVerts2d(:,edgeSeedInd) - edgeVectors(:,edgeSeedInd).*([1;1]*edgeSeedPos'); % reverse from the clockwise-most point on the edge
 
 
-
 %% Generate final seed point on flattened crista
 % the centroid is already the origin of the coordinate system, so
 % edgeSeedVerts is already a ray from the centroid to the outer edge
@@ -203,12 +200,93 @@ for i = 1:size(edgeVerts2d,2)
     end
 end
 
+%% Map to 3D
+% create triangulation objects to use Matlab's built-in functions
+TR3d = triangulation(double(indv)',verts3d');
+TR2d = triangulation(double(indv)',verts2d');
+% Find which triangle each point is in. The triangles have the same IDs in
+% 2d and 3d
+seedTris = pointLocation(TR2d,seedNodes2d'); % indeces of the triangles that seed points are on
+seedTriNormals = faceNormal(TR3d, seedTris); % normal vectors to the face of the seed triangles
 
+triVertInds = indv(:,seedTris);
+
+vec1P2d = zeros(2,numGen);
+seedNodes3d = zeros(3,numGen);
+
+for i = 1:numGen
+    % find seed point coordinates in 2d
+    % find vertices of triangle that seed point is on
+    triVert1 = verts2d(:, triVertInds(1,i));
+    triVert2 = verts2d(:, triVertInds(2,i));
+    triVert3 = verts2d(:, triVertInds(3,i));
+    
+    % find coordinate axes (2 sides of triangle)
+    vec12 = triVert2 - triVert1;
+    vec13 = triVert3 - triVert1;
+
+    dist12 = norm(vec12);
+    dist13 = norm(vec13);
+    
+    % normalize vectors
+    vec12 = vec12/dist12;
+    vec13 = vec13/dist13;
+
+    % make the vectors orthonormal
+    vec13 = vec13 - vec12*(dot(vec13,vec12));
+    vec13 = vec13/norm(vec13);
+
+    dist13 = dot(vec13, triVert3 - triVert1); % redo max distance in orthogonal coordinate system
+    
+    % find coordinates of seed point
+    vec1P2d(:,i) = seedNodes2d(:,i) - triVert1;
+    coord1 = dot(vec1P2d(:,i), vec12)/dist12;
+    coord2 = dot(vec1P2d(:,i), vec13)/dist13;
+
+    % find seed point coordinates in 3d
+    % get triangle vertices in 3d
+    triVert1 = verts3d(:, triVertInds(1,i));
+    triVert2 = verts3d(:, triVertInds(2,i));
+    triVert3 = verts3d(:, triVertInds(3,i));
+
+    % find coordinate axes (2 sides of triangle)
+    vec12 = triVert2 - triVert1;
+    vec13 = triVert3 - triVert1;
+
+    dist12 = norm(vec12);
+    dist13 = norm(vec13);
+    
+    % normalize vectors
+    vec12 = vec12/dist12;
+    vec13 = vec13/dist13;
+
+    % make the vectors orthonormal
+    vec13 = vec13 - vec12*(dot(vec13,vec12));
+    vec13 = vec13/norm(vec13);
+
+    dist13 = dot(vec13, triVert3 - triVert1); % redo max distance in orthogonal coordinate system
+    
+    seedNodes3d(:,i) = triVert1 + vec12*(coord1*dist12) + vec13*(coord2*dist13);
+end
+%%
+% figure
+% plot([triVert1(1) triVert2(1) triVert3(1) triVert1(1)], [triVert1(2) triVert2(2) triVert3(2) triVert1(2)])
+% hold on
+% plot(seedNodes2d(1,1),seedNodes2d(2,1),'*k')
+
+%% Plot 3d points
+% plot3d(f1.CurrentAxes, seedNodes3d(1,:), seedNodes3d(2,:), seedNodes3d(3,:), '*')
+
+f5 = plotFlow(flow_vest_fixed, flow_ant_crista, 'p0', seedNodes3d, 'plotFlow', false);
+title('3D Crista with Seed Nodes')
+
+%% Generate streamlines
+
+[axonVerts, step_out] = stream3Comsol(V_nerve.p,V_nerve.t,V_nerve.d1,V_nerve.d2,...
+    V_nerve.d3,p0,step);
 
 %% Function definitions
 
-% double check if this works as intended. Should it be comparing every
-% edge, or should it stick with comparing vertices?
 function result = edgeNeighbors(v1Ind, v2Ind, indv)
     % This function returns the indices of the triangles bordering an edge
     % defined by two inputted vertices. The inputted vertices should
@@ -226,4 +304,3 @@ function result = edgeNeighbors(v1Ind, v2Ind, indv)
         end
     end
 end
-

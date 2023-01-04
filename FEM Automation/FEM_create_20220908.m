@@ -1,4 +1,4 @@
-function [model_out, model_path] = FEM_create_20220908
+function [model_out] = FEM_create_20220908(model, geom_file)
 %FEM_CREATE_20220908 Creates a new mph file from the predefined vestibular
 %labyrinth parts from Solidworks. Creates geometry, materials, mesh, and CC
 %physics but no electric current physics or studies.
@@ -7,10 +7,10 @@ function [model_out, model_path] = FEM_create_20220908
 import com.comsol.model.*
 import com.comsol.model.util.*
 
-ModelUtil.showProgress(true); %activates progress bar
-model = ModelUtil.create('Model');
-model_path = 'R:\Morris, Brian\Computational Modeling\FEM Models\Model as of 20220908';
-model.modelPath(model_path);
+% ModelUtil.showProgress(true); %activates progress bar
+% model = ModelUtil.create('Model');
+% % model_path = 'R:\Morris, Brian\Computational Modeling\FEM Models\Model as of 20220908';
+% model.modelPath(model_path);
 
 %Create Model Component
 model.component.create('comp1', true);
@@ -18,6 +18,8 @@ model.component.create('comp1', true);
 model.component('comp1').geom.create('geom1', 3);
 %Create Model Mesh
 model.component('comp1').mesh.create('mesh1');
+
+fprintf('Created blank model.\n')
 
 %Add Model physics (CurvilinearCoordinates for Facial, cochlear, and
 %Vestibular Nerves)
@@ -35,9 +37,11 @@ model.component('comp1').geom('geom1').feature('imp1').set('selresult', true); %
 model.component('comp1').geom('geom1').feature('imp1').set('selresultshow', 'all'); %Selection Results Settings
 model.component('comp1').geom('geom1').feature('imp1').set('selindividual', true); %Selection Results options
 model.component('comp1').geom('geom1').feature('imp1').set('selindividualshow', 'all'); %Selection Results Settings
-model.component('comp1').geom('geom1').feature('imp1').set('filename', 'R:\Computational Modeling\Monkey Geometry as of 20220628\Full Geometry - Split Nerves.SLDASM');
+% model.component('comp1').geom('geom1').feature('imp1').set('filename', 'R:\Computational Modeling\Monkey Geometry as of 20220628\Full Geometry - Split Nerves.SLDASM');
+model.component('comp1').geom('geom1').feature('imp1').set('filename', geom_file);
 model.component('comp1').geom('geom1').feature('imp1').importData;
 model.component('comp1').geom('geom1').run('fin');
+fprintf('Geometry successfully imported.\n')
 
 %Create Facial Inlet Explicit Selection
 model.component('comp1').geom('geom1').create('sel1', 'ExplicitSelection');
@@ -122,6 +126,8 @@ model.component('comp1').geom('geom1').feature('sel11').selection('selection').s
 model.component('comp1').geom('geom1').run('sel11');
 
 model.component('comp1').geom('geom1').run; % run geometry
+
+fprintf('Selections specified.\n')
 %% Materials
 %Define Material 1 as Nerve
 model.component('comp1').material.create('mat1', 'Common');
@@ -160,6 +166,7 @@ model.component('comp1').material('mat6').selection.set([4 8]);
 model.component('comp1').material('mat6').propertyGroup('def').set('electricconductivity', {'.3333'});
 model.component('comp1').material('mat6').propertyGroup('def').set('relpermittivity', {'22500'});
 
+fprintf('Materials defined.\n')
 %% Physics Set up - Electric Currents and Curvilinear Coordinates x 3
 model.component('comp1').physics('cc').prop('Settings').set('CreateBasis', true);
 model.component('comp1').physics('cc').create('flow1', 'FlowMethod', 3);
@@ -180,7 +187,8 @@ model.component('comp1').physics('cc2').feature('flow1').create('out1', 'Outlet'
 model.component('comp1').physics('cc2').feature('flow1').feature('out1').selection.named('geom1_sel4');
 
 model.component('comp1').physics('cc3').label('Curvilinear Coordinates - Vestibular');
-model.component('comp1').physics('cc3').selection.named('geom1_imp1_Vestibular_Nerve1_dom');
+% model.component('comp1').physics('cc3').selection.named('geom1_imp1_Vestibular_Nerve1_dom');
+model.component('comp1').physics('cc3').selection.named('geom1_imp1_Vestibular_Nerve__otolith_edit_v21_dom');
 model.component('comp1').physics('cc3').prop('Settings').set('CreateBasis', true);
 model.component('comp1').physics('cc3').create('flow1', 'FlowMethod', 3);
 model.component('comp1').physics('cc3').feature('flow1').create('inl1', 'Inlet', 2);
@@ -188,10 +196,13 @@ model.component('comp1').physics('cc3').feature('flow1').feature('inl1').selecti
 model.component('comp1').physics('cc3').feature('flow1').create('out1', 'Outlet', 2);
 model.component('comp1').physics('cc3').feature('flow1').feature('out1').selection.named('geom1_sel6');
 
+fprintf('Physics nodes defined.\n')
 %% Mesh
 model.component('comp1').mesh('mesh1').automatic(false);
 model.component('comp1').mesh('mesh1').feature('ftet1').selection.remaining;
 
 model_out = model;
+
+fprintf('Mesh done.\n')
 end
 

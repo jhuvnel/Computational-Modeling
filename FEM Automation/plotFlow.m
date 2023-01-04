@@ -95,13 +95,13 @@ if p.Results.plotCrista
 end
 % Plot starting points
 if ~sum(strcmp(p.UsingDefaults{1},'p0'))
-    plot3(p.Results.p0(1,:),p.Results.p0(2,:),p.Results.p0(3,:),'r.');
+    plot3(p.Results.p0(1,:),p.Results.p0(2,:),p.Results.p0(3,:),'g.');
     hold on
 end
 % Plot trajectories
 if ~sum(strcmp(p.UsingDefaults{1},'traj'))
     for i = 1:size(p.Results.traj,1)
-        plot3(gca,p.Results.traj{i}(1,:),p.Results.traj{i}(2,:),p.Results.traj{i}(3,:),'-r.')
+        plot3(gca,p.Results.traj{i}(1,:),p.Results.traj{i}(2,:),p.Results.traj{i}(3,:),'-g.')
         if i == 1
             hold on
         end
