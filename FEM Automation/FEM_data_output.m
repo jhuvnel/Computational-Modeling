@@ -18,7 +18,9 @@ sel_fac_dom = 'geom1_imp1_Facial_Nerve1_dom'; % selection for facial nerve domai
 dset_coch = 'dset2';
 sel_coch_dom = 'geom1_imp1_Cochlear_Nerve1_dom'; % selection for cochlear nerve domain
 dset_vest = 'dset3'; % tag for the dataset containing vestibular nerve flow vector field
-sel_vest_dom = 'geom1_imp1_Vestibular_Nerve1_dom'; % selection for vestibular nerve domain
+
+% sel_vest_dom = 'geom1_imp1_Vestibular_Nerve1_dom'; % selection for vestibular nerve domain
+sel_vest_dom = 'geom1_sel12'; % vestibular nerve domain selection for 20230104_otolith_edit model 
 
 sel_facial_inlet = 'geom1_sel1';
 sel_facial_outlet = 'geom1_sel2';
@@ -36,11 +38,20 @@ sel_utr_crista_bnd = 'geom1_sel11'; % utricle crista
 
 % tags for vector field data
 % velTags = {'cc3.vX','cc3.vY','cc3.vY'}; % velocity field, but this doesn't generate proper trajectories
-basisVecTagsFac = {'cc.e1x','cc.e1y','cc.e1z'}; % facial nerve
-basisVecTagsCoch = {'cc2.e1x','cc2.e1y','cc2.e1z'}; % cochlear nerve
-basisVecTagsVest = {'cc3.e1x','cc3.e1y','cc3.e1z'}; % basis vector 1 (along the axon)
+basisVec1TagsFac = {'cc.e1x','cc.e1y','cc.e1z'}; % facial nerve
+basisVec2TagsFac = {'cc.e2x','cc.e2y','cc.e2z'}; % facial nerve
+basisVec3TagsFac = {'cc.e3x','cc.e3y','cc.e3z'}; % facial nerve
+basisVecTagsFac = [basisVec1TagsFac, basisVec2TagsFac, basisVec3TagsFac];
+
+basisVec1TagsCoch = {'cc2.e1x','cc2.e1y','cc2.e1z'}; % cochlear nerve
+basisVec2TagsCoch = {'cc2.e2x','cc2.e2y','cc2.e2z'}; % cochlear nerve
+basisVec3TagsCoch = {'cc2.e3x','cc2.e3y','cc2.e3z'}; % cochlear nerve
+basisVecTagsCoch = [basisVec1TagsCoch, basisVec2TagsCoch, basisVec3TagsCoch];
+
+basisVec1TagsVest = {'cc3.e1x','cc3.e1y','cc3.e1z'}; % basis vector 1 (along the axon)
 basisVec2TagsVest = {'cc3.e2x','cc3.e2y','cc3.e2z'}; % basis vector 2 (orthogonal to other two vectors)
 basisVec3TagsVest = {'cc3.e3x','cc3.e3y','cc3.e3z'}; % basis vector 3 (orthogonal to other two vectors)
+basisVecTagsVest = [basisVec1TagsVest, basisVec2TagsVest, basisVec3TagsVest];
 
 % tags for electric potential and currents
 vTags = {'V2_1','V2_3','V2_4','V2_5','V2_6','V2_7'};
@@ -62,23 +73,23 @@ fileDate = date;
 % get flow vector field values for vestibular nerve
 % selection argument pair means fxn will only return vector field data 
 % within the selection specified (also the only volume it was actually calculated for)
-flow_fac = mpheval(model,basisVecTagsFac,'dataset',dset_fac,'selection',sel_fac_dom);
-flow_coch = mpheval(model,basisVecTagsCoch,'dataset',dset_coch,'selection',sel_coch_dom);
-flow_vest = mpheval(model,basisVecTagsVest,'dataset',dset_vest,'selection',sel_vest_dom);
+flow_fac = mpheval(model,basisVec1TagsFac,'dataset',dset_fac,'selection',sel_fac_dom);
+flow_coch = mpheval(model,basisVec1TagsCoch,'dataset',dset_coch,'selection',sel_coch_dom);
+flow_vest = mpheval(model,basisVec1TagsVest,'dataset',dset_vest,'selection',sel_vest_dom);
 
 % get the mesh data for the facial and cochlear ends
-flow_facial_inlet = mpheval(model,basisVecTagsFac,'dataset',dset_fac,'selection',sel_facial_inlet);
-flow_facial_outlet = mpheval(model,basisVecTagsFac,'dataset',dset_fac,'selection',sel_facial_outlet);
-flow_coch_inlet = mpheval(model,basisVecTagsCoch,'dataset',dset_coch,'selection',sel_coch_inlet);
-flow_coch_outlet = mpheval(model,basisVecTagsCoch,'dataset',dset_coch,'selection',sel_coch_outlet);
+flow_facial_inlet = mpheval(model,basisVec1TagsFac,'dataset',dset_fac,'selection',sel_facial_inlet);
+flow_facial_outlet = mpheval(model,basisVec1TagsFac,'dataset',dset_fac,'selection',sel_facial_outlet);
+flow_coch_inlet = mpheval(model,basisVec1TagsCoch,'dataset',dset_coch,'selection',sel_coch_inlet);
+flow_coch_outlet = mpheval(model,basisVec1TagsCoch,'dataset',dset_coch,'selection',sel_coch_outlet);
 
 % get the mesh data for the crista
-flow_post_crista = mpheval(model,basisVecTagsVest,'dataset',dset_vest,'selection',sel_post_crista_bnd);
-flow_lat_crista = mpheval(model,basisVecTagsVest,'dataset',dset_vest,'selection',sel_lat_crista_bnd);
-flow_ant_crista = mpheval(model,basisVecTagsVest,'dataset',dset_vest,'selection',sel_ant_crista_bnd);
-flow_sacc_crista = mpheval(model,basisVecTagsVest,'dataset',dset_vest,'selection',sel_sacc_crista_bnd);
-flow_utr_crista = mpheval(model,basisVecTagsVest,'dataset',dset_vest,'selection',sel_utr_crista_bnd);
-flow_vestinlet = mpheval(model,basisVecTagsVest,'dataset',dset_vest,'selection',sel_vest_inlet_bnd);
+flow_post_crista = mpheval(model,basisVec1TagsVest,'dataset',dset_vest,'selection',sel_post_crista_bnd);
+flow_lat_crista = mpheval(model,basisVec1TagsVest,'dataset',dset_vest,'selection',sel_lat_crista_bnd);
+flow_ant_crista = mpheval(model,basisVec1TagsVest,'dataset',dset_vest,'selection',sel_ant_crista_bnd);
+flow_sacc_crista = mpheval(model,basisVec1TagsVest,'dataset',dset_vest,'selection',sel_sacc_crista_bnd);
+flow_utr_crista = mpheval(model,basisVec1TagsVest,'dataset',dset_vest,'selection',sel_utr_crista_bnd);
+flow_vestinlet = mpheval(model,basisVec1TagsVest,'dataset',dset_vest,'selection',sel_vest_inlet_bnd);
 
 % get voltage and electric current density values for all node points
 % within vestibular nerve, for all electrode combinations
@@ -106,12 +117,17 @@ flow_vest_fixed.d3 = -1*flow_vest.d3;
 % flow_vest_tocrista = flow_vest;
 % %%
 % flow_vest_fromcrista = flow_vest;
+%% Test fiberGenComsolv2 (generates random seed nodes based on locIndex)
+numAxons = 100;
+locIndex = rand(numAxons,1);
+[trajv2_test, p0v2_test] = fiberGenComsolv2(flow_fac, flow_facial_inlet, numAxons, locIndex, step, basisVecTagsFac, model, dset_fac);
 %% Generate trajectories for all nerve divisions
 step = [301e-3; 300.5e-3; -1];
-% step = [.0001; -1];
-numAxons = 50;
-[traj_fac_pre, fiberType1, p0_fac] = fiberGenComsol(flow_fac,flow_facial_inlet,numAxons*10,step); % facial nerve fibers generate better when originating axially
-[traj_coch_pre, fiberType1, p0_coch] = fiberGenComsol(flow_coch_fixed,flow_coch_outlet,numAxons*10,step); % unclear whether axial or distal origin is better
+% step = [.03; -1];
+% step = [.003; -1];
+numAxons = 100;
+[traj_fac_pre, fiberType1, p0_fac] = fiberGenComsol(flow_fac,flow_facial_inlet,numAxons,step); % facial nerve fibers generate better when originating axially
+[traj_coch_pre, fiberType1, p0_coch] = fiberGenComsol(flow_coch_fixed,flow_coch_outlet,numAxons*2,step); % unclear whether axial or distal origin is better
 [traj_vestinlet_pre, fiberType1, p0_inlet] = fiberGenComsol(flow_vest,flow_vestinlet,numAxons*5,step); % axial vestibular origin
 
 [traj_post_pre, fiberType1, p0_post_crista] = fiberGenComsol(flow_vest_fixed,flow_post_crista,numAxons,step);
@@ -127,20 +143,24 @@ numAxons = 50;
 % Carlo method).
 % all_trajs = {raj_post_pre,traj_lat_pre,traj_ant_pre,traj_sacc_pre,traj_utr_pre,traj_vestinlet_pret};
 all_trajs = {traj_post_pre,traj_lat_pre,traj_ant_pre,traj_sacc_pre,traj_utr_pre, traj_fac_pre, traj_coch_pre, traj_vestinlet_pre};
+% all_trajs = {traj_post_pre,0,0,0,0, traj_fac_pre, traj_coch_pre, traj_vestinlet_pre};
+
 numActualAxonsAll = zeros(length(all_trajs),1);
 toKeep = cell(length(all_trajs),1);
 all_trajs_out = toKeep;
 for i = 1:length(all_trajs)
     toKeep{i} = false(numAxons,1);
-    for j = 1:size(all_trajs{i},1)
-        arcLens = sqrt(sum( (all_trajs{i}{j,3}(:,2:end) - all_trajs{i}{j,3}(:,1:end-1)).^2 ,1));
-        totLen = sum(arcLens);
-        if totLen >= 5 % length of trajectory must be at least 6 mm
-            toKeep{i}(j) = true;
+    if iscell(all_trajs{i})
+        for j = 1:size(all_trajs{i},1)
+            arcLens = sqrt(sum( (all_trajs{i}{j,3}(:,2:end) - all_trajs{i}{j,3}(:,1:end-1)).^2 ,1));
+            totLen = sum(arcLens);
+            if totLen >= 4.5 % length of trajectory must be at least 4.5 mm
+                toKeep{i}(j) = true;
+            end
         end
+        all_trajs_out{i} = all_trajs{i}(toKeep{i},:);
+        numActualAxonsAll(i) = size(all_trajs_out{i},1);
     end
-    all_trajs_out{i} = all_trajs{i}(toKeep{i},:);
-    numActualAxonsAll(i) = size(all_trajs_out{i},1);
     disp([num2str(numActualAxonsAll(i)),'/',num2str(size(all_trajs{i},1)),' axons succesfully generated in nerve ',num2str(i),'.'])
 end
 disp('----------------------------------------------')
@@ -301,49 +321,57 @@ save(['fullSolution',fileDate],'param_post','param_lat','param_ant',...
 %% Plot everything
 % plot crista origin results
 f12 = plotFlow(flow_vest_fixed,flow_post_crista,traj_post_pre(toKeep{1},3));
+f12.Position = [200 200 560 420];
 badTraj = traj_post_pre(~toKeep{1},3);
 for i = 1:sum(~toKeep{1})
     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
 end
 title(gca,'Post. Crista Origin')
 f22 = plotFlow(flow_vest_fixed,flow_lat_crista,traj_lat_pre(toKeep{2},3));
+f22.Position = [200 200 560 420];
 badTraj = traj_lat_pre(~toKeep{2},3);
 for i = 1:sum(~toKeep{2})
     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
 end
 title(gca,'Lat. Crista Origin')
 f32 = plotFlow(flow_vest_fixed,flow_ant_crista,traj_ant_pre(toKeep{3},3));
+f32.Position = [200 200 560 420];
 badTraj = traj_ant_pre(~toKeep{3},3);
 for i = 1:sum(~toKeep{3})
     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
 end
 title(gca,'Ant. Crista Origin')
 f42 = plotFlow(flow_vest_fixed,flow_sacc_crista,traj_sacc_pre(toKeep{4},3));
+f42.Position = [200 200 560 420];
 badTraj = traj_sacc_pre(~toKeep{4},3);
 for i = 1:sum(~toKeep{4})
     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
 end
-title(gca,'Sacc. Crista Origin')
+title(gca,'Sacc. Macula Origin')
 f52 = plotFlow(flow_vest_fixed,flow_utr_crista,traj_utr_pre(toKeep{5},3));
+f52.Position = [200 200 560 420];
 badTraj = traj_utr_pre(~toKeep{5},3);
 for i = 1:sum(~toKeep{5})
     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
 end
-title(gca,'Utr. Crista Origin')
+title(gca,'Utr. Macula Origin')
 
 f62 = plotFlow(flow_fac,flow_facial_inlet,traj_fac_pre(toKeep{6},3));
+f62.Position = [200 200 560 420];
 badTraj = traj_fac_pre(~toKeep{6},3);
 for i = 1:sum(~toKeep{6})
     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
 end
 title(gca,'Facial Nerve')
 f72 = plotFlow(flow_coch_fixed,flow_coch_outlet,traj_coch_pre(toKeep{7},3));
+f72.Position = [200 200 560 420];
 badTraj = traj_coch_pre(~toKeep{7},3);
 for i = 1:sum(~toKeep{7})
     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
 end
 title(gca,'Cochlear Nerve')
 f82 = plotFlow(flow_vest,flow_vestinlet,traj_vestinlet_pre(toKeep{8},3));
+f82.Position = [200 200 560 420];
 badTraj = traj_vestinlet_pre(~toKeep{8},3);
 for i = 1:sum(~toKeep{8})
     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
@@ -384,14 +412,62 @@ toc
 % title(gca,'Vest. Inlet Origin')
 
 %% Save figures
-% figs = {f1, f3, f4, f5, f6, f7, f8};
-% for i = 1:length(figs)
-%     saveas(figs{i},['R:\Computational Modeling\Model as of 20220908\nerveTrajTest',num2str(i)])
+figs = {f12, f22, f32, f42, f52, f62, f72, f82};
+for i = 1:length(figs)
+    saveas(figs{i},['R:\Computational Modeling\Model as of 20230104\Test traj figures\p003step',num2str(i)])
 %     saveas(figs{i},['R:\Computational Modeling\Model as of 20220908\nerveTrajTest',num2str(i)],'png')
-% end
+end
 %%
 % for i = 11:15
 %     saveas(i,['C:\Users\Evan\OneDrive - Johns Hopkins\VNEL1DRV\_Vesper\Modeling\Modeling Results\Traj step size figures\point1umstep',num2str(i)])
 % end   
 %% 
 % f = plotFlow(flow_vest,flow_post_crista,'p0',p0_test_post_crista,'plotFlow',false)
+
+%% Test vestibular nerve-only model...
+flow_test_vest = mpheval(model, basisVec1TagsFac);
+flow_test_vest_fixed = flow_test_vest;
+flow_test_vest_fixed.d1 = -1*flow_test_vest.d1;
+flow_test_vest_fixed.d2 = -1*flow_test_vest.d2;
+flow_test_vest_fixed.d3 = -1*flow_test_vest.d3;
+
+sel_test_vestoutlet = 'geom1_sel2';
+flow_test_vestoutlet = mpheval(model, basisVec1TagsFac,'selection',sel_test_vestoutlet);
+step = [301e-3; 300.5e-3; -1];
+numAxons = 500;
+
+[traj_test_vest_pre, fiberType1, p0_test_vest] = fiberGenComsol(flow_test_vest_fixed,flow_test_vestoutlet,numAxons,step);
+
+
+all_trajs = {traj_test_vest_pre};
+
+numActualAxonsAll = zeros(length(all_trajs),1);
+toKeep = cell(length(all_trajs),1);
+all_trajs_out = toKeep;
+for i = 1:length(all_trajs)
+    toKeep{i} = false(numAxons,1);
+    if iscell(all_trajs{i})
+        for j = 1:size(all_trajs{i},1)
+            arcLens = sqrt(sum( (all_trajs{i}{j,3}(:,2:end) - all_trajs{i}{j,3}(:,1:end-1)).^2 ,1));
+            totLen = sum(arcLens);
+            if totLen >= 4.5 % length of trajectory must be at least 4.5 mm
+                toKeep{i}(j) = true;
+            end
+        end
+        all_trajs_out{i} = all_trajs{i}(toKeep{i},:);
+        numActualAxonsAll(i) = size(all_trajs_out{i},1);
+    end
+    disp([num2str(numActualAxonsAll(i)),'/',num2str(size(all_trajs{i},1)),' axons succesfully generated in nerve ',num2str(i),'.'])
+end
+disp('----------------------------------------------')
+
+traj_test_vest = all_trajs_out{1};
+
+
+ftest = plotFlow(flow_test_vest_fixed,flow_test_vestoutlet,traj_test_vest_pre(toKeep{1},3));
+ftest.Position = [200 200 560 420];
+badTraj = traj_test_vest_pre(~toKeep{1},3);
+for i = 1:sum(~toKeep{1})
+    plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
+end
+title(gca,'Test')

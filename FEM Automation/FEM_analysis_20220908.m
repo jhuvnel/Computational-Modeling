@@ -94,7 +94,7 @@ for i = 1:nRef
         model.study('std3').feature('stat').setEntry('activate', ECs{i,j}.tag, false);
     end
 end
-
+%%
 % run the studies. Since no solution nodes were created, it just uses the
 % default solver and computes results for each study
 model.study('std1').run;

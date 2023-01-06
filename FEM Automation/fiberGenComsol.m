@@ -2,8 +2,8 @@ function [traj, fiberType, p0] = fiberGenComsol(V_nerve, V_crista, numGen, step)
 %FIBERGENCOMSOL This function generates the vertices (nodes) of axons given
 %a comsol model and the vector field defining flow along a nerve and the
 %crista to start from. It will randomly distribute the axons evenly along
-%the crista surface. It uses the stream3() Matlab function to generate a
-%streamline using the vector field.
+%the crista surface. It uses the stream3Comsol() Matlab function to
+%generate a streamline using the vector field.
 %   The function takes as arguments: 
 %       V_nerve: the post data output from mpheval for the vector field
 %           within a nerve
@@ -13,7 +13,7 @@ function [traj, fiberType, p0] = fiberGenComsol(V_nerve, V_crista, numGen, step)
 %       numGen: the total number of axons to generate. 
 %       step: column vector of internode distances for each node of
 %       Ranvier. To only set first two and fill the rest, use format 
-%       [3.05e-6; 3.00e-6 ;-1]
+%       [3.05e-3; 3.00e-3 ;-1]
 %   Returns:
 %       verts: a cell array containing the vertices of
 %           the fiber trajectory, with each vertex being a node of Ranvier.

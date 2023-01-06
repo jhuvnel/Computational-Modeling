@@ -108,6 +108,7 @@ if ~sum(strcmp(p.UsingDefaults{1},'traj'))
     end
 end
 
+axis equal
 xlabel('x [mm]')
 ylabel('y [mm]')
 zlabel('z [mm]')

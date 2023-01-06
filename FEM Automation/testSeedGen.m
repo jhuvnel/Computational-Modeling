@@ -6,9 +6,15 @@ numGen = 50;
 % fiber. This is just for testing!!!
 locIndex = 10*rand(numGen,1);
 
-%% find centroid of the surface
-V_crista = flow_ant_crista;
 
+basisVecTagsVest = {'cc3.e1x','cc3.e1y','cc3.e1z'}; % basis vector 1 (along the axon)
+basisVec2TagsVest = {'cc3.e2x','cc3.e2y','cc3.e2z'}; % basis vector 2 (orthogonal to other two vectors)
+basisVec3TagsVest = {'cc3.e3x','cc3.e3y','cc3.e3z'}; % basis vector 3 (orthogonal to other two vectors)
+
+
+%% find centroid of the surface
+V_crista = flow_lat_crista;
+V_nerve = flow_vest_fixed;
 % get vertices of starting triangle
 
 nTri = size(V_crista.t,2);
@@ -33,7 +39,7 @@ surfCentroid = centroids*areas'/sum(areas);
 
 %% Extract x-component of curvilinear coordinates at centroid
 % mpheval(model,basisVecTags,'dataset',dset_vest,'selection',sel_vest_inlet_bnd);
-[b11, b12, b13, b21, b22, b23, b31, b32, b33] = mphinterp(model, [basisVecTags, basisVec2Tags, basisVec3Tags], 'coord', surfCentroid, 'dataset', dset_vest);
+[b11, b12, b13, b21, b22, b23, b31, b32, b33] = mphinterp(model, [basisVecTagsVest, basisVec2TagsVest, basisVec3TagsVest], 'coord', surfCentroid, 'dataset', dset_vest);
 % note: it shouldn't really change anything, but I rearranged the basis
 % vectors so that the surface is projected onto x and y (e1 and e2) of new
 % plane, just to look nice
@@ -41,7 +47,7 @@ normVec = -1*[b11; b12; b13]; % normal vector to plane (z')
 e1 = [b31; b32; b33]; % basis vector 1 of plane (x')
 e2 = [b21; b22; b23]; % basis vector 2 of plane (y')
 %% Plot 3d crista and centroids
-f1 = plotFlow(flow_vest_fixed, flow_ant_crista, 'p0', centroids, 'plotFlow', false);
+f1 = plotFlow(V_nerve, V_crista, 'p0', centroids, 'plotFlow', false);
 hold on
 plot3(surfCentroid(1),surfCentroid(2),surfCentroid(3),'g*')
 plot3([surfCentroid(1), surfCentroid(1) + normVec(1)*0.1],[surfCentroid(2), surfCentroid(2) + normVec(2)*0.1],[surfCentroid(3), surfCentroid(3) + normVec(3)*0.1],'g-')
@@ -274,17 +280,21 @@ end
 % hold on
 % plot(seedNodes2d(1,1),seedNodes2d(2,1),'*k')
 
-%% Plot 3d points
-% plot3d(f1.CurrentAxes, seedNodes3d(1,:), seedNodes3d(2,:), seedNodes3d(3,:), '*')
-
-f5 = plotFlow(flow_vest_fixed, flow_ant_crista, 'p0', seedNodes3d, 'plotFlow', false);
-title('3D Crista with Seed Nodes')
 
 %% Generate streamlines
 
 [axonVerts, step_out] = stream3Comsol(V_nerve.p,V_nerve.t,V_nerve.d1,V_nerve.d2,...
-    V_nerve.d3,p0,step);
+    V_nerve.d3,seedNodes3d,step);
 
+%% Plot 3d points and streamlines
+% plot3d(f1.CurrentAxes, seedNodes3d(1,:), seedNodes3d(2,:), seedNodes3d(3,:), '*')
+
+f5 = plotFlow(V_nerve, V_crista, 'p0', seedNodes3d, 'plotFlow', false);
+title('3D Crista with Seed Nodes')
+for i = 1:numGen
+    plot3(axonVerts{i}(1,:),axonVerts{i}(2,:),axonVerts{i}(3,:),'-g.')
+
+end
 %% Function definitions
 
 function result = edgeNeighbors(v1Ind, v2Ind, indv)
