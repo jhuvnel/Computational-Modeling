@@ -1,4 +1,4 @@
-function [verts, p0] = fiberGenComsolv2(V_nerve, V_crista, locIndex, step, basisVecTags, model, dset)
+function [trajs, p0] = fiberGenComsolv2(V_nerve, V_crista, locIndex, step, basisVecTags, model, dset)
 %FIBERGENCOMSOLV2 This function generates the vertices (nodes) of axons
 %given a comsol model and the vector field defining flow along a nerve and
 %the crista to start from. It will randomly distribute the axons evenly
@@ -9,11 +9,11 @@ function [verts, p0] = fiberGenComsolv2(V_nerve, V_crista, locIndex, step, basis
 %       V_nerve: the post data output from mpheval for the vector field
 %           within a nerve
 %       V_crista: the post data output from mpheval for any variable on the
-%           desired crista (this function only uses the coordinates and 
+%           desired crista (this function only uses the coordinates and
 %           simpleces returned, not the variable's value)
-%       locIndex: a column vector containing a normalized "radius" along the
-%           crista to place each seed node at. The number of rows will be
-%           the total number of seed points generated
+%       locIndex: a column vector containing a normalized "radius" along
+%           the crista to place each seed node at. The number of rows will
+%           be the total number of seed points generated
 %       step: column vector of internode distances for each node of
 %           Ranvier. To only set first two and fill the rest, use format 
 %           [3.05e-3; 3.00e-3;-1]
@@ -21,10 +21,16 @@ function [verts, p0] = fiberGenComsolv2(V_nerve, V_crista, locIndex, step, basis
 %           components of each basis vector in Comsol, in the form of a
 %           char vector or string. Should be in the form 
 %           {e1x, e1y, e1z, e2x, e2y, e2z, e3x, e3y, e3z} 
-%       model: Model object for Comsol model through Livelink.
+%       model: Model object for Comsol model through Livelink. dset: string
+%           vector containing the tag for the dataset in model with the
+%           flow information for the relevant nerve (same dataset as was
+%           used to get V_nerve)
 %       
 %   Returns:
-%       verts: a cell array containing the vertices of
+%       trajs: an n x 3 cell array. Each row contains a set of information
+%           for 1 axon (n = number of axons). The first column contains the
+%           locIndex. The second column contains a vector of internode
+%           distances (the step). The third column contains the vertices of
 %           the fiber trajectory, with each vertex being a node of Ranvier.
 %       p0: starting points on the crista for each generated axon
 %   January 2023, Evan Vesper, VNEL
@@ -95,31 +101,22 @@ axis equal
 ax = gca; 
 % legend('Crista surface mesh', 'Centroids of crista triangles', 'Centroid of mesh', 'Direction of projection plane') 
 f1.Position = [100 100 560 420];
+view(ax, e1)
 rotate3d(f1)
 drawnow
 
-
-[e1az, e1el, ~] = cart2sph(e1(1), e1(2), e1(3)); % spherical coords are in radians
-[caz, cel] = view(ax, e1); % view() handles angles in degrees, not radians!
 % Check if user approves of projection...
 projAngle = ax.View;
 warnbox = warndlg('Rotate the axes until you are satisfied with the projection. Hit ok when done.','Choose projection angle');
 waitfor(warnbox);
-% check = input('Rotate the axes until you are satisfied with the projection. Input anything to continue.');
 if projAngle ~= ax.View
     % replace the basis vectors to match the current viewing angle
-    viewAxis = ax.CameraPosition - ax.CameraTarget;
-    
-    [viewaz, viewel] = view();
+    [viewaz, viewel] = view(); % view() handles angles in degrees, not radians!
     viewaz = viewaz - 90; % make azimuth referenced to -y axis since the axis.View property has a different azimuth definition than sph2cart() function
-
-    % angles between normVec and viewAxis
-    transformaz = viewaz - e1az;
-    transformel = viewel - e1el;
     
     % create new basis vectors from transform
     % Modified Gram-Schmidt Method
-    [e1(1), e1(2), e1(3)] = sph2cart(deg2rad(viewaz), deg2rad(viewel), 1);
+    [e1(1), e1(2), e1(3)] = sph2cart(deg2rad(viewaz), deg2rad(viewel), 1);  % spherical coords are in radians
     e2 = e2 - e1*dot(e1, e2)/dot(e1,e1);
     e3 = e3 - e1*dot(e1, e3)/dot(e1,e1);
     
@@ -183,8 +180,8 @@ for i = 1:size(indSimplexOuterEdge,2)
 end
 %% Extract and sort vertices along perimeter of flattened crista
 % convert from "simplex" indeces for each edge to just the indeces of all the outer edge verts
-[indEdgeVerts, ~, ~] = unique(indSimplexOuterEdge(:)); 
-edgeVerts2d = verts2d(:,indEdgeVerts);
+% [indEdgeVerts, ~, ~] = unique(indSimplexOuterEdge(:)); 
+% edgeVerts2d = verts2d(:,indEdgeVerts);
 
 % % put outer edge vertices into clockwise order - NOTE this only works if
 % % the outer edge is convex and there are no holes in the mesh!
@@ -376,7 +373,11 @@ seedNodes3d = mapto3D(seedNodes2d, indv, verts2d, verts3d);
 % end
 
 %% Return output variables
-verts = axonVerts;
+locIndexOut = cell(numGen,1);
+for i = 1:numGen
+    locIndexOut{i} = locIndex(i);
+end
+trajs = [locIndexOut, step_out, axonVerts];
 p0 = seedNodes3d;
 
 %% Function definitions
@@ -440,12 +441,12 @@ function seedNodes3d = mapto3D(seedNodes2d, indv, verts2d, verts3d)
     vec1P2d = zeros(2,nSeed);
     seedNodes3d = zeros(3,nSeed);
     
-    for i = 1:nSeed
+    for kk = 1:nSeed
         % find seed point coordinates in 2d
         % find vertices of triangle that seed point is on
-        triVert1 = verts2d(:, triVertInds(1,i));
-        triVert2 = verts2d(:, triVertInds(2,i));
-        triVert3 = verts2d(:, triVertInds(3,i));
+        triVert1 = verts2d(:, triVertInds(1,kk));
+        triVert2 = verts2d(:, triVertInds(2,kk));
+        triVert3 = verts2d(:, triVertInds(3,kk));
         
         % find coordinate axes (2 sides of triangle)
         vec12 = triVert2 - triVert1;
@@ -465,15 +466,15 @@ function seedNodes3d = mapto3D(seedNodes2d, indv, verts2d, verts3d)
         dist13 = dot(vec13, triVert3 - triVert1); % redo max distance in orthogonal coordinate system
         
         % find coordinates of seed point
-        vec1P2d(:,i) = seedNodes2d(:,i) - triVert1;
-        coord1 = dot(vec1P2d(:,i), vec12)/dist12;
-        coord2 = dot(vec1P2d(:,i), vec13)/dist13;
+        vec1P2d(:,kk) = seedNodes2d(:,kk) - triVert1;
+        coord1 = dot(vec1P2d(:,kk), vec12)/dist12;
+        coord2 = dot(vec1P2d(:,kk), vec13)/dist13;
     
         % find seed point coordinates in 3d
         % get triangle vertices in 3d
-        triVert1 = verts3d(:, triVertInds(1,i));
-        triVert2 = verts3d(:, triVertInds(2,i));
-        triVert3 = verts3d(:, triVertInds(3,i));
+        triVert1 = verts3d(:, triVertInds(1,kk));
+        triVert2 = verts3d(:, triVertInds(2,kk));
+        triVert3 = verts3d(:, triVertInds(3,kk));
     
         % find coordinate axes (2 sides of triangle)
         vec12 = triVert2 - triVert1;
@@ -492,7 +493,7 @@ function seedNodes3d = mapto3D(seedNodes2d, indv, verts2d, verts3d)
     
         dist13 = dot(vec13, triVert3 - triVert1); % redo max distance in orthogonal coordinate system
         
-        seedNodes3d(:,i) = triVert1 + vec12*(coord1*dist12) + vec13*(coord2*dist13);
+        seedNodes3d(:,kk) = triVert1 + vec12*(coord1*dist12) + vec13*(coord2*dist13);
     end
 end
 

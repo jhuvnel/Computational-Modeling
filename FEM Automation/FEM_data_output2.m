@@ -120,72 +120,27 @@ flow_vest_fixed.d3 = -1*flow_vest.d3;
 % flow_vest_fromcrista = flow_vest;
 disp('Flow information extracted.')
 toc
-
 %% SCC fiber gen
-
-% [traj_post_pre, p0_post_crista] = fiberGenComsolv2(flow_vest_fixed, flow_post_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
-% [traj_lat_pre, p0_lat_crista] = fiberGenComsolv2(flow_vest_fixed, flow_lat_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
-% [traj_ant_pre, p0_ant_crista] = fiberGenComsolv2(flow_vest_fixed, flow_ant_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
-% [traj_sacc_pre, p0_sacc_crista] = fiberGenComsolv2(flow_vest_fixed, flow_sacc_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
-% [traj_utr_pre, p0_utr_crista] = fiberGenComsolv2(flow_vest_fixed, flow_utr_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
 disp('--------Starting SCC fiber generation.--------')
 tic
 step = [301e-3; 300.5e-3; -1];
-% 1 to 3
-% this actually is 0-3 I think
+
 numAxons_1to3 = parameterCellSCC_1to3{1}(1);
-locIndex = 3*rand(numAxons_1to3,1);
-
-[traj_post_pre_1to3, p0_post_crista_1to3] = fiberGenComsolv2(flow_vest_fixed, flow_post_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
-[traj_lat_pre_1to3, p0_lat_crista_1to3] = fiberGenComsolv2(flow_vest_fixed, flow_lat_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
-[traj_ant_pre_1to3, p0_ant_crista_1to3] = fiberGenComsolv2(flow_vest_fixed, flow_ant_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
-disp('Trajs done with locIndex 1 to 3.')
-
-% 2 to 5
-% means locIndex can be 2-5
 numAxons_2to5 = parameterCellSCC_2to5{1}(1);
-locIndex = 3*rand(numAxons_2to5,1) + 2;
-
-[traj_post_pre_2to5, p0_post_crista_2to5] = fiberGenComsolv2(flow_vest_fixed, flow_post_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
-[traj_lat_pre_2to5, p0_lat_crista_2to5] = fiberGenComsolv2(flow_vest_fixed, flow_lat_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
-[traj_ant_pre_2to5, p0_ant_crista_2to5] = fiberGenComsolv2(flow_vest_fixed, flow_ant_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
-disp('Trajs done with locIndex 2 to 5.')
-
-% 3 to 5
 numAxons_3to5 = parameterCellSCC_3to5{1}(1);
-locIndex = 2*rand(numAxons_3to5,1) + 3;
-
-[traj_post_pre_3to5, p0_post_crista_3to5] = fiberGenComsolv2(flow_vest_fixed, flow_post_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
-[traj_lat_pre_3to5, p0_lat_crista_3to5] = fiberGenComsolv2(flow_vest_fixed, flow_lat_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
-[traj_ant_pre_3to5, p0_ant_crista_3to5] = fiberGenComsolv2(flow_vest_fixed, flow_ant_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
-disp('Trajs done with locIndex 3 to 5.')
-
-% 4 to 7
 numAxons_4to7 = parameterCellSCC_4to7{1}(1);
-locIndex = 3*rand(numAxons_4to7,1) + 4;
-
-[traj_post_pre_4to7, p0_post_crista_4to7] = fiberGenComsolv2(flow_vest_fixed, flow_post_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
-[traj_lat_pre_4to7, p0_lat_crista_4to7] = fiberGenComsolv2(flow_vest_fixed, flow_lat_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
-[traj_ant_pre_4to7, p0_ant_crista_4to7] = fiberGenComsolv2(flow_vest_fixed, flow_ant_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
-disp('Trajs done with locIndex 4 to 7.')
-
-% 5 to 8
 numAxons_5to8 = parameterCellSCC_5to8{1}(1);
-locIndex = 3*rand(numAxons_5to8,1) + 5;
-
-[traj_post_pre_5to8, p0_post_crista_5to8] = fiberGenComsolv2(flow_vest_fixed, flow_post_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
-[traj_lat_pre_5to8, p0_lat_crista_5to8] = fiberGenComsolv2(flow_vest_fixed, flow_lat_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
-[traj_ant_pre_5to8, p0_ant_crista_5to8] = fiberGenComsolv2(flow_vest_fixed, flow_ant_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
-disp('Trajs done with locIndex 5 to 8.')
-
-% 6 to 10
 numAxons_6to10 = parameterCellSCC_6to10{1}(1);
-locIndex = 4*rand(numAxons_6to10,1) + 6;
+numAxons_SCC = sum([numAxons_1to3, numAxons_2to5, numAxons_3to5, numAxons_4to7, numAxons_5to8, numAxons_6to10]);
+% may want to generate new random locIndeces for each nerve
+locIndex_SCC = [3*rand(numAxons_1to3,1); 3*rand(numAxons_2to5,1) + 2; 2*rand(numAxons_3to5,1) + 3; 3*rand(numAxons_4to7,1) + 4; 3*rand(numAxons_5to8,1) + 5; 4*rand(numAxons_6to10,1) + 6;];
 
-[traj_post_pre_6to10, p0_post_crista_6to10] = fiberGenComsolv2(flow_vest_fixed, flow_post_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
-[traj_lat_pre_6to10, p0_lat_crista_6to10] = fiberGenComsolv2(flow_vest_fixed, flow_lat_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
-[traj_ant_pre_6to10, p0_ant_crista_6to10] = fiberGenComsolv2(flow_vest_fixed, flow_ant_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
-disp('Trajs done with locIndex 6 to 10.')
+[traj_post_pre, p0_post] = fiberGenComsolv2(flow_vest_fixed, flow_post_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+disp('Trajs done with posterior canal.')
+[traj_lat_pre, p0_lat] = fiberGenComsolv2(flow_vest_fixed, flow_lat_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+disp('Trajs done with lateral canal.')
+[traj_ant_pre, p0_ant] = fiberGenComsolv2(flow_vest_fixed, flow_ant_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+disp('Trajs done with anterior canal.')
 
 toc
 
@@ -193,19 +148,100 @@ toc
 disp('--------Starting utricle and saccule fiber generation.--------')
 tic
 step = [301e-3; 300.5e-3; -1];
-% 1 to 4
+
 numAxons_1to4 = parameterCellUS_1to4{1}(1);
 numAxons_3to7 = parameterCellUS_3to7{1}(1);
 numAxons_6to10 = parameterCellUS_6to10{1}(1);
 numAxons_utr_sacc = sum([numAxons_1to4, numAxons_3to7, numAxons_6to10]);
-locIndex = [4*rand(numAxons_1to4,1); 4*rand(numAxons_3to7,1) + 3; 4*rand(numAxons_6to10,1) + 6];
+locIndex_utr_sacc = [4*rand(numAxons_1to4,1); 4*rand(numAxons_3to7,1) + 3; 4*rand(numAxons_6to10,1) + 6];
 
-[traj_sacc_pre, p0_sacc_crista] = fiberGenComsolv2(flow_vest_fixed, flow_sacc_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
-[traj_utr_pre, p0_utr_crista] = fiberGenComsolv2(flow_vest_fixed, flow_utr_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+[traj_sacc_pre, p0_sacc] = fiberGenComsolv2(flow_vest_fixed, flow_sacc_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+[traj_utr_pre, p0_utr] = fiberGenComsolv2(flow_vest_fixed, flow_utr_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
 disp('Utricle and saccule fibers done.')
 
 toc
 
+%% Facial and Cochlear Fiber Gen
+disp('--------Starting facial and cochlear fiber generation.--------')
+tic
+
+numAxons_fac = 500;
+locIndex = 10*rand(numAxons_fac,1);
+[traj_fac_pre, p0_fac] = fiberGenComsolv2(flow_fac, flow_facial_inlet, locIndex, step, basisVecTagsFac, model, dset_fac);
+disp('Trajs done with facial nerve.')
+
+numAxons_coch = 1000; 
+[traj_coch_pre, fiberType1, p0_coch] = fiberGenComsol(flow_coch_fixed,flow_coch_outlet,numAxons_coch,step); % unclear whether axial or distal origin is better
+disp('Trajs done with cochlear nerve.')
+
+toc
+
+%% SCC fiber gen
+% % [traj_post_pre, p0_post_crista] = fiberGenComsolv2(flow_vest_fixed, flow_post_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+% % [traj_lat_pre, p0_lat_crista] = fiberGenComsolv2(flow_vest_fixed, flow_lat_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+% % [traj_ant_pre, p0_ant_crista] = fiberGenComsolv2(flow_vest_fixed, flow_ant_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+% % [traj_sacc_pre, p0_sacc_crista] = fiberGenComsolv2(flow_vest_fixed, flow_sacc_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+% % [traj_utr_pre, p0_utr_crista] = fiberGenComsolv2(flow_vest_fixed, flow_utr_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+% disp('--------Starting SCC fiber generation.--------')
+% tic
+% step = [301e-3; 300.5e-3; -1];
+% % 1 to 3
+% % this actually is 0-3 I think
+% numAxons_1to3 = parameterCellSCC_1to3{1}(1);
+% locIndex = 3*rand(numAxons_1to3,1);
+% 
+% [traj_post_pre_1to3, p0_post_crista_1to3] = fiberGenComsolv2(flow_vest_fixed, flow_post_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+% [traj_lat_pre_1to3, p0_lat_crista_1to3] = fiberGenComsolv2(flow_vest_fixed, flow_lat_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+% [traj_ant_pre_1to3, p0_ant_crista_1to3] = fiberGenComsolv2(flow_vest_fixed, flow_ant_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+% disp('Trajs done with locIndex 1 to 3.')
+% 
+% % 2 to 5
+% % means locIndex can be 2-5
+% numAxons_2to5 = parameterCellSCC_2to5{1}(1);
+% locIndex = 3*rand(numAxons_2to5,1) + 2;
+% 
+% [traj_post_pre_2to5, p0_post_crista_2to5] = fiberGenComsolv2(flow_vest_fixed, flow_post_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+% [traj_lat_pre_2to5, p0_lat_crista_2to5] = fiberGenComsolv2(flow_vest_fixed, flow_lat_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+% [traj_ant_pre_2to5, p0_ant_crista_2to5] = fiberGenComsolv2(flow_vest_fixed, flow_ant_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+% disp('Trajs done with locIndex 2 to 5.')
+% 
+% % 3 to 5
+% numAxons_3to5 = parameterCellSCC_3to5{1}(1);
+% locIndex = 2*rand(numAxons_3to5,1) + 3;
+% 
+% [traj_post_pre_3to5, p0_post_crista_3to5] = fiberGenComsolv2(flow_vest_fixed, flow_post_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+% [traj_lat_pre_3to5, p0_lat_crista_3to5] = fiberGenComsolv2(flow_vest_fixed, flow_lat_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+% [traj_ant_pre_3to5, p0_ant_crista_3to5] = fiberGenComsolv2(flow_vest_fixed, flow_ant_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+% disp('Trajs done with locIndex 3 to 5.')
+% 
+% % 4 to 7
+% numAxons_4to7 = parameterCellSCC_4to7{1}(1);
+% locIndex = 3*rand(numAxons_4to7,1) + 4;
+% 
+% [traj_post_pre_4to7, p0_post_crista_4to7] = fiberGenComsolv2(flow_vest_fixed, flow_post_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+% [traj_lat_pre_4to7, p0_lat_crista_4to7] = fiberGenComsolv2(flow_vest_fixed, flow_lat_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+% [traj_ant_pre_4to7, p0_ant_crista_4to7] = fiberGenComsolv2(flow_vest_fixed, flow_ant_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+% disp('Trajs done with locIndex 4 to 7.')
+% 
+% % 5 to 8
+% numAxons_5to8 = parameterCellSCC_5to8{1}(1);
+% locIndex = 3*rand(numAxons_5to8,1) + 5;
+% 
+% [traj_post_pre_5to8, p0_post_crista_5to8] = fiberGenComsolv2(flow_vest_fixed, flow_post_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+% [traj_lat_pre_5to8, p0_lat_crista_5to8] = fiberGenComsolv2(flow_vest_fixed, flow_lat_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+% [traj_ant_pre_5to8, p0_ant_crista_5to8] = fiberGenComsolv2(flow_vest_fixed, flow_ant_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+% disp('Trajs done with locIndex 5 to 8.')
+% 
+% % 6 to 10
+% numAxons_6to10 = parameterCellSCC_6to10{1}(1);
+% locIndex = 4*rand(numAxons_6to10,1) + 6;
+% 
+% [traj_post_pre_6to10, p0_post_crista_6to10] = fiberGenComsolv2(flow_vest_fixed, flow_post_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+% [traj_lat_pre_6to10, p0_lat_crista_6to10] = fiberGenComsolv2(flow_vest_fixed, flow_lat_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+% [traj_ant_pre_6to10, p0_ant_crista_6to10] = fiberGenComsolv2(flow_vest_fixed, flow_ant_crista, locIndex, step, basisVecTagsVest, model, dset_vest);
+% disp('Trajs done with locIndex 6 to 10.')
+% 
+% toc
 %%
 % disp('--------Starting utricle and saccule fiber generation.--------')
 % tic
@@ -236,50 +272,19 @@ toc
 % 
 % toc
 
-%% Facial and Cochlear Fiber Gen
-disp('--------Starting facial and cochlear fiber generation.--------')
-
-tic
-numAxons_fac = 500;
-locIndex = 10*rand(numAxons_fac,1);
-[traj_fac_pre, p0_fac] = fiberGenComsolv2(flow_fac, flow_facial_inlet, locIndex, step, basisVecTagsFac, model, dset_fac);
-disp('Trajs done with facial nerve.')
-
-numAxons_coch = 1000; 
-[traj_coch_pre, fiberType1, p0_coch] = fiberGenComsol(flow_coch_fixed,flow_coch_outlet,numAxons_coch,step); % unclear whether axial or distal origin is better
-disp('Trajs done with cochlear nerve.')
-
-toc
-
-%% Generate trajectories for all nerve divisions
-% step = [301e-3; 300.5e-3; -1];
-% % step = [.03; -1];
-% % step = [.003; -1];
-% numAxons = 100;
-% [traj_fac_pre, fiberType1, p0_fac] = fiberGenComsol(flow_fac,flow_facial_inlet,numAxons,step); % facial nerve fibers generate better when originating axially
-% [traj_coch_pre, fiberType1, p0_coch] = fiberGenComsol(flow_coch_fixed,flow_coch_outlet,numAxons*2,step); % unclear whether axial or distal origin is better
-% % [traj_vestinlet_pre, fiberType1, p0_inlet] = fiberGenComsol(flow_vest,flow_vestinlet,numAxons*5,step); % axial vestibular origin
-% 
-% [traj_post_pre, fiberType1, p0_post_crista] = fiberGenComsol(flow_vest_fixed,flow_post_crista,numAxons,step);
-% [traj_lat_pre, fiberType1, p0_lat_crista] = fiberGenComsol(flow_vest_fixed,flow_lat_crista,numAxons,step);
-% [traj_ant_pre, fiberType1, p0_ant_crista] = fiberGenComsol(flow_vest_fixed,flow_ant_crista,numAxons,step);
-% [traj_sacc_pre, fiberType1, p0_sacc_crista] = fiberGenComsol(flow_vest_fixed,flow_sacc_crista,numAxons,step);
-% [traj_utr_pre, fiberType1, p0_utr_crista] = fiberGenComsol(flow_vest_fixed,flow_utr_crista,numAxons,step);
-
+%% Check which trajectories failed
 % remove all the trajectories that aren't long enough (hit the wall of the
 % nerve). In the future I need to fix the flow to avoid this happening, or
 % change the fiberGenComsol/stream3Comsol function(s) to keep trying new
 % starting points until I get the desired number of axons (like a Monte
 % Carlo method).
-% all_trajs = {raj_post_pre,traj_lat_pre,traj_ant_pre,traj_sacc_pre,traj_utr_pre,traj_vestinlet_pret};
-all_trajs = {traj_post_pre,traj_lat_pre,traj_ant_pre,traj_sacc_pre,traj_utr_pre, traj_fac_pre, traj_coch_pre, traj_vestinlet_pre};
-% all_trajs = {traj_post_pre,0,0,0,0, traj_fac_pre, traj_coch_pre, traj_vestinlet_pre};
+all_trajs = {traj_post_pre,traj_lat_pre,traj_ant_pre,traj_sacc_pre,traj_utr_pre, traj_fac_pre, traj_coch_pre};
 
 numActualAxonsAll = zeros(length(all_trajs),1);
 toKeep = cell(length(all_trajs),1);
 all_trajs_out = toKeep;
 for i = 1:length(all_trajs)
-    toKeep{i} = false(numAxons,1);
+    toKeep{i} = false(length(all_trajs{i}),1);
     if iscell(all_trajs{i})
         for j = 1:size(all_trajs{i},1)
             arcLens = sqrt(sum( (all_trajs{i}{j,3}(:,2:end) - all_trajs{i}{j,3}(:,1:end-1)).^2 ,1));
@@ -302,27 +307,30 @@ traj_sacc = all_trajs_out{4};
 traj_utr = all_trajs_out{5};
 traj_fac = all_trajs_out{6};
 traj_coch = all_trajs_out{7};
-traj_vestinlet = all_trajs_out{8};
 clear all_trajs all_trajs_out
 beep
 
 %%
 % save(['trajs_',fileDate],"traj_vestinlet","traj_post","traj_lat","traj_ant","traj_sacc","traj_utr")
-save_dir = 'R:\Computational Modeling\Solved model data 20230110\';
+save_dir = 'R:\Computational Modeling\Solved model data 20230113\';
 save([save_dir,'trajs_',fileDate],"traj_post","traj_lat","traj_ant","traj_sacc","traj_utr","traj_fac","traj_coch")
-toc
 
 %% Full FEM sampling along all trajectories
-solf_fac = []; sol_coch = []; sol_post = []; sol_lat = []; sol_ant = []; sol_sacc = []; sol_utr = [];
+tic
+sol_post = []; sol_lat = []; sol_ant = []; sol_sacc = []; sol_utr = []; solf_fac = []; sol_coch = [];
 
-sol_fac = sampleFEM(model,vTags,ecTags,dset_ec,traj_fac,current);
-sol_coch = sampleFEM(model,vTags,ecTags,dset_ec,traj_coch,current);
+
 sol_post = sampleFEM(model,vTags,ecTags,dset_ec,traj_post,current);
 sol_lat = sampleFEM(model,vTags,ecTags,dset_ec,traj_lat,current);
 sol_ant = sampleFEM(model,vTags,ecTags,dset_ec,traj_ant,current);
 sol_sacc = sampleFEM(model,vTags,ecTags,dset_ec,traj_sacc,current);
 sol_utr = sampleFEM(model,vTags,ecTags,dset_ec,traj_utr,current);
-
+sol_fac = sampleFEM(model,vTags,ecTags,dset_ec,traj_fac,current);
+sol_coch = sampleFEM(model,vTags,ecTags,dset_ec,traj_coch,current);
+toc
+%%
+save(['fullSolution',fileDate],'sol_post','sol_lat','sol_ant','sol_sacc',...
+    'sol_utr','waveForm','current')
 %% Generate Parameter cells for each nerve
 % Vthresh = 0.085; % aactivation threshold relative to resting membrane potential, V
 % 
@@ -429,13 +437,13 @@ for i = 1:sum(~toKeep{7})
     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
 end
 title(gca,'Cochlear Nerve')
-f82 = plotFlow(flow_vest,flow_vestinlet,traj_vestinlet_pre(toKeep{8},3));
-f82.Position = [200 200 560 420];
-badTraj = traj_vestinlet_pre(~toKeep{8},3);
-for i = 1:sum(~toKeep{8})
-    plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
-end
-title(gca,'Axial Vestibular Origin')
+% f82 = plotFlow(flow_vest,flow_vestinlet,traj_vestinlet_pre(toKeep{8},3));
+% f82.Position = [200 200 560 420];
+% badTraj = traj_vestinlet_pre(~toKeep{8},3);
+% for i = 1:sum(~toKeep{8})
+%     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
+% end
+% title(gca,'Axial Vestibular Origin')
 
 
 %% Plot incomplete trajectories
@@ -465,11 +473,11 @@ title(gca,'Axial Vestibular Origin')
 %%
 % toc
 %% Save figures
-% figs = {f12, f22, f32, f42, f52, f62, f72, f82};
-% for i = 1:length(figs)
-%     saveas(figs{i},['R:\Computational Modeling\Model as of 20230104\Test traj figures\p003step',num2str(i)])
-% %     saveas(figs{i},['R:\Computational Modeling\Model as of 20220908\nerveTrajTest',num2str(i)],'png')
-% end
+figs = {f12, f22, f32, f42, f52, f62, f72};
+for i = 1:length(figs)
+    saveas(figs{i},['R:\Computational Modeling\Solved model data 20230113\traj_p3step',num2str(i)])
+%     saveas(figs{i},['R:\Computational Modeling\Model as of 20220908\nerveTrajTest',num2str(i)],'png')
+end
 %%
 % for i = 11:15
 %     saveas(i,['C:\Users\Evan\OneDrive - Johns Hopkins\VNEL1DRV\_Vesper\Modeling\Modeling Results\Traj step size figures\point1umstep',num2str(i)])
