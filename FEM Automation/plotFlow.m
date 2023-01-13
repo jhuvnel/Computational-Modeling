@@ -37,8 +37,8 @@ validtraj = @(x) iscell(x);
 validpoints = @(x) isfloat(x) && (size(x,1)==3);
 addRequired(p,'flow_vest',@isstruct)
 addRequired(p,'flow_crista',@isstruct)
-addOptional(p,'traj',{[0;0;0]},validtraj)
-addParameter(p,'p0',[0;0;0],validpoints)
+addOptional(p,'traj',{[]},validtraj)
+addParameter(p,'p0',[],validpoints)
 addParameter(p,'plotFlow',1,@islogical)
 addParameter(p,'plotNerveMesh',0,@islogical)
 addParameter(p,'plotCrista',1,@islogical)
@@ -94,12 +94,14 @@ if p.Results.plotCrista
     end
 end
 % Plot starting points
-if ~sum(strcmp(p.UsingDefaults{1},'p0'))
+% if ~sum(strcmp(p.UsingDefaults{1},'p0'))
+if ~(isempty(p.Results.p0))
     plot3(p.Results.p0(1,:),p.Results.p0(2,:),p.Results.p0(3,:),'g.');
     hold on
 end
 % Plot trajectories
-if ~sum(strcmp(p.UsingDefaults{1},'traj'))
+% if ~sum(strcmp(p.UsingDefaults{1},'traj'))
+if ~(isempty(p.Results.traj{1}))
     for i = 1:size(p.Results.traj,1)
         plot3(gca,p.Results.traj{i}(1,:),p.Results.traj{i}(2,:),p.Results.traj{i}(3,:),'-g.')
         if i == 1
@@ -112,6 +114,6 @@ axis equal
 xlabel('x [mm]')
 ylabel('y [mm]')
 zlabel('z [mm]')
-
+f.Position = [100 100 560 420];
 fOut = f;
 end
