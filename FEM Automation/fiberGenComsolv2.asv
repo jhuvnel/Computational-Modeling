@@ -359,8 +359,11 @@ seedNodes3d = mapto3D(seedNodes2d, indv, verts2d, verts3d);
 
 
 %% Generate streamlines
+step = [50e-3; -1];
 [axonVerts, step_out] = stream3Comsol(V_nerve.p,V_nerve.t,V_nerve.d1,V_nerve.d2,...
     V_nerve.d3,seedNodes3d,step);
+
+% at this point, step_out is the same as hardcoded step
 
 %% Plot 3d points and streamlines
 % % plot3d(f1.CurrentAxes, seedNodes3d(1,:), seedNodes3d(2,:), seedNodes3d(3,:), '*')
@@ -372,8 +375,68 @@ seedNodes3d = mapto3D(seedNodes2d, indv, verts2d, verts3d);
 % 
 % end
 
+%% This is WIP of trying to generate streamline with a small step size and then sampling along the curve to find nodes
+% step_base = [0.01;-1];
+% verts = stream3Comsol(V_nerve.p,V_nerve.t,V_nerve.d1,V_nerve.d2,...
+%     V_nerve.d3,p0,step_base);
+% figure
+% plotFlow(V_nerve,V_crista,verts)
+% title('stream3Comsol output (small step size)')
+
+step_full = [];
+% I believe I could optimize this by dividing remaining arclength by
+% step_fill to find final size of step_full for preallocation.
+for i = 1:numGen
+    if size(axonVerts{i},2) < ceil(1/step_base(1))
+        traj{i,3} = [0;0;0];
+        traj{i,2} = [];
+        warning(['Current trajectory ',num2str(i),' is too short. Filling traj with zeros.'])
+    else
+        arclen = arclength(axonVerts{i}(1,:),axonVerts{i}(2,:),axonVerts{i}(3,:));
+        
+        cumStepLength = zeros(3,1);
+        % Generate cumuluative sum of step vector
+        stepFillFlag = step(end) == -1; % flag for if asked to auto fill step vector
+        if stepFillFlag
+            step_full = step(1:end-1);
+            step_fill  = step(end-1); % step size to auto fill with
+            cumStepLength = cumsum(step_full);
+            while cumStepLength(end) + step(end-1) < arclen
+                step_full = [step_full; step_fill];
+                cumStepLength = [cumStepLength; cumStepLength(end)+step_fill];
+            end
+        else % if full step vector is provided (no auto fill)
+            step_full = step;
+            cumStepLength = cumsum(step);
+            
+            % cut off steps at end that would make it longer than actual fiber
+            % trajectory
+            steps_on_curve = cumStepLength<arclen;
+            step_full = step_full(steps_on_curve);
+            cumStepLength = cumStepLength(steps_on_curve);
+        end
+        
+        try
+            % interpolate trajectory at node points
+            relArcLen = cumStepLength/arclen;
+            traj{i,3} = interparc(relArcLen,axonVerts{i}(1,:),axonVerts{i}(2,:),axonVerts{i}(3,:));
+            % output step vector
+            traj{i,2} = step_full;
+        catch ME
+            warning(['Error with interparc for trajectory ',num2str(i),'. Filling traj with zeros.'])
+            traj{i,3} = [0;0;0];
+            traj{i,2} = [];
+        end
+
+    end
+end
+
 %% Return output variables
-trajs = [celllocIndex, step_out, axonVerts];
+locIndexOut = cell(numGen,1);
+for i = 1:numGen
+    locIndexOut{i} = locIndex(i);
+end
+trajs = [locIndexOut, step_out, axonVerts];
 p0 = seedNodes3d;
 
 %% Function definitions

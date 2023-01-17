@@ -182,20 +182,20 @@ save(['trajs_',fileDate],"traj_post","traj_lat","traj_ant","traj_sacc","traj_utr
 
 
 %% Testing fiberGenComsol with interpolation to node points
-% step_vec_test = [301e-3; 300.5e-3; -1]; % units are mm - [301 um; 300.5 um; -1]
-% 
-% [traj_test2, fiberType2, p0_test2] = fiberGenComsol(flow_vest_fixed,flow_ant_crista,50,step_vec_test);
-% 
-% toKeep = [];
-% for j = 1:size(traj_test2,1)
-%     if length(traj_test2{j,2}) > 20
-%         toKeep = [toKeep, j];
-%     end
-% end
-% traj_test2 = traj_test2(toKeep,:);
-% disp([num2str(size(traj_test2,1)),' axons succesfully generated.'])
-% plotFlow(flow_vest_fixed, flow_ant_crista,traj_test2(:,3));
-% title('Succesful test\_traj2 axons')
+step_vec_test = [301e-3; 300.5e-3; -1]; % units are mm - [301 um; 300.5 um; -1]
+
+[traj_test2, fiberType2, p0_test2] = fiberGenComsol(flow_vest_fixed,flow_ant_crista,50,step_vec_test);
+
+toKeep = [];
+for j = 1:size(traj_test2,1)
+    if length(traj_test2{j,2}) > 20
+        toKeep = [toKeep, j];
+    end
+end
+traj_test2 = traj_test2(toKeep,:);
+disp([num2str(size(traj_test2,1)),' axons succesfully generated.'])
+plotFlow(flow_vest_fixed, flow_ant_crista,traj_test2(:,3));
+title('Succesful test\_traj2 axons')
 
 %% Extract Ve at node points
 % % testing mphinterp alone

@@ -2,7 +2,9 @@
 % exports a representative axon trajectory for each vestibular nerve
 % division based on a selected traj on a plot.
 
-
+% run these sections manually once you have a selected point on a single
+% axon trajectory selected in the figure. Do it sepearately for each
+% nerve...
 %%
 tract_post = [cursor_info_post.Target.XData; cursor_info_post.Target.YData; cursor_info_post.Target.ZData];
 %%

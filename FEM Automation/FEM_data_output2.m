@@ -62,6 +62,7 @@ vTags = {'V2_1','V2_3','V2_4','V2_5','V2_6','V2_7'};
 %     'ec4.Jx','ec4.Jy','ec4.Jz',...
 %     'ec5.Jx','ec5.Jy','ec5.Jz',...
 %     'ec6.Jx','ec6.Jy','ec6.Jz'};
+ITags = {'I_1','I_2','I_3','I_4','I_5','I_6'};
 
 % tags for electrical currents physics nodes
 ecTags = {'ec','ec2','ec3','ec4','ec5','ec6'};
@@ -69,6 +70,10 @@ dset_ec = 'dset4'; % dataset for electric currents
 
 % get current date for save file name
 fileDate = date;
+
+% Import total current delivered to electrodes
+ITable_file = 'R:\Computational Modeling\Solved model data 20230113\delivered_currents.txt';
+currents = readmatrix(ITable_file,'NumHeaderLines',5,'OutputType','double','Delimiter','    ');
 
 
 %% For testing vestibular nerve-only model with fine mesh
@@ -181,7 +186,7 @@ disp('Trajs done with anterior canal.')
 
 toc
 
-% Utricle and Saccule Fiber Gen
+%% Utricle and Saccule Fiber Gen
 disp('--------Starting utricle and saccule fiber generation.--------')
 tic
 % step = [301e-3; 300.5e-3; -1];
@@ -358,17 +363,18 @@ tic
 sol_post = []; sol_lat = []; sol_ant = []; sol_sacc = []; sol_utr = []; solf_fac = []; sol_coch = [];
 
 
-sol_post = sampleFEM(model,vTags,ecTags,dset_ec,traj_post,current);
-sol_lat = sampleFEM(model,vTags,ecTags,dset_ec,traj_lat,current);
-sol_ant = sampleFEM(model,vTags,ecTags,dset_ec,traj_ant,current);
-sol_sacc = sampleFEM(model,vTags,ecTags,dset_ec,traj_sacc,current);
-sol_utr = sampleFEM(model,vTags,ecTags,dset_ec,traj_utr,current);
-sol_fac = sampleFEM(model,vTags,ecTags,dset_ec,traj_fac,current);
-sol_coch = sampleFEM(model,vTags,ecTags,dset_ec,traj_coch,current);
+sol_post = sampleFEM(model,vTags,ecTags,dset_ec,traj_post,currents);
+sol_lat = sampleFEM(model,vTags,ecTags,dset_ec,traj_lat,currents);
+sol_ant = sampleFEM(model,vTags,ecTags,dset_ec,traj_ant,currents);
+sol_sacc = sampleFEM(model,vTags,ecTags,dset_ec,traj_sacc,currents);
+sol_utr = sampleFEM(model,vTags,ecTags,dset_ec,traj_utr,currents);
+sol_fac = sampleFEM(model,vTags,ecTags,dset_ec,traj_fac,currents);
+sol_coch = sampleFEM(model,vTags,ecTags,dset_ec,traj_coch,currents);
+
+%
+save([save_dir,'fullSolution',fileDate],'sol_post','sol_lat','sol_ant','sol_sacc',...
+    'sol_utr','waveForm','currents')
 toc
-%%
-save(['fullSolution',fileDate],'sol_post','sol_lat','sol_ant','sol_sacc',...
-    'sol_utr','waveForm','current')
 %% Generate Parameter cells for each nerve
 % Vthresh = 0.085; % aactivation threshold relative to resting membrane potential, V
 % 
@@ -512,10 +518,13 @@ title(gca,'Cochlear Nerve')
 % toc
 %% Save figures
 % figs = {f12, f22, f32, f42, f52, f62, f72};
-figs = {f12, f22, f32, f42, f52};
+% figs = {f12, f22, f32, f42, f52};
+figs = 2:2:10;
 for i = 1:length(figs)
-    saveas(figs{i},['R:\Computational Modeling\Model with curvilinear coordinates only\traj_p05step',num2str(i)])
+%     saveas(figs{i},['R:\Computational Modeling\Model with curvilinear coordinates only\traj_p05step',num2str(i)])
 %     saveas(figs{i},['R:\Computational Modeling\Model as of 20220908\nerveTrajTest',num2str(i)],'png')
+    saveas(figs,['R:\Computational Modeling\Model with curvilinear coordinates only\finemesh_2d_',num2str(i)])
+
 end
 %%
 % for i = 11:15

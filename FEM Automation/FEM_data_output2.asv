@@ -351,7 +351,7 @@ beep
 % save(['trajs_',fileDate],"traj_vestinlet","traj_post","traj_lat","traj_ant","traj_sacc","traj_utr")
 save_dir = 'R:\Computational Modeling\Model with curvilinear coordinates only\';
 % save([save_dir,'trajs_',fileDate],"traj_post","traj_lat","traj_ant","traj_sacc","traj_utr","traj_fac","traj_coch")
-save([save_dir,'trajs_',fileDate],"traj_post","traj_lat","traj_ant","traj_sacc","traj_utr")
+save([save_dir,'trajs_',fileDate],"traj_post","traj_lat","traj_ant","traj_sacc","traj_utr", "traj_post_pre","traj_lat_pre","traj_ant_pre","traj_sacc_pre","traj_utr_pre")
 
 %% Full FEM sampling along all trajectories
 tic
@@ -512,10 +512,13 @@ title(gca,'Cochlear Nerve')
 % toc
 %% Save figures
 % figs = {f12, f22, f32, f42, f52, f62, f72};
-figs = {f12, f22, f32, f42, f52};
+% figs = {f12, f22, f32, f42, f52};
+figs = 2:2:10;
 for i = 1:length(figs)
-    saveas(figs{i},['R:\Computational Modeling\Model with curvilinear coordinates only\traj_p05step',num2str(i)])
+%     saveas(figs{i},['R:\Computational Modeling\Model with curvilinear coordinates only\traj_p05step',num2str(i)])
 %     saveas(figs{i},['R:\Computational Modeling\Model as of 20220908\nerveTrajTest',num2str(i)],'png')
+    saveas(figs,['R:\Computational Modeling\Model with curvilinear coordinates only\finemesh_2d_',num2str(i)])
+
 end
 %%
 % for i = 11:15
