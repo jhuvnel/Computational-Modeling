@@ -161,6 +161,19 @@ flow_vest_fixed.d3 = -1*flow_vest.d3;
 % flow_vest_fromcrista = flow_vest;
 disp('Flow information extracted.')
 toc
+%% Testing with one nerve
+numAxons_test = 50;
+locIndex_test = 10*rand(numAxons_test,1);
+
+step_test = [301e-3; 300.5e-3; -1];
+
+[traj_post_test, p0_post_test] = fiberGenComsolv2(flow_vest_fixed, flow_post_crista, locIndex_test, step_test, basisVecTagsVest, model, dset_vest);
+
+%%
+% plot crista origin results
+ftest = plotFlow(flow_vest_fixed,flow_post_crista,traj_post_test(:,3));
+title(gca,'Post. Crista Origin - Test')
+
 %% SCC fiber gen
 disp('--------Starting SCC fiber generation.--------')
 tic
