@@ -391,7 +391,7 @@ success_length = 4.5; % mm
 trajs = cell(numGen, 3);
 
 for i = 1:numGen
-    if size(streamVerts{i},2) < ceil(success_length/step_stream(1))
+    if size(streamVerts{i},2) < ceil(success_length/step_stream{i}(1))
         trajs{i,3} = [0;0;0];
         trajs{i,2} = [];
         warning(['Current trajectory ',num2str(i),' is too short. Filling traj with zeros.'])
@@ -400,18 +400,18 @@ for i = 1:numGen
         
         cumStepLength = zeros(3,1);
         % Generate cumuluative sum of step vector
-        stepFillFlag = step{i}(end) == -1; % flag for if asked to auto fill step vector
+        stepFillFlag = step(end) == -1; % flag for if asked to auto fill step vector
         if stepFillFlag
-            step_full = step{i}(1:end-1);
-            step_fill  = step{i}(end-1); % step size to auto fill with
+            step_full = step(1:end-1);
+            step_fill  = step(end-1); % step size to auto fill with
             cumStepLength = cumsum(step_full);
-            while cumStepLength(end) + step{i}(end-1) < arclen
+            while cumStepLength(end) + step(end-1) < arclen
                 step_full = [step_full; step_fill];
                 cumStepLength = [cumStepLength; cumStepLength(end)+step_fill];
             end
         else % if full step vector is provided (no auto fill)
-            step_full = step{i};
-            cumStepLength = cumsum(step{i});
+            step_full = step;
+            cumStepLength = cumsum(step);
             
             % cut off steps at end that would make it longer than actual fiber
             % trajectory
@@ -423,12 +423,12 @@ for i = 1:numGen
         try
             % interpolate trajectory at node points
             relArcLen = cumStepLength/arclen;
-            trajs{i,3} = interparc(relArcLen,streamVerts{i}(1,:),streamVerts{i}(2,:),streamVerts{i}(3,:));
+            trajs{i,3} = interparc(relArcLen,streamVerts{i}(1,:),streamVerts{i}(2,:),streamVerts{i}(3,:))';
             % output step vector
             trajs{i,2} = step_full;
         catch
             warning(['Error with interparc for trajectory ',num2str(i),'. Filling traj with zeros.'])
-            trajs{i,3} = [0;0;0];
+            trajs{i,3} = [0,0,0];
             trajs{i,2} = [];
         end
 

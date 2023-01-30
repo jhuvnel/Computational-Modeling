@@ -370,16 +370,16 @@ toc
 %
 delete(poolobj); % shut down parallel pool
 
-%% Save results
+% Save results
 fileDate = date;
-save([saveDir,'threshResultsFull_',fileDate],'resultsThresh_all', 'errorObjs', 'errorObjs2')
+save([saveDir,'threshResultsFull_',fileDate],'resultsThresh_all')
 %% For just testing
 
 postSCC_SimCell = resultsThresh_post;
 latSCC_SimCell = resultsThresh_lat;
 antSCC_SimCell = resultsThresh_ant;
-% utricle_SimCell = ;
-% saccule_SimCell = ;
+utricle_SimCell = ;
+saccule_SimCell = ;
 
 %% Post Processing - Find Recruitment
 currentRange = linspace(0,10,500);

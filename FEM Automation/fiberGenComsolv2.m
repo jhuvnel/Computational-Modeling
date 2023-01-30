@@ -428,7 +428,7 @@ for i = 1:numGen
             trajs{i,2} = step_full;
         catch
             warning(['Error with interparc for trajectory ',num2str(i),'. Filling traj with zeros.'])
-            trajs{i,3} = [0;0;0];
+            trajs{i,3} = [0,0,0];
             trajs{i,2} = [];
         end
 
