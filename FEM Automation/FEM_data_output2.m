@@ -75,6 +75,8 @@ fileDate = date;
 ITable_file = 'R:\Computational Modeling\Solved model data 20230113\delivered_currents.txt';
 currents = readmatrix(ITable_file,'NumHeaderLines',5,'OutputType','double','Delimiter','    ');
 
+% add paths of arclength and interparc functions for fiberGenComsolv2
+addpath('C:\Users\Evan\Documents\GitHub\Computational-Modeling\FEM Automation\Utility Scripts\arclength','C:\Users\Evan\Documents\GitHub\Computational-Modeling\FEM Automation\Utility Scripts\interparc');
 
 %% For testing vestibular nerve-only model with fine mesh
 tic
@@ -162,17 +164,17 @@ flow_vest_fixed.d3 = -1*flow_vest.d3;
 disp('Flow information extracted.')
 toc
 %% Testing with one nerve
-% numAxons_test = 50;
-% locIndex_test = 10*rand(numAxons_test,1);
-% 
-% step_test = [301e-3; 300.5e-3; -1];
-% 
-% [traj_post_test, p0_post_test] = fiberGenComsolv2(flow_vest_fixed, flow_post_crista, locIndex_test, step_test, basisVecTagsVest, model, dset_vest);
-% 
-% %
-% % plot crista origin results
-% ftest = plotFlow(flow_vest_fixed,flow_post_crista,traj_post_test(:,3));
-% title(gca,'Post. Crista Origin - Test')
+numAxons_test = 50;
+locIndex_test = 10*rand(numAxons_test,1);
+
+step_test = [301e-3; 300.5e-3; -1];
+
+[traj_post_test, p0_post_test] = fiberGenComsolv2(flow_vest_fixed, flow_post_crista, locIndex_test, step_test, basisVecTagsVest, model, dset_vest);
+
+%
+% plot crista origin results
+ftest = plotFlow(flow_vest_fixed,flow_post_crista,traj_post_test(:,3));
+title(gca,'Post. Crista Origin - Test')
 
 %% SCC fiber gen
 disp('--------Starting SCC fiber generation.--------')
@@ -363,6 +365,30 @@ traj_utr = all_trajs_out{5};
 traj_fac = all_trajs_out{6};
 traj_coch = all_trajs_out{7};
 clear all_trajs all_trajs_out
+
+% Remove nodes if the axon is too long
+% In the neuromorphic model, initial conditions are only defined for up to
+% 50 nodes per axon (might actually be 40 since 10 are virtual endnodes).
+% So far only facial axons are longer than this.
+
+for i = 1:length(traj_fac(:,1))
+    nNode = size(traj_fac{3,i},2); % how many nodes there are
+
+    side = 0; % which end of axon to remove nodes from
+    while nNode > 40
+        % This alternates removing nodes from either end of the axon so
+        % that the center (which is nearest the canals and electrodes) is
+        % preserved.
+        if side == 1
+            traj_fac{3,i} = traj_fac{3,i}(:,1:end-1); % remove last node
+        else
+            traj_fac{3,i} = traj_fac{3,i}(:,2:end); % remove first node
+        end
+        nNode = size(traj_fac{3,i},2); % recalculate number of nodes
+
+    end
+end
+
 beep
 
 

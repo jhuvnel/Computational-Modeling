@@ -49,6 +49,7 @@ tic
 try
 % resultsTestThresh = findThresholdWaveform(parameterTestThresh,solutionBigCell{1},waveForm,traj_test2,simClassTest,errorFileTest);
 resultsTestThresh = findThresholdWaveform(parameterTestThresh,sol_post{1}(1:nTestAxons,:),waveForm,[],simClassTest,errorFileTest);
+% resultsTestThresh = findThresholdWaveform(parameterTestThresh,sol_post{1}(35,:),waveForm,[],simClassTest,errorFileTest);
 catch ME
     errorObjs{i} =  ME;
     if (strcmp(ME.identifier,'MATLAB:Java:GenericException'))
@@ -200,16 +201,19 @@ save([saveDir,'threshResultsFull_',fileDate],'resultsThresh_post','resultsThresh
 nBandSCC = 6;
 nBandUS = 3;
 nSol = length(sol_post);
-nAxonGroups = (3*nBandSCC + 2*nBandUS + 2); % update based on how many nerves are being simulated
+nNerve = 7; % number of nerves - 5 vestibular + 1 facial + 1 cochlear
+nAxonGroups = (3*nBandSCC + 2*nBandUS + 2); % update based on how many nerves are being simulated - 3 SCC, 2 oto, 1 facial, 1 cochlear
 nSims = nAxonGroups*nSol;
 % set up all cells for parfor
-resultsThresh_all = cell(1,nSims);
+% resultsThresh_all_parfor = cell(1,nSims);
 simClass_all = cell(1,nSims);
 
 sol_all = [sol_post, sol_lat, sol_ant, sol_sacc, sol_utr, sol_fac, sol_coch];
 paramToSolMap = zeros(1,nSims);
 % sol_all = cell(1,nSims);
 
+% have to put all the parameter cells into one variable for slicing in
+% parfor. Have to do the same thing with the simClasses
 param_all = cell(1,nSims);
 for i = 1:nSol
     % posterior canal
@@ -280,7 +284,9 @@ for i = 1:nSol
 
     % facial
     param_all{1,nAxonGroups*(i-1)+1+3*nBandSCC+2*nBandUS} = paramCellFac;
-    simClass_all{1,nAxonGroups*(i-1)+1+3*nBandSCC+2*nBandUS} = AxonSimulate_SENN_AxonI;
+    % I am randomly choosing AxonSimulate_G_AHPAxon_CVStar1483 here instead
+    % of AxonSimulate_SENN_AxonI as originally.
+    simClass_all{1,nAxonGroups*(i-1)+1+3*nBandSCC+2*nBandUS} = AxonSimulate_G_AHPAxon_CVStar1483;
     paramToSolMap(nAxonGroups*(i-1)+1+3*nBandSCC+2*nBandUS) = i + 5*nSol;
 
     % cochlear
@@ -301,13 +307,33 @@ for i = 1:nSims
     extract = param_all{i}{10}(2):param_all{i}{10}(3);
     sol_all_parfor{1,i} = sol_all{paramToSolMap(i)}(extract,:);
 end
-% %%
-% for i = 1:1
-%     % run neuromorphic model thresholding function - I left out traj input
-%     % since it is just copying the traj into the results cell and I want to
-%     % save memory
-%     resultsThresh_all{i} = findThresholdWaveform(param_all{i},sol_all_parfor{i},waveForm,[],simClass_all{i},errorFileTest); 
-% end
+%% Debugging
+% find max number of nodes in each axon group and all axons together
+maxNodes = 0;
+iNodes = zeros(1,nSims);
+for i = 1:nSims
+    iNodes(i) = max(cellfun(@length, sol_all_parfor{i}(:,2)));
+    if maxNodes < iNodes(i)
+        maxNodes = iNodes(i);
+    end
+end
+disp(maxNodes)
+%% Debugging
+test_sacc3_inds = [24 50 76 102 128 154];
+
+test_fac_inds = [25 51 77 102 129 154];
+resultsThresh_all_parfor_test = cell(size(test_sacc3_inds));
+
+% for iter = 1:length(test_sacc3_inds)
+for iter = 1
+    % run neuromorphic model thresholding function - I left out traj input
+    % since it is just copying the traj into the results cell and I want to
+    % save memory
+%     i = test_sacc3_inds(iter);
+    i = test_fac_inds(iter);
+%     i = 1;
+    resultsThresh_all_parfor_test{iter} = findThresholdWaveform(param_all{i},sol_all_parfor{i},waveForm,[],simClass_all{i},errorFileTest);
+end
 %%
 poolobj = parpool(16); % create parallel pool object
 F = parfevalOnAll(poolobj,@javaaddpath,0,javaPath); % set the pool to add java dynamic path for each worker - necessary if you are using dynamic java path within the parfor
@@ -315,13 +341,18 @@ F = parfevalOnAll(poolobj,@javaaddpath,0,javaPath); % set the pool to add java d
 %% parallel for loop
 tic
 errorObjs = cell(1,nSims);
-errorObjs2 = cell(1,nSims);
+resultsThresh_all_parfor = cell(1,nSims);
 
-parfor i = 1:5
+parfor i = 1:nSims
+    % something doesn't like the simClass_all array that I made... so I
+    % will just use a single variable for the simClass. This includes some
+    % hardcoding in the axonGroups that take each fiber type
     axonGroup = mod(i,nAxonGroups) + 1;
     if any(axonGroup == [1 3 7 9 13 15 19 22])
         simClass = AxonSimulate_G_AHPAxon_CVStar0265;
-    elseif any(axonGroup == [2 4 5 8 10 11 14 16 17 20 21 23 24])
+    elseif any(axonGroup == [2 4 5 8 10 11 14 16 17 20 21 23 24 25])
+        % 25 corresponds to facial fibers. remove 25 if you want to set
+        % them to a different axon class (like SENN_AxonI)
         simClass = AxonSimulate_G_AHPAxon_CVStar1483;
     elseif any(axonGroup == [6 12 18])
         simClass = AxonSimulate_G_AHPAxon_CVStar5082;
@@ -329,125 +360,296 @@ parfor i = 1:5
         simClass = AxonSimulate_SENN_AxonI;
     end
     % run neuromorphic model thresholding function - I left out traj input
-    % since it is just copying the traj into the results cell and I want to
-    % save memory
+    % since it is just copying the traj into the results cell and I don't
+    % want it more complicated
+
 %     resultsThresh_all{i} = findThresholdWaveform(param_all{i},sol_all_parfor{i},waveForm,[],simClass,errorFileTest); 
 
     try
-    resultsThresh_all{i} = findThresholdWaveform(param_all{i},sol_all_parfor{i},waveForm,[],simClass,errorFileTest); 
+        resultsThresh_all_parfor{i} = findThresholdWaveform(param_all{i},sol_all_parfor{i},waveForm,[],simClass,errorFileTest); 
     catch ME
         errorObjs{i} =  ME;
-        if (strcmp(ME.identifier,'MATLAB:Java:GenericException'))
-            warning(['Error encountered in axonGroup ', num2str(i), ' java: array index out of bounds exception. Retrying with 1 less axon.'])
-            try % retry
-                % remove one axon from the end, this seems to help
-                param_all{i}{1} = param_all{i}{1} - [1;0;1]; 
-                sol_all_parfor{i} = sol_all_parfor{i}(1:end-1,:);
-                
-                resultsThresh_all{i} = findThresholdWaveform(param_all{i},sol_all_parfor{i},waveForm,[],simClass,errorFileTest); 
-            catch ME2
-                errorObjs2{i} = ME2;
-                warning('Error encountered again. Skipping this axonGroup.')
-            end
+        warning(['Error encountered in axonGroup ', num2str(i),'.\n',errorObjs{i}.message])
+%         if (strcmp(ME.identifier,'MATLAB:Java:GenericException'))
+%             warning(['Error encountered in axonGroup ', num2str(i), ' java: array index out of bounds exception. Retrying with 1 less axon.'])
+%             try % retry
+%                 % remove one axon from the end, this seems to help
+%                 param_all{i}{1} = param_all{i}{1} - [1;0;1]; 
+%                 sol_all_parfor{i} = sol_all_parfor{i}(1:end-1,:);
+%                 
+%                 resultsThresh_all{i} = findThresholdWaveform(param_all{i},sol_all_parfor{i},waveForm,[],simClass,errorFileTest); 
+%             catch ME2
+%                 errorObjs2{i} = ME2;
+%                 warning('Error encountered again. Skipping this axonGroup.')
+%             end
+%         else
+%             warning(['Unkown error encountered in axonGroup ', num2str(i), ' findThresholdWaveform.'])
+%         end
+    end
+end
+tNeuromorphic_parfor = toc;
+fprintf('Full neuromorphic model computational time with 16 parallel workers: %f \n', tNeuromorphic_parfor)
+
+%% Pack results back into original sol_all format for whole nerves
+resultsThresh_all = cell(1,nSol*nNerve);
+for i = 1:nSims
+    if ~isempty(resultsThresh_all_parfor{i})
+        if isempty(resultsThresh_all{paramToSolMap(i)})
+            % if this is the first band/group of axons added to this cell, just
+            % copy the axon group results cell
+            resultsThresh_all(paramToSolMap(i)) = resultsThresh_all_parfor(i);
         else
-            warning(['Unkown error encountered in axonGroup ', num2str(i), ' findThresholdWaveform.'])
+           % if an axon group has already been added to this nerve's cell,
+           % append axons in the next axon group inside the nerve cell
+           % append parameter cell... only need to changes elements 1, 5, 6, 10
+           temp_param_cell = resultsThresh_all{paramToSolMap(i)}{1};
+           temp_param_cell{1} = ... % nerve axon numbers
+               [temp_param_cell{1}(1) + resultsThresh_all_parfor{i}{1}{1}(1);
+               1;
+               temp_param_cell{1}(1) + resultsThresh_all_parfor{i}{1}{1}(1)];
+           temp_param_cell{5} = [temp_param_cell{5}; resultsThresh_all_parfor{i}{1}{5}]; % fiber diams
+           temp_param_cell{6} = [temp_param_cell{6}; resultsThresh_all_parfor{i}{1}{6}]; % inital state array
+           temp_param_cell{10} = [temp_param_cell{10}, resultsThresh_all_parfor{i}{1}{10}]; % band axon numbers - will now contain a column for each band/axon group
+    
+           resultsThresh_all{paramToSolMap(i)}{1} = temp_param_cell;
+    
+           % append threshold current
+           resultsThresh_all{paramToSolMap(i)}{4} = [resultsThresh_all{paramToSolMap(i)}{4}; resultsThresh_all_parfor{i}{4}];
+           % append AP initiation node and time point
+           resultsThresh_all{paramToSolMap(i)}{5} = [resultsThresh_all{paramToSolMap(i)}{5}; resultsThresh_all_parfor{i}{5}];
+    
         end
     end
 end
 
+postSCC_SimCell = resultsThresh_all(1:nSol);
+latSCC_SimCell = resultsThresh_all(1+nSol:2*nSol);
+antSCC_SimCell = resultsThresh_all(1+2*nSol:3*nSol);
+saccule_SimCell = resultsThresh_all(1+3*nSol:4*nSol);
+utricle_SimCell = resultsThresh_all(1+4*nSol:5*nSol);
+facial_SimCell = resultsThresh_all(1+5*nSol:6*nSol);
+cochlear_SimCell = resultsThresh_all(1+6*nSol:7*nSol);
 
-%
-% resultsThresh_post = resultsThresh_all(1:nSol);
-% resultsThresh_lat = resultsThresh_all(1+nSol:2*nSol);
-% resultsThresh_ant = resultsThresh_all(1+2*nSol:3*nSol);
-% resultsThresh_sacc = resultsThresh_all(1+3*nSol:4*nSol);
-% resultsThresh_utr = resultsThresh_all(1+4*nSol:5*nSol);
 
-toc
+
 % clear aggregate cells since they are just copies and pretty big
 % clear simClass_all sol_all param_all resultsThresh_all
+ 
 
-%
-delete(poolobj); % shut down parallel pool
-
-% Save results
+%% Save results
 fileDate = date;
-save([saveDir,'threshResultsFull_',fileDate],'resultsThresh_all')
-%% For just testing
-
-postSCC_SimCell = resultsThresh_post;
-latSCC_SimCell = resultsThresh_lat;
-antSCC_SimCell = resultsThresh_ant;
-utricle_SimCell = ;
-saccule_SimCell = ;
+save([saveDir,'threshResultsFull_',fileDate],'postSCC_SimCell','latSCC_SimCell','antSCC_SimCell','utricle_SimCell','saccule_SimCell', 'errorObjs','tNeuromorphic_parfor')
 
 %% Post Processing - Find Recruitment
-currentRange = linspace(0,10,500);
+currentRange = linspace(0,10,500); % this is the range of current scaling to threshold values for
 currentRangeLen = length(currentRange);
 current = 200e-6;
 
-% preallocate memory
-numSims = length(antSCC_SimCell);
-latSum = cell(1,numSims);
+% preallocate variables
+numEl = length(antSCC_SimCell); % number of electrodes
+latSum = cell(1,numEl);
 postSum = latSum;
 antSum = latSum;
-utrSum = latSum;
 saccSum = latSum;
+utrSum = latSum;
+facSum = latSum;
+cochSum = latSum;
 
+postSumNorm = latSum;
+latSumNorm = latSum;
 antSumNorm = latSum;
+utrSumNorm = latSum;
+saccSumNorm = latSum;
+facSumNorm = latSum;
+cochSumNorm = latSum;
 
 % create cumulative sum of fibers recruited vs current
-for i = 1:numSims % for every electrode combo
+for i = 1:numEl % for every electrode combo
     % preallocate memory
     latSum{i} = zeros(1,currentRangeLen);
     postSum{i} = zeros(1,currentRangeLen);
     antSum{i} = zeros(1,currentRangeLen);
-%     utrSum{i} = zeros(1,currentRangeLen);
-%     saccSum{i} = zeros(1,currentRangeLen);
-    for j = 1:currentRangeLen
-        if i == 1
+    saccSum{i} = zeros(1,currentRangeLen);
+    utrSum{i} = zeros(1,currentRangeLen);
+    facSum{i} = zeros(1,currentRangeLen);
+    cochSum{i} = zeros(1,currentRangeLen);
+        for j = 1:currentRangeLen
+            % if condition just skips the current cell if it is empty (i.e.
+            % there was an error when solving for the threshold and nothing
+            % was returned)
+            if ~isempty(latSCC_SimCell{i})
             % add number of axons whose threshold is below this current
             % level and then subtract those who didn't ever get activated
             % (negative threshold)
-            latSum{i}(j) = size(find(latSCC_SimCell{i}{4,1} < currentRange(j)),1);
-            latSum{i}(j) = latSum{i}(j) - size(find(latSCC_SimCell{i}{4,1} <= 0),1);
+                latSum{i}(j) = latSum{i}(j) + size(find(latSCC_SimCell{i}{4,1} < currentRange(j)),1);
+                latSum{i}(j) = latSum{i}(j) - size(find(latSCC_SimCell{i}{4,1} <= 0),1);
+            end
+            
+            if ~isempty(postSCC_SimCell{i})
+                postSum{i}(j) = postSum{i}(j) + size(find(postSCC_SimCell{i}{4,1} < currentRange(j)),1);
+                postSum{i}(j) = postSum{i}(j) - size(find(postSCC_SimCell{i}{4,1} <= 0),1);
+            end
+            
+            if ~isempty(antSCC_SimCell{i})
+                antSum{i}(j) = antSum{i}(j) + size(find(antSCC_SimCell{i}{4,1} < currentRange(j)),1);
+                antSum{i}(j) = antSum{i}(j) - size(find(antSCC_SimCell{i}{4,1} <= 0),1);
+            end
+            
+            if ~isempty(saccule_SimCell{i})
+                saccSum{i}(j) = saccSum{i}(j) + size(find(saccule_SimCell{i}{4,1} < currentRange(j)),1);
+                saccSum{i}(j) = saccSum{i}(j) - size(find(saccule_SimCell{i}{4,1} <= 0),1);
+            end
 
-            postSum{i}(j) = size(find(postSCC_SimCell{i}{4,1} < currentRange(j)),1);
-            postSum{i}(j) = postSum{i}(j) - size(find(postSCC_SimCell{i}{4,1} <= 0),1);
-            
-            antSum{i}(j) = size(find(antSCC_SimCell{i}{4,1} < currentRange(j)),1);
-            antSum{i}(j) = antSum{i}(j) - size(find(antSCC_SimCell{i}{4,1} <= 0),1);
-            
-%             utrSum{i}(j) = size(find(utricle_SimCell{i}{4,1} < currentRange(j)),1);
-%             utrSum{i}(j) = utrSum{i}(j) - size(find(utricle_SimCell{i}{4,1} <= 0),1);
-%
-%             saccSum{i}(j) = size(find(saccule_SimCell{i}{4,1} < currentRange(j)),1);
-%             saccSum{i}(j) = saccSum{i}(j) - size(find(saccule_SimCell{i}{4,1} <= 0),1);
-        else
-            latSum{i}(j) = latSum{i}(j) + size(find(latSCC_SimCell{i}{4,1} < currentRange(j)),1);
-            latSum{i}(j) = latSum{i}(j) - size(find(latSCC_SimCell{i}{4,1} <= 0),1);
-        
-            postSum{i}(j) = postSum{i}(j) + size(find(postSCC_SimCell{i}{4,1} < currentRange(j)),1);
-            postSum{i}(j) = postSum{i}(j) - size(find(postSCC_SimCell{i}{4,1} <= 0),1);
-        
-            antSum{i}(j) = antSum{i}(j) + size(find(antSCC_SimCell{i}{4,1} < currentRange(j)),1);
-            antSum{i}(j) = antSum{i}(j) - size(find(antSCC_SimCell{i}{4,1} <= 0),1);
-            
-%             utrSum{i}(j) = utrSum{i}(j) + size(find(utricle_SimCell{i}{4,1} < currentRange(j)),1);
-%             utrSum{i}(j) = utrSum{i}(j) - size(find(utricle_SimCell{i}{4,1} <= 0),1);
-%         
-%             saccSum{i}(j) = saccSum{i}(j) + size(find(saccule_SimCell{i}{4,1} < currentRange(j)),1);
-%             saccSum{i}(j) = saccSum{i}(j) - size(find(saccule_SimCell{i}{4,1} <= 0),1);
+            if ~isempty(utricle_SimCell{i})
+                utrSum{i}(j) = utrSum{i}(j) + size(find(utricle_SimCell{i}{4,1} < currentRange(j)),1);
+                utrSum{i}(j) = utrSum{i}(j) - size(find(utricle_SimCell{i}{4,1} <= 0),1);
+            end
+
+            if ~isempty(facial_SimCell{i})
+                facSum{i}(j) = facSum{i}(j) + size(find(facial_SimCell{i}{4,1} < currentRange(j)),1);
+                facSum{i}(j) = facSum{i}(j) - size(find(facial_SimCell{i}{4,1} <= 0),1);
+            end
+
+            if ~isempty(cochlear_SimCell{i})
+                cochSum{i}(j) = cochSum{i}(j) + size(find(cochlear_SimCell{i}{4,1} < currentRange(j)),1);
+                cochSum{i}(j) = cochSum{i}(j) - size(find(cochlear_SimCell{i}{4,1} <= 0),1);
+            end
         end
-    end
     
     % normalize by total number of axons for that nerve
     postSumNorm{i} = 100*postSum{i}/size(postSCC_SimCell{i}{4,1},1);
     latSumNorm{i} = 100*latSum{i}/size(latSCC_SimCell{i}{4,1},1);
     antSumNorm{i} = 100*antSum{i}/size(antSCC_SimCell{i}{4,1},1);
-%     saccSumNorm{i} = 100*saccSum{i}/size(saccule_SimCell{i}{4,1},1);
-%     utrSumNorm{i} = 100*utrSum{i}/size(utricle_SimCell{i}{4,1},1);
+    saccSumNorm{i} = 100*saccSum{i}/size(saccule_SimCell{i}{4,1},1);
+    utrSumNorm{i} = 100*utrSum{i}/size(utricle_SimCell{i}{4,1},1);
+%     facSumNorm{i} = 100*facSum{i}/size(facial_SimCell{i}{4,1},1);
+    cochSumNorm{i} = 100*cochSum{i}/size(cochlear_SimCell{i}{4,1},1);
 end
+
+% Plot activation curves by electrode
+% all of these electrodes were referenced to electrode 2 in the common crus
+electrode_names_full = {'1 (post. canal)','3 (ant. canal)','4 (ant. canal)','5 (lat. canal)','6 (post. canal)','7 (lat. canal)'};
+electrode_names = {'1','3','4','5','6','7'};
+nerve_names = {'Anterior Canal','Lateral Canal','Posterior Canal','Saccule','Utricle','Facial','Cochlear'};
+% nerve_names = {'Anterior Canal','Lateral Canal','Posterior Canal','Saccule','Utricle','Cochlear'};
+currVector = currentRange*current*1e6; % uA
+normalCurrentRange = [currVector(2) 300]; % uA, used to plot a shaded region indicating standard range of currents used in monkeys
+maxNum = 100; % sets y-axis limit in plots (max activation)
+
+% Individual figure per electrode
+% maxNum = 100;
+% for i = 1:numEl
+%     figure
+%     plot(currVector,  antSumNorm{i}, 'g'); 
+%     hold on
+%     plot(currVector,  latSumNorm{i}, 'r'); 
+%     plot(currVector,  postSumNorm{i}, 'b'); 
+%     plot(currVector,  saccSumNorm{i}, '--'); 
+%     plot(currVector,  utrSumNorm{i}, '--'); 
+% %     plot(currVector,  facSumNorm{i}, ':'); 
+%     plot(currVector,  cochSumNorm{i}, ':'); 
+%     title(['Electrode ', electrode_names{i}]);
+%     xlabel('Current (mA)');
+%     ylabel('% Fibers Activated');
+%     legend(nerve_names,'Location','southeast')
+%     axis([0 max(currVector) 0 maxNum])
+% 
+% end
+
+% Subplot format
+el2TileMap = ...
+    [2, 1, 4;
+    3, 5, 6]';
+figure('Units','Inches','Position',[2 2 14 8])
+ph = cell(7,1);
+th = tiledlayout(2,3);
+for i = 1:numEl
+    nexttile
+
+    ph{1} = plot(currVector,  antSumNorm{el2TileMap(i)}, 'g','LineWidth',1); 
+    hold on
+    ph{2} = plot(currVector,  latSumNorm{el2TileMap(i)}, 'r','LineWidth',1); 
+    ph{3} = plot(currVector,  postSumNorm{el2TileMap(i)}, 'b','LineWidth',1); 
+    ph{4} = plot(currVector,  saccSumNorm{el2TileMap(i)}, '--','LineWidth',1); 
+    ph{5} = plot(currVector,  utrSumNorm{el2TileMap(i)}, '--','LineWidth',1); 
+%     ph{6} = plot(currVector,  facSumNorm{el2TileMap(i)}, ':','LineWidth',1); 
+    ph{8} = area(normalCurrentRange, [1 1]*maxNum, 'FaceColor', [1 1 1]*0.9, 'LineStyle','none');
+%     ph{8} = plot(normalCurrentRange, [1 1]*.97*maxNum, 'Color', [1 1 1]*0.7, 'LineWidth', 3); 
+    uistack(ph{8},'bottom')
+    set(gca,'Layer','top')
+
+    switch i
+        case {1,4}
+            ph{1}.LineWidth = 3; % bold target canal
+        case {2,5}
+            ph{3}.LineWidth = 3; % bold target canal
+        case {3,6}
+            ph{2}.LineWidth = 3; % bold target canal
+    end
+
+    title(['Electrode ', electrode_names{el2TileMap(i)}]);
+
+    axis([0 max(currVector) 0 maxNum])
+%     axis([0 max(currVector)/2 0 maxNum])
+
+end
+legend(ph([1:5 7]), nerve_names([1:5 7]),'Location','northwest','NumColumns',2) % apply legend to last plot
+legend('boxoff')
+
+% add title and axis labels to entire tiledlayout
+title(th, 'Recruitment by Electrode')
+xlabel(th, 'Current Amplitude [uA]');
+ylabel(th, '% Fibers Activated');
+
+saveas(gcf,[saveDir,'recruitmentTiles_',fileDate])
+
+% Subplot format with log current scale
+
+figure('Units','Inches','Position',[2 2 14 8])
+ph = cell(7,1);
+th = tiledlayout(2,3);
+for i = 1:numEl
+    nexttile
+    
+    ph{1} = semilogx(currVector,  antSumNorm{el2TileMap(i)}, 'g','LineWidth', 1); 
+    hold on
+    ph{2} = semilogx(currVector,  latSumNorm{el2TileMap(i)}, 'r','LineWidth', 1); 
+    ph{3} = semilogx(currVector,  postSumNorm{el2TileMap(i)}, 'b','LineWidth',1); 
+    ph{4} = semilogx(currVector,  saccSumNorm{el2TileMap(i)}, '--','LineWidth',1); 
+    ph{5} = semilogx(currVector,  utrSumNorm{el2TileMap(i)}, '--','LineWidth',1); 
+%     ph{6} = semilogx(currVector,  facSumNorm{el2TileMap(i)}, ':','LineWidth',1); 
+    ph{7} = semilogx(currVector,  cochSumNorm{el2TileMap(i)}, ':','LineWidth',1); 
+    % plot standard range of used current
+    ph{8} = area(normalCurrentRange, [1 1]*maxNum, 'FaceColor', [1 1 1]*0.9, 'LineStyle','none');
+%     ph{8} = semilogx(normalCurrentRange, [1 1]*.97*maxNum, 'Color', [1 1 1]*0.7, 'LineWidth', 3); 
+    uistack(ph{8},'bottom')
+    set(gca,'Layer','top')
+    
+    
+    switch i
+        case {1,4}
+            ph{1}.LineWidth = 3; % bold target canal
+        case {2,5}
+            ph{3}.LineWidth = 3; % bold target canal
+        case {3,6}
+            ph{2}.LineWidth = 3; % bold target canal
+    end
+
+    title(['Electrode ', electrode_names{el2TileMap(i)}]);
+
+    axis([0 max(currVector) 0 maxNum])
+
+end
+legend(ph([1:5 7]), nerve_names([1:5 7]),'Location','northwest','NumColumns',2) % apply legend to last plot
+legend('boxoff')
+
+% add title and axis labels to entire tiledlayout
+title(th, 'Recruitment by Electrode - Log x axis')
+xlabel(th, 'Current Amplitude [uA]');
+ylabel(th, '% Fibers Activated');
+
+saveas(gcf,[saveDir,'recruitmentTilesLog_',fileDate])
+
 %% Plot activation curves by canal
 % Currently this creates one plot per SCC and plots different lines for
 % each electrode. Better plot might be to make 1 plot per electrode and
@@ -455,8 +657,8 @@ end
 % Posterior SCC
 figure
 maxNum = 0;
-for i = 1:numSims
-    plot(currentRange*current,  postSumNorm{i}); 
+for i = 1:numEl
+    plot(currVector,  postSumNorm{i}); 
     hold on
     maxNum = max([maxNum, postSumNorm{i}]);
 end
@@ -464,13 +666,13 @@ title('Posterior SCC Recruitment');
 xlabel('current in amps');
 ylabel('% Activation');
 legend({'V2\_1 (post. canal)','V2\_3 (ant. canal)','V2\_4 (ant. canal)','V2\_5 (horiz. canal)','V2\_6 (post. canal)','V2\_7 (horiz. canal)'},'Location','southeast')
-axis([0 current*max(currentRange) 0 maxNum])
+axis([0 max(currVector) 0 maxNum])
 
 % Lateral SCC
 figure
 maxNum = 0;
-for i = 1:numSims
-    plot(currentRange*current,  latSumNorm{i}); 
+for i = 1:numEl
+    plot(currVector,  latSumNorm{i}); 
     hold on
     maxNum = max([maxNum, latSumNorm{i}]);
 end
@@ -478,13 +680,13 @@ title('Lateral SCC Recruitment');
 xlabel('current in amps');
 ylabel('% Activation');
 legend({'V2\_1 (post. canal)','V2\_3 (ant. canal)','V2\_4 (ant. canal)','V2\_5 (horiz. canal)','V2\_6 (post. canal)','V2\_7 (horiz. canal)'},'Location','southeast')
-axis([0 current*max(currentRange) 0 maxNum])
+axis([0 max(currVector) 0 maxNum])
 
 % Anterior SCC
 figure
 maxNum = 0;
-for i = 1:numSims
-    plot(currentRange*current,  antSumNorm{i}); 
+for i = 1:numEl
+    plot(currVector,  antSumNorm{i}); 
     hold on
     maxNum = max([maxNum, antSumNorm{i}]);
 end
@@ -492,7 +694,7 @@ title('Anterior SCC Recruitment');
 xlabel('current in amps');
 ylabel('% Activation');
 legend({'V2\_1 (post. canal)','V2\_3 (ant. canal)','V2\_4 (ant. canal)','V2\_5 (horiz. canal)','V2\_6 (post. canal)','V2\_7 (horiz. canal)'},'Location','southeast')
-axis([0 current*max(currentRange) 0 maxNum])
+axis([0 max(currVector) 0 maxNum])
 
 % if (flagNormalizeToNumFibers ~= 1)
 %     plot(currentRange*current, horSum, '-r', currentRange*current, posSum, '-b', currentRange*current, supSum, '-g',...
@@ -501,7 +703,7 @@ axis([0 current*max(currentRange) 0 maxNum])
 %     xlabel('current in amps');
 %     ylabel('number of fibers stimulated');
 %     maxNum = max([horSum posSum supSum utrSum sacSum]);
-%     axis([0 current*max(currentRange) 0 maxNum])
+%     axis([0 max(currVector) 0 maxNum])
 % end
 % if (flagNormalizeToNumFibers == 1)
 %     horSum = 100*horSum/sccNumFibers;    supSum = 100*supSum/sccNumFibers;    posSum = 100*posSum/sccNumFibers;
@@ -512,29 +714,10 @@ axis([0 current*max(currentRange) 0 maxNum])
 %     xlabel('current in amps');
 %     ylabel('% Activation');
 %     maxNum = max([horSum posSum supSum utrSum sacSum]);
-%     axis([0 current*max(currentRange) 0 maxNum])
+%     axis([0 max(currVector) 0 maxNum])
 % end
 
-%% Plot activation curves by electrode
-% all of these electrodes were referenced to electrode 2 in the common crus
-electrode_names = {'1 (post. canal)','3 (ant. canal)','4 (ant. canal)','5 (lat. canal)','6 (post. canal)','7 (lat. canal)'};
-canal_names = {'Anterior Canal','Lateral Canal','Posterior Canal'};
 
-currVector = currentRange*current*1000;
-maxNum = 100;
-for i = 1:numSims
-    figure
-    plot(currVector,  antSumNorm{i}, 'g'); 
-    hold on
-    plot(currVector,  latSumNorm{i}, 'r'); 
-    plot(currVector,  postSumNorm{i}, 'b'); 
-    title(['Electrode ', electrode_names{i}]);
-    xlabel('Current (mA)');
-    ylabel('% Activation');
-    legend(canal_names,'Location','southeast')
-    axis([0 max(currVector) 0 maxNum])
-
-end
 %%
 
 % %temp = rand(150,1);

@@ -75,6 +75,8 @@ fileDate = date;
 ITable_file = 'R:\Computational Modeling\Solved model data 20230113\delivered_currents.txt';
 currents = readmatrix(ITable_file,'NumHeaderLines',5,'OutputType','double','Delimiter','    ');
 
+% add paths of arclength and interparc functions for fiberGenComsolv2
+addpath('C:\Users\Evan\Documents\GitHub\Computational-Modeling\FEM Automation\Utility Scripts\arclength','C:\Users\Evan\Documents\GitHub\Computational-Modeling\FEM Automation\Utility Scripts\interparc');
 
 %% For testing vestibular nerve-only model with fine mesh
 tic
@@ -162,17 +164,17 @@ flow_vest_fixed.d3 = -1*flow_vest.d3;
 disp('Flow information extracted.')
 toc
 %% Testing with one nerve
-% numAxons_test = 50;
-% locIndex_test = 10*rand(numAxons_test,1);
-% 
-% step_test = [301e-3; 300.5e-3; -1];
-% 
-% [traj_post_test, p0_post_test] = fiberGenComsolv2(flow_vest_fixed, flow_post_crista, locIndex_test, step_test, basisVecTagsVest, model, dset_vest);
-% 
-% %
-% % plot crista origin results
-% ftest = plotFlow(flow_vest_fixed,flow_post_crista,traj_post_test(:,3));
-% title(gca,'Post. Crista Origin - Test')
+numAxons_test = 50;
+locIndex_test = 10*rand(numAxons_test,1);
+
+step_test = [301e-3; 300.5e-3; -1];
+
+[traj_post_test, p0_post_test] = fiberGenComsolv2(flow_vest_fixed, flow_post_crista, locIndex_test, step_test, basisVecTagsVest, model, dset_vest);
+
+%
+% plot crista origin results
+ftest = plotFlow(flow_vest_fixed,flow_post_crista,traj_post_test(:,3));
+title(gca,'Post. Crista Origin - Test')
 
 %% SCC fiber gen
 disp('--------Starting SCC fiber generation.--------')
@@ -363,6 +365,28 @@ traj_utr = all_trajs_out{5};
 traj_fac = all_trajs_out{6};
 traj_coch = all_trajs_out{7};
 clear all_trajs all_trajs_out
+
+% Remove nodes if the axon is too long
+% In the neuromorphic model, initial conditions are only defined for up to
+% 50 nodes per axon (might actually be 40 since 10 are virtual endnodes).
+% So far only facial axons are longer than this.
+
+for i = 1:length(traj_fac(:,1))
+    nNode = size(traj_fac{3,i},2); % how many nodes there are
+
+    side = 0; % which end of axon to remove nodes from
+    while nNode > 40
+        
+        if side == 1
+            traj_fac{3,i} = traj_fac{3,i}(:,1:end-1); % remove last node
+        else
+            traj_fac{3,i} = traj_fac{3,i}(:,2:end); % remove first node
+        end
+        nNode = size(traj_fac{3,i},2); % recalculate 
+
+    end
+end
+
 beep
 
 
@@ -409,15 +433,28 @@ for i = 1:3
     bigParamCellSCC{i,4} = parameterCellSCC_4to7;
     bigParamCellSCC{i,5} = parameterCellSCC_5to8;
     bigParamCellSCC{i,6} = parameterCellSCC_6to10;
-    % now put in the correct axons this parameter cell will refer to
-    bigParamCellSCC{i,1}{1}(2:3) = [1; tempSCC(1) - sum(~toKeep{i}(1:tempSCC(1)))];
-    bigParamCellSCC{i,2}{1}(2:3) = [bigParamCellSCC{i,1}{1}(3) + 1; bigParamCellSCC{i,1}{1}(3) + sum(toKeep{i}(tempSCC(1)+1 : tempSCC(2)))];
-    bigParamCellSCC{i,3}{1}(2:3) = [bigParamCellSCC{i,2}{1}(3) + 1; bigParamCellSCC{i,2}{1}(3) + sum(toKeep{i}(tempSCC(2)+1 : tempSCC(3)))];
-    bigParamCellSCC{i,4}{1}(2:3) = [bigParamCellSCC{i,3}{1}(3) + 1; bigParamCellSCC{i,3}{1}(3) + sum(toKeep{i}(tempSCC(3)+1 : tempSCC(4)))];
-    bigParamCellSCC{i,5}{1}(2:3) = [bigParamCellSCC{i,4}{1}(3) + 1; bigParamCellSCC{i,4}{1}(3) + sum(toKeep{i}(tempSCC(4)+1 : tempSCC(5)))];
-    bigParamCellSCC{i,6}{1}(2:3) = [bigParamCellSCC{i,5}{1}(3) + 1; bigParamCellSCC{i,5}{1}(3) + sum(toKeep{i}(tempSCC(5)+1 : tempSCC(6)))];
+%     % now put in the correct axons this parameter cell will refer to
+    bigParamCellSCC{i,1}{10} = [sum(toKeep{i}(1:tempSCC(1))); 1; tempSCC(1) - sum(~toKeep{i}(1:tempSCC(1)))];
+    bigParamCellSCC{i,2}{10} = [sum(toKeep{i}(tempSCC(1)+1 : tempSCC(2))); bigParamCellSCC{i,1}{10}(3) + 1; bigParamCellSCC{i,1}{10}(3) + sum(toKeep{i}(tempSCC(1)+1 : tempSCC(2)))];
+    bigParamCellSCC{i,3}{10} = [sum(toKeep{i}(tempSCC(2)+1 : tempSCC(3))); bigParamCellSCC{i,2}{10}(3) + 1; bigParamCellSCC{i,2}{10}(3) + sum(toKeep{i}(tempSCC(2)+1 : tempSCC(3)))];
+    bigParamCellSCC{i,4}{10} = [sum(toKeep{i}(tempSCC(3)+1 : tempSCC(4))); bigParamCellSCC{i,3}{10}(3) + 1; bigParamCellSCC{i,3}{10}(3) + sum(toKeep{i}(tempSCC(3)+1 : tempSCC(4)))];
+    bigParamCellSCC{i,5}{10} = [sum(toKeep{i}(tempSCC(4)+1 : tempSCC(5))); bigParamCellSCC{i,4}{10}(3) + 1; bigParamCellSCC{i,4}{10}(3) + sum(toKeep{i}(tempSCC(4)+1 : tempSCC(5)))];
+    bigParamCellSCC{i,6}{10} = [sum(toKeep{i}(tempSCC(5)+1 : tempSCC(6))); bigParamCellSCC{i,5}{10}(3) + 1; bigParamCellSCC{i,5}{10}(3) + sum(toKeep{i}(tempSCC(5)+1 : tempSCC(6)))];
+
+    bigParamCellSCC{i,1}{1} = [sum(toKeep{i}(1:tempSCC(1))); 1; tempSCC(1) - sum(~toKeep{i}(1:tempSCC(1)))];
+    bigParamCellSCC{i,2}{1} = [sum(toKeep{i}(tempSCC(1)+1 : tempSCC(2))); 1; sum(toKeep{i}(tempSCC(1)+1 : tempSCC(2)))];
+    bigParamCellSCC{i,3}{1} = [sum(toKeep{i}(tempSCC(2)+1 : tempSCC(3))); 1; sum(toKeep{i}(tempSCC(2)+1 : tempSCC(3)))];
+    bigParamCellSCC{i,4}{1} = [sum(toKeep{i}(tempSCC(3)+1 : tempSCC(4))); 1; sum(toKeep{i}(tempSCC(3)+1 : tempSCC(4)))];
+    bigParamCellSCC{i,5}{1} = [sum(toKeep{i}(tempSCC(4)+1 : tempSCC(5))); 1; sum(toKeep{i}(tempSCC(4)+1 : tempSCC(5)))];
+    bigParamCellSCC{i,6}{1} = [sum(toKeep{i}(tempSCC(5)+1 : tempSCC(6))); 1; sum(toKeep{i}(tempSCC(5)+1 : tempSCC(6)))];
 
     % now put in random initial conditions
+    bigParamCellSCC{i,1}{6} = rand(bigParamCellSCC{i,1}{1}(1),1);
+    bigParamCellSCC{i,2}{6} = rand(bigParamCellSCC{i,2}{1}(1),1);
+    bigParamCellSCC{i,3}{6} = rand(bigParamCellSCC{i,3}{1}(1),1);
+    bigParamCellSCC{i,4}{6} = rand(bigParamCellSCC{i,4}{1}(1),1);
+    bigParamCellSCC{i,5}{6} = rand(bigParamCellSCC{i,5}{1}(1),1);
+    bigParamCellSCC{i,6}{6} = rand(bigParamCellSCC{i,6}{1}(1),1);
 end
 
 % US
@@ -435,9 +472,18 @@ for i = 4:5 % iterator for toKeep
     bigParamCellUS{ii,2} = parameterCellUS_3to7;
     bigParamCellUS{ii,3} = parameterCellUS_6to10;
     % now put in the correct axons this parameter cell will refer to
-    bigParamCellUS{ii,1}{1}(2:3) = [1; tempUS(1) - sum(~toKeep{i}(1:tempUS(1)))];
-    bigParamCellUS{ii,2}{1}(2:3) = [bigParamCellUS{ii,1}{1}(3) + 1; bigParamCellUS{ii,1}{1}(3) + sum(toKeep{i}(tempUS(1)+1 : tempUS(2)))];
-    bigParamCellUS{ii,3}{1}(2:3) = [bigParamCellUS{ii,2}{1}(3) + 1; bigParamCellUS{ii,2}{1}(3) + sum(toKeep{i}(tempUS(2)+1 : tempUS(3)))];
+    bigParamCellUS{ii,1}{10} = [sum(toKeep{i}(1:tempUS(1))); 1; tempUS(1) - sum(~toKeep{i}(1:tempUS(1)))];
+    bigParamCellUS{ii,2}{10} = [sum(toKeep{i}(tempUS(1)+1 : tempUS(2))); bigParamCellUS{ii,1}{10}(3) + 1; bigParamCellUS{ii,1}{10}(3) + sum(toKeep{i}(tempUS(1)+1 : tempUS(2)))];
+    bigParamCellUS{ii,3}{10} = [sum(toKeep{i}(tempUS(2)+1 : tempUS(3))); bigParamCellUS{ii,2}{10}(3) + 1; bigParamCellUS{ii,2}{10}(3) + sum(toKeep{i}(tempUS(2)+1 : tempUS(3)))];
+
+    bigParamCellUS{ii,1}{1} = [sum(toKeep{i}(1:tempUS(1))); 1; tempUS(1) - sum(~toKeep{i}(1:tempUS(1)))];
+    bigParamCellUS{ii,2}{1} = [sum(toKeep{i}(tempUS(1)+1 : tempUS(2))); 1; sum(toKeep{i}(tempUS(1)+1 : tempUS(2)))];
+    bigParamCellUS{ii,3}{1} = [sum(toKeep{i}(tempUS(2)+1 : tempUS(3))); 1; sum(toKeep{i}(tempUS(2)+1 : tempUS(3)))];
+
+    % now put in random initial conditions
+    bigParamCellUS{ii,1}{6} = rand(bigParamCellUS{ii,1}{1}(1),1);
+    bigParamCellUS{ii,2}{6} = rand(bigParamCellUS{ii,2}{1}(1),1);
+    bigParamCellUS{ii,3}{6} = rand(bigParamCellUS{ii,3}{1}(1),1);
 end
 
 % Facial and cochlear fibers are simpler since, at least right now, I am
@@ -449,10 +495,11 @@ paramCellFac{2} = 1e-7; % timestep, s
 paramCellFac{3} = [2e-6; 1e-6;-1]; % active node (nodes of Ranvier) lengths, m
 paramCellFac{4} = [300e-6; -1]; % passive node (internode) lengths, m
 paramCellFac{5} = ones(paramCellFac{1}(1),1)*[1.4e-6, -1]; % fiber diameters at each node, m
-paramCellFac{6} = zeros(paramCellFac{1}(1),1); % initial state array
+paramCellFac{6} = rand(paramCellFac{1}(1),1); % initial state array
 paramCellFac{7} = Vthresh; % activation threshold voltage, V
 paramCellFac{8} = [100; 300]; % limit on fine threshold
 paramCellFac{9} = 0.01; % precision for finding thresholds, i.e. 0.01 = 1%
+paramCellFac{10} = paramCellFac{1};
 
 % Cochlear
 paramCellCoch = cell(9,1);
@@ -461,10 +508,11 @@ paramCellCoch{2} = 1e-7; % timestep, s
 paramCellCoch{3} = [2e-6; 1e-6;-1]; % active node (nodes of Ranvier) lengths, m
 paramCellCoch{4} = [300e-6; -1]; % passive node (internode) lengths, m
 paramCellCoch{5} = ones(paramCellCoch{1}(1),1)*[1.4e-6, -1]; % fiber diameters at each node, m
-paramCellCoch{6} = zeros(paramCellCoch{1}(1),1); % initial state array
+paramCellCoch{6} = rand(paramCellCoch{1}(1),1); % initial state array
 paramCellCoch{7} = Vthresh; % activation threshold voltage, V
 paramCellCoch{8} = [100; 300]; % limit on fine threshold
 paramCellCoch{9} = 0.01; % precision for finding thresholds, i.e. 0.01 = 1%
+paramCellCoch{10} = paramCellCoch{1};
 
 %
 save([save_dir,'params',fileDate],'bigParamCellSCC','bigParamCellUS','paramCellFac','paramCellCoch')
