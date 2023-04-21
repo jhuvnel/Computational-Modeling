@@ -87,7 +87,7 @@ if p.Results.plotCrista
         indvi = indv(:,i);
         p4 = [flow_crista.p(:,indvi(1)), flow_crista.p(:,indvi(2)),...
             flow_crista.p(:,indvi(3)), flow_crista.p(:,indvi(1))];
-        plot3(p4(1,:),p4(2,:),p4(3,:),'b')
+        plot3(p4(1,:),p4(2,:),p4(3,:),'k')
         if i == 1
             hold on
         end
@@ -96,14 +96,14 @@ end
 % Plot starting points
 % if ~sum(strcmp(p.UsingDefaults{1},'p0'))
 if ~(isempty(p.Results.p0))
-    plot3(p.Results.p0(1,:),p.Results.p0(2,:),p.Results.p0(3,:),'g.');
+    plot3(p.Results.p0(1,:),p.Results.p0(2,:),p.Results.p0(3,:),'k.');
     hold on
 end
 % Plot trajectories
 % if ~sum(strcmp(p.UsingDefaults{1},'traj'))
 if ~(isempty(p.Results.traj{1}))
     for i = 1:size(p.Results.traj,1)
-        plot3(gca,p.Results.traj{i}(1,:),p.Results.traj{i}(2,:),p.Results.traj{i}(3,:),'-g.')
+        plot3(gca,p.Results.traj{i}(1,:),p.Results.traj{i}(2,:),p.Results.traj{i}(3,:),'-y.')
         if i == 1
             hold on
         end

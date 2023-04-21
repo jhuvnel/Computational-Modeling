@@ -139,7 +139,6 @@ flow_vestinlet = mpheval(model,basisVec1TagsVest,'dataset',dset_vest,'selection'
 % within vestibular nerve, for all electrode combinations
 % ec_vest = mpheval(model,ecTags,'dataset',dset_ec,'selection',sel_vest_dom);
 
-%%
 % reverese direction of flow since we want it going from crista towards
 % brainstem - double check how you defined it in Comsol first!!!
 flow_fac_fixed = flow_fac;
@@ -164,22 +163,26 @@ flow_vest_fixed.d3 = -1*flow_vest.d3;
 disp('Flow information extracted.')
 toc
 %% Testing with one nerve
-numAxons_test = 50;
-locIndex_test = 10*rand(numAxons_test,1);
-
-step_test = [301e-3; 300.5e-3; -1];
-
-[traj_post_test, p0_post_test] = fiberGenComsolv2(flow_vest_fixed, flow_post_crista, locIndex_test, step_test, basisVecTagsVest, model, dset_vest);
-
-%
-% plot crista origin results
-ftest = plotFlow(flow_vest_fixed,flow_post_crista,traj_post_test(:,3));
-title(gca,'Post. Crista Origin - Test')
+% numAxons_test = 50;
+% locIndex_test = 10*rand(numAxons_test,1);
+% 
+% step_test = [301e-3; 300.5e-3; -1];
+% 
+% [traj_post_test, p0_post_test] = fiberGenComsolv2(flow_vest_fixed, flow_post_crista, locIndex_test, step_test, basisVecTagsVest, model, dset_vest);
+% 
+% %
+% % plot crista origin results
+% ftest = plotFlow(flow_vest_fixed,flow_post_crista,traj_post_test(:,3));
+% title(gca,'Post. Crista Origin - Test')
 
 %% SCC fiber gen
 disp('--------Starting SCC fiber generation.--------')
 tic
-step = [301e-3; 300.5e-3; -1];
+% The step size is the step in between each active node (of Ranvier) and
+% the passive node (myelinated internode). So, it should be half the
+% distance between the active nodes.
+% step = [301e-3; 300.5e-3; -1];
+step = [(parameterCellSCC_6to10{3}([1 2]) + (parameterCellSCC_6to10{4}(1)*[1;1]))*1000/2; -1];
 
 
 numAxons_1to3 = parameterCellSCC_1to3{1}(1);
@@ -204,7 +207,6 @@ toc
 % Utricle and Saccule Fiber Gen
 disp('--------Starting utricle and saccule fiber generation.--------')
 tic
-% step = [301e-3; 300.5e-3; -1];
 
 numAxons_1to4 = parameterCellUS_1to4{1}(1);
 numAxons_3to7 = parameterCellUS_3to7{1}(1);
@@ -217,16 +219,20 @@ locIndex_utr_sacc = [4*rand(numAxons_1to4,1); 4*rand(numAxons_3to7,1) + 3; 4*ran
 disp('Utricle and saccule fibers done.')
 
 toc
-
-%% Facial and Cochlear Fiber Gen
+%%
+% Facial and Cochlear Fiber Gen
 disp('--------Starting facial and cochlear fiber generation.--------')
 tic
+% step = [250.75e-3; -1];
+step = [200.75e-3; -1];
+
 
 numAxons_fac = 500;
 locIndex_fac = 10*rand(numAxons_fac,1);
 [traj_fac_pre, p0_fac] = fiberGenComsolv2(flow_fac, flow_facial_inlet, locIndex_fac, step, basisVecTagsFac, model, dset_fac);
 disp('Trajs done with facial nerve.')
-
+%%
+step = [(parameterCellSCC_6to10{3}([1 2]) + (parameterCellSCC_6to10{4}(1)*[1;1]))*1000/2; -1];
 numAxons_coch = 1000; 
 [traj_coch_pre, fiberType1, p0_coch] = fiberGenComsol(flow_coch_fixed,flow_coch_outlet,numAxons_coch,step); % unclear whether axial or distal origin is better
 disp('Trajs done with cochlear nerve.')
@@ -329,13 +335,20 @@ toc
 % 
 % toc
 
-%% Check which trajectories failed
-% remove all the trajectories that aren't long enough (hit the wall of the
+%% Check which trajectories failed and trim nodes
+% Remove all the trajectories that aren't long enough (hit the wall of the
 % nerve). In the future I need to fix the flow to avoid this happening, or
 % change the fiberGenComsol/stream3Comsol function(s) to keep trying new
 % starting points until I get the desired number of axons (like a Monte
 % Carlo method).
+% Also remove extra nodes if there are more than 40, since the neuromorphic
+% model can't assign initial conditions to axons that are longer than 40
+% nodes long. Note - nodes include nodes of Ranvier and internodes! (active
+% and passive nodes).
 all_trajs = {traj_post_pre,traj_lat_pre,traj_ant_pre,traj_sacc_pre,traj_utr_pre, traj_fac_pre, traj_coch_pre};
+
+minTrajLen = 3; % mm, minimum length of axon trajectory
+maxNodes = 40; % maximum number of nodes
 
 numActualAxonsAll = zeros(length(all_trajs),1);
 toKeep = cell(length(all_trajs),1);
@@ -344,16 +357,45 @@ for i = 1:length(all_trajs)
     toKeep{i} = false(length(all_trajs{i}),1);
     if iscell(all_trajs{i})
         for j = 1:size(all_trajs{i},1)
+            % calculate length of axon
             arcLens = sqrt(sum( (all_trajs{i}{j,3}(:,2:end) - all_trajs{i}{j,3}(:,1:end-1)).^2 ,1));
             totLen = sum(arcLens);
-            if totLen >= 4.5 % length of trajectory must be at least 4.5 mm
+            if totLen >= minTrajLen % length of trajectory must be at least x mm
                 toKeep{i}(j) = true;
+                nNodes = length(all_trajs{i}{j,3}(1,:));
+                if nNodes > maxNodes % too many nodes
+
+                    if i == 6 % for facial nerve only...
+                        % This alternates removing nodes from either end of the axon so
+                        % that the center (which is nearest the canals and electrodes) is
+                        % preserved.
+                        side = 0;
+                        while nNodes > maxNodes
+                            if side == 1
+                                all_trajs{i}{j,3} = all_trajs{i}{j,3}(:,1:end-1); % remove last node
+                                all_trajs{i}{j,2} = all_trajs{i}{j,2}(1:end-1);
+                                side = 0; % alternate side
+                            else
+                                all_trajs{i}{j,3} = all_trajs{i}{j,3}(:,2:end); % remove first node
+                                all_trajs{i}{j,2} = all_trajs{i}{j,2}(1:end-1);
+                                side = 1; % alternate side
+                            end
+                            
+                            nNodes = length(all_trajs{i}{j,3}(1,:)); % recalculate number of nodes
+                        end
+
+                    else % all other nerves
+                        all_trajs{i}{j,3} = all_trajs{i}{j,3}(:,1:maxNodes); % take off extra nodes at end
+                        all_trajs{i}{j,2} = all_trajs{i}{j,2}(1:maxNodes);
+                    end
+
+                end
             end
         end
         all_trajs_out{i} = all_trajs{i}(toKeep{i},:);
         numActualAxonsAll(i) = size(all_trajs_out{i},1);
     end
-    disp([num2str(numActualAxonsAll(i)),'/',num2str(size(all_trajs{i},1)),' axons succesfully generated in nerve ',num2str(i),'.'])
+    disp([num2str(numActualAxonsAll(i)),'/',num2str(size(all_trajs{i},1)),' axons successfully generated in nerve ',num2str(i),'.'])
 end
 disp('----------------------------------------------')
 
@@ -366,49 +408,29 @@ traj_fac = all_trajs_out{6};
 traj_coch = all_trajs_out{7};
 clear all_trajs all_trajs_out
 
-% Remove nodes if the axon is too long
-% In the neuromorphic model, initial conditions are only defined for up to
-% 50 nodes per axon (might actually be 40 since 10 are virtual endnodes).
-% So far only facial axons are longer than this.
-
-for i = 1:length(traj_fac(:,1))
-    nNode = size(traj_fac{3,i},2); % how many nodes there are
-
-    side = 0; % which end of axon to remove nodes from
-    while nNode > 40
-        % This alternates removing nodes from either end of the axon so
-        % that the center (which is nearest the canals and electrodes) is
-        % preserved.
-        if side == 1
-            traj_fac{3,i} = traj_fac{3,i}(:,1:end-1); % remove last node
-        else
-            traj_fac{3,i} = traj_fac{3,i}(:,2:end); % remove first node
-        end
-        nNode = size(traj_fac{3,i},2); % recalculate number of nodes
-
-    end
-end
-
 beep
 
 
 %%
 % save(['trajs_',fileDate],"traj_vestinlet","traj_post","traj_lat","traj_ant","traj_sacc","traj_utr")
-save_dir = 'R:\Computational Modeling\Model with curvilinear coordinates only\';
+save_dir = 'R:\Computational Modeling\Model as of 20230104\19-April-2023\';
 % save([save_dir,'trajs_',fileDate],"traj_post","traj_lat","traj_ant","traj_sacc","traj_utr","traj_fac","traj_coch")
-save([save_dir,'trajs_',fileDate],"traj_post","traj_lat","traj_ant","traj_sacc","traj_utr", "traj_post_pre","traj_lat_pre","traj_ant_pre","traj_sacc_pre","traj_utr_pre")
+save([save_dir,'trajs_',fileDate],"traj_post","traj_lat","traj_ant",...
+    "traj_sacc","traj_utr", "traj_post_pre","traj_lat_pre",...
+    "traj_ant_pre","traj_sacc_pre","traj_utr_pre","traj_fac",...
+    "traj_coch","traj_fac_pre","traj_coch_pre")
 
 %% Full FEM sampling along all trajectories
 tic
-sol_post = []; sol_lat = []; sol_ant = []; sol_sacc = []; sol_utr = []; solf_fac = []; sol_coch = [];
+% sol_post = []; sol_lat = []; sol_ant = []; sol_sacc = []; sol_utr = []; solf_fac = []; sol_coch = [];
 
 
-sol_post = sampleFEM(model,vTags,ecTags,dset_ec,traj_post,currents);
-sol_lat = sampleFEM(model,vTags,ecTags,dset_ec,traj_lat,currents);
-sol_ant = sampleFEM(model,vTags,ecTags,dset_ec,traj_ant,currents);
-sol_sacc = sampleFEM(model,vTags,ecTags,dset_ec,traj_sacc,currents);
-sol_utr = sampleFEM(model,vTags,ecTags,dset_ec,traj_utr,currents);
-sol_fac = sampleFEM(model,vTags,ecTags,dset_ec,traj_fac,currents);
+% sol_post = sampleFEM(model,vTags,ecTags,dset_ec,traj_post,currents);
+% sol_lat = sampleFEM(model,vTags,ecTags,dset_ec,traj_lat,currents);
+% sol_ant = sampleFEM(model,vTags,ecTags,dset_ec,traj_ant,currents);
+% sol_sacc = sampleFEM(model,vTags,ecTags,dset_ec,traj_sacc,currents);
+% sol_utr = sampleFEM(model,vTags,ecTags,dset_ec,traj_utr,currents);
+% sol_fac = sampleFEM(model,vTags,ecTags,dset_ec,traj_fac,currents);
 sol_coch = sampleFEM(model,vTags,ecTags,dset_ec,traj_coch,currents);
 
 %
@@ -488,15 +510,78 @@ for i = 4:5 % iterator for toKeep
     bigParamCellUS{ii,3}{6} = rand(bigParamCellUS{ii,3}{1}(1),1);
 end
 
+%% US with 7 bands
+% nBandUS = 7;
+% numAxons_1to4A = 100;
+% numAxons_1to4B1 = 50;
+% numAxons_3to7B1 = 100;
+% numAxons_3to7B2 = 50;
+% numAxons_6to10B2 = 50;
+% numAxons_6to10B3 = 50;
+% numAxons_6to10C = 50;
+% 
+% tempUS = cumsum([numAxons_1to4A, numAxons_1to4B1, numAxons_3to7B1, numAxons_3to7B2, numAxons_6to10B2, numAxons_6to10B3, numAxons_6to10C]);
+% 
+% bigParamCellUS = cell(2,nBandUS); % nOtolith x nBandUS
+% 
+% for i = 4:5 % iterator for toKeep
+%     ii = i - 3; % iterator for bigParamCellUS
+%     
+%     % first copy parameter cells
+%     bigParamCellUS{ii,1} = parameterCellUS_1to4_typeA;
+%     bigParamCellUS{ii,2} = parameterCellUS_1to4_typeB1;
+% 
+%     bigParamCellUS{ii,3} = parameterCellUS_3to7_typeB1;
+%     bigParamCellUS{ii,4} = parameterCellUS_3to7_typeB2;
+% 
+%     bigParamCellUS{ii,5} = parameterCellUS_6to10_typeB2;
+%     bigParamCellUS{ii,6} = parameterCellUS_6to10_typeB3;
+%     bigParamCellUS{ii,7} = parameterCellUS_6to10_typeC;
+% 
+%     
+%     % now put in the correct axons this parameter cell will refer to
+%     bigParamCellUS{ii,1}{10} = [sum(toKeep{i}(1:tempUS(1))); 1; tempUS(1) - sum(~toKeep{i}(1:tempUS(1)))];
+%     bigParamCellUS{ii,2}{10} = [sum(toKeep{i}(tempUS(1)+1 : tempUS(2))); bigParamCellUS{ii,1}{10}(3) + 1; bigParamCellUS{ii,1}{10}(3) + sum(toKeep{i}(tempUS(1)+1 : tempUS(2)))];
+%     bigParamCellUS{ii,3}{10} = [sum(toKeep{i}(tempUS(2)+1 : tempUS(3))); bigParamCellUS{ii,2}{10}(3) + 1; bigParamCellUS{ii,2}{10}(3) + sum(toKeep{i}(tempUS(2)+1 : tempUS(3)))];
+%     bigParamCellUS{ii,4}{10} = [sum(toKeep{i}(tempUS(3)+1 : tempUS(4))); bigParamCellUS{ii,3}{10}(3) + 1; bigParamCellUS{ii,3}{10}(3) + sum(toKeep{i}(tempUS(3)+1 : tempUS(4)))];
+%     bigParamCellUS{ii,5}{10} = [sum(toKeep{i}(tempUS(4)+1 : tempUS(5))); bigParamCellUS{ii,4}{10}(3) + 1; bigParamCellUS{ii,4}{10}(3) + sum(toKeep{i}(tempUS(4)+1 : tempUS(5)))];
+%     bigParamCellUS{ii,6}{10} = [sum(toKeep{i}(tempUS(5)+1 : tempUS(6))); bigParamCellUS{ii,5}{10}(3) + 1; bigParamCellUS{ii,5}{10}(3) + sum(toKeep{i}(tempUS(5)+1 : tempUS(6)))];
+%     bigParamCellUS{ii,7}{10} = [sum(toKeep{i}(tempUS(6)+1 : tempUS(7))); bigParamCellUS{ii,6}{10}(3) + 1; bigParamCellUS{ii,6}{10}(3) + sum(toKeep{i}(tempUS(6)+1 : tempUS(7)))];
+% 
+%     
+%     bigParamCellUS{ii,1}{1} = [sum(toKeep{i}(1:tempUS(1))); 1; tempUS(1) - sum(~toKeep{i}(1:tempUS(1)))];
+%     bigParamCellUS{ii,2}{1} = [sum(toKeep{i}(tempUS(1)+1 : tempUS(2))); 1; sum(toKeep{i}(tempUS(1)+1 : tempUS(2)))];
+%     bigParamCellUS{ii,3}{1} = [sum(toKeep{i}(tempUS(2)+1 : tempUS(3))); 1; sum(toKeep{i}(tempUS(2)+1 : tempUS(3)))];
+%     bigParamCellUS{ii,4}{1} = [sum(toKeep{i}(tempUS(3)+1 : tempUS(4))); 1; sum(toKeep{i}(tempUS(3)+1 : tempUS(4)))];
+%     bigParamCellUS{ii,5}{1} = [sum(toKeep{i}(tempUS(4)+1 : tempUS(5))); 1; sum(toKeep{i}(tempUS(4)+1 : tempUS(5)))];
+%     bigParamCellUS{ii,6}{1} = [sum(toKeep{i}(tempUS(5)+1 : tempUS(6))); 1; sum(toKeep{i}(tempUS(5)+1 : tempUS(6)))];
+%     bigParamCellUS{ii,7}{1} = [sum(toKeep{i}(tempUS(6)+1 : tempUS(7))); 1; sum(toKeep{i}(tempUS(6)+1 : tempUS(7)))];
+% 
+%     % set axon diameters - these depend on fiber type and species!!!
+%     bigParamCellUS{ii,1}{5} = ones(bigParamCellUS{ii,1}{1}(1),1)*[1.4e-6, -1];
+%     bigParamCellUS{ii,2}{5} = ones(bigParamCellUS{ii,2}{1}(1),1)*[2.21e-6, -1];
+%     bigParamCellUS{ii,3}{5} = ones(bigParamCellUS{ii,3}{1}(1),1)*[2.21e-6, -1];
+%     bigParamCellUS{ii,4}{5} = ones(bigParamCellUS{ii,4}{1}(1),1)*[2.23e-6, -1];
+%     bigParamCellUS{ii,5}{5} = ones(bigParamCellUS{ii,5}{1}(1),1)*[2.23e-6, -1];
+%     bigParamCellUS{ii,6}{5} = ones(bigParamCellUS{ii,6}{1}(1),1)*[2.49e-6, -1];
+%     bigParamCellUS{ii,7}{5} = ones(bigParamCellUS{ii,7}{1}(1),1)*[2.81e-6, -1];
+% 
+%     % now put in random initial conditions
+%     for j = 1:nBandUS
+%         bigParamCellUS{ii,j}{6} = rand(bigParamCellUS{ii,j}{1}(1),1);
+%     end
+% end
+
+%% Facial and Cochlear Nerves
 % Facial and cochlear fibers are simpler since, at least right now, I am
 % not varying fiber parameters
 % Facial
 paramCellFac = cell(9,1);
 paramCellFac{1} = [numActualAxonsAll(6); 1; numActualAxonsAll(6)]; % [number of axons, first axon, last axon]
 paramCellFac{2} = 1e-7; % timestep, s
-paramCellFac{3} = [2e-6; 1e-6;-1]; % active node (nodes of Ranvier) lengths, m
-paramCellFac{4} = [300e-6; -1]; % passive node (internode) lengths, m
-paramCellFac{5} = ones(paramCellFac{1}(1),1)*[1.4e-6, -1]; % fiber diameters at each node, m
+paramCellFac{3} = [1.5e-6; 1.5e-6;-1]; % active node (nodes of Ranvier) lengths, m
+paramCellFac{4} = [500e-6; -1]; % passive node (internode) lengths, m
+paramCellFac{5} = ones(paramCellFac{1}(1),1)*[8e-6, -1]; % fiber diameters at each node, m
 paramCellFac{6} = rand(paramCellFac{1}(1),1); % initial state array
 paramCellFac{7} = Vthresh; % activation threshold voltage, V
 paramCellFac{8} = [100; 300]; % limit on fine threshold
@@ -509,7 +594,7 @@ paramCellCoch{1} = [numActualAxonsAll(7); 1; numActualAxonsAll(7)]; % [number of
 paramCellCoch{2} = 1e-7; % timestep, s
 paramCellCoch{3} = [2e-6; 1e-6;-1]; % active node (nodes of Ranvier) lengths, m
 paramCellCoch{4} = [300e-6; -1]; % passive node (internode) lengths, m
-paramCellCoch{5} = ones(paramCellCoch{1}(1),1)*[1.4e-6, -1]; % fiber diameters at each node, m
+paramCellCoch{5} = ones(paramCellCoch{1}(1),1)*[3e-6, -1]; % fiber diameters at each node, m
 paramCellCoch{6} = rand(paramCellCoch{1}(1),1); % initial state array
 paramCellCoch{7} = Vthresh; % activation threshold voltage, V
 paramCellCoch{8} = [100; 300]; % limit on fine threshold
@@ -624,13 +709,13 @@ for i = 1:sum(~toKeep{7})
     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
 end
 title(gca,'Cochlear Nerve')
-% f82 = plotFlow(flow_vest,flow_vestinlet,traj_vestinlet_pre(toKeep{8},3));
-% f82.Position = [200 200 560 420];
-% badTraj = traj_vestinlet_pre(~toKeep{8},3);
-% for i = 1:sum(~toKeep{8})
-%     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
-% end
-% title(gca,'Axial Vestibular Origin')
+f82 = plotFlow(flow_vest,flow_vestinlet,traj_vestinlet_pre(toKeep{8},3));
+f82.Position = [200 200 560 420];
+badTraj = traj_vestinlet_pre(~toKeep{8},3);
+for i = 1:sum(~toKeep{8})
+    plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
+end
+title(gca,'Axial Vestibular Origin')
 
 
 %% Plot incomplete trajectories
@@ -651,22 +736,47 @@ title(gca,'Cochlear Nerve')
 % title(gca,'Utr. Crista Origin')
 %%
 % plot all the crista trajectories together
-% flows_crista = {flow_vestinlet,flow_post_crista,flow_lat_crista,flow_ant_crista,flow_sacc_crista,flow_utr_crista};
-% trajs_crista = {traj_post(:,3),traj_lat(:,3),traj_ant(:,3),traj_sacc(:,3),traj_utr(:,3)};
-% f7 = plotMultiFlow(flow_vest_fixed,flows_crista,trajs_crista,'plotFlow',false);
-% title(gca,'Specific Crista Innervations')
-% 
-% clear flows_crista trajs_crista
+flows_crista = {flow_vestinlet,flow_post_crista,flow_lat_crista,...
+    flow_ant_crista,flow_sacc_crista,flow_utr_crista,flow_facial_inlet,...
+    flow_facial_outlet,flow_coch_inlet,flow_coch_outlet};
+% just pull out ~10% of the trajs so that they are distinguishable
+trajs_crista = {traj_ant(1:10:end,3),traj_lat(1:10:end,3),traj_post(1:10:end,3),...
+    traj_sacc(1:10:end,3),traj_utr(1:10:end,3),...
+    traj_fac(1:10:end,3),traj_coch(1:10:end,3)};
+f7 = plotMultiFlow(flow_vest_fixed,flows_crista,trajs_crista,'plotFlow',false);
+grid on
+axis equal
+f7.Units = 'inches';
+f7.Position = [1 1 8 4.667];
+title(gca,'Axons Generated for Each Nerve')
+xlabel('x [mm]')
+ylabel('y [mm]')
+zlabel('z [mm]')
+
+clear flows_crista trajs_crista
+
+%%
+figure('Units','inches','Position',[1 1 6 6])
+% red green blue orange brown yellow purple
+trajColors = {'r','g','b',[0.8500 0.3250 0.0980],[165,42,42]/245,'c',[0.4940 0.1840 0.5560]};
+nerve_names = {'Anterior Canal','Lateral Canal','Posterior Canal','Saccule','Utricle','Facial','Cochlear'};
+temp1 = 1:8;
+temp2 = 2:9;
+for i = 1:7
+    plot(temp1(i:i+1),temp2(i:i+1),'.-','Color',trajColors{i})
+    hold on
+end
+legend(nerve_names,'Location','eastoutside')
 %%
 % toc
 %% Save figures
-% figs = {f12, f22, f32, f42, f52, f62, f72};
+figs = {f12, f22, f32, f42, f52, f62, f72};
 % figs = {f12, f22, f32, f42, f52};
-figs = 2:2:10;
+% figs = 2:2:10;
 for i = 1:length(figs)
-%     saveas(figs{i},['R:\Computational Modeling\Model with curvilinear coordinates only\traj_p05step',num2str(i)])
+    saveas(figs{i},[save_dir,'traj_',num2str(i)])
 %     saveas(figs{i},['R:\Computational Modeling\Model as of 20220908\nerveTrajTest',num2str(i)],'png')
-    saveas(figs,['R:\Computational Modeling\Model with curvilinear coordinates only\finemesh_2d_',num2str(i)])
+%     saveas(figs,['R:\Computational Modeling\Model with curvilinear coordinates only\finemesh_2d_',num2str(i)])
 
 end
 %%

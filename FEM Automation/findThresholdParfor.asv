@@ -27,17 +27,17 @@ javaclasspath('-dynamic') % display dynamic path (optional)
 % slnTestFile = 'testSolution16-Nov-2022.mat';
 % load(slnTestFile)
 
-slnFullFile = 'R:\Computational Modeling\Model with curvilinear coordinates only\fullSolution24-Jan-2023.mat';
-load(slnFullFile)
+% slnFullFile = 'R:\Computational Modeling\Model as of 20230104\19-April-2023\fullSolution20-Apr-2023.mat';
+% load(slnFullFile)
 
 % choose a save location for .mat files and error log
 % saveDir = 'C:\Users\Evan\OneDrive - Johns Hopkins\VNEL1DRV\_Vesper\Modeling Results\Matlab Data'; % Matlab can't access 1Drive I think
 fileDate = date;
-saveDir = 'R:\Computational Modeling\Model with curvilinear coordinates only\';
+saveDir = 'R:\Computational Modeling\Model as of 20230104\19-April-2023\';
 errorFileTest = [saveDir,'\ErrorFileThresh',fileDate,'new.txt'];
 
 %% Testing for one FEM solution
-parameterTestThresh = bigParamCellSCC{2,1};
+parameterTestThresh = paramCellFac;
 nTestAxons = 50;
 parameterTestThresh{1} =[nTestAxons;1;nTestAxons];
 parameterTestThresh{6} = -1; % set to fill condition like Abder did, though I'm not sure why he did it for thresholding and not just a single waveform simulation
@@ -48,7 +48,7 @@ simClassTest = AxonSimulate_G_AHPAxon_CVStar0265;
 tic
 try
 % resultsTestThresh = findThresholdWaveform(parameterTestThresh,solutionBigCell{1},waveForm,traj_test2,simClassTest,errorFileTest);
-resultsTestThresh = findThresholdWaveform(parameterTestThresh,sol_post{1}(1:nTestAxons,:),waveForm,[],simClassTest,errorFileTest);
+resultsTestThresh = findThresholdWaveform(parameterTestThresh,sol_fac{1}(1:nTestAxons,:),waveForm,[],simClassTest,errorFileTest);
 % resultsTestThresh = findThresholdWaveform(parameterTestThresh,sol_post{1}(35,:),waveForm,[],simClassTest,errorFileTest);
 catch ME
     errorObjs{i} =  ME;
@@ -189,13 +189,10 @@ delete(poolobj); % shut down parallel pool
 % % clear aggregate cells since they are just copies and pretty big
 % % clear simClass_all sol_all param_all resultsThresh_all
 % delete(poolobj); % shut down parallel pool
-%% Save results
-fileDate = date;
-save([saveDir,'threshResultsTest_',fileDate],'resultsTestThresh','resultsThresh','parameterTestThresh')
 
-%% Save results
-fileDate = date;
-save([saveDir,'threshResultsFull_',fileDate],'resultsThresh_post','resultsThresh_lat','resultsThresh_ant','resultsThresh_sacc','resultsThresh_utr')
+% %% Save test results
+% fileDate = date;
+% save([saveDir,'threshResultsTest_',fileDate],'resultsTestThresh','resultsThresh','parameterTestThresh')
 
 %% Run threshold finding for all FEM solution sets w/ Bands
 nBandSCC = 6;
@@ -283,15 +280,15 @@ for i = 1:nSol
 
 
     % facial
+    paramCellFac{6} = -1; % set to fill condition since facial initial conditions seem to have problems
     param_all{1,nAxonGroups*(i-1)+1+3*nBandSCC+2*nBandUS} = paramCellFac;
-    % I am randomly choosing AxonSimulate_G_AHPAxon_CVStar1483 here instead
-    % of AxonSimulate_SENN_AxonI as originally.
-    simClass_all{1,nAxonGroups*(i-1)+1+3*nBandSCC+2*nBandUS} = AxonSimulate_G_AHPAxon_CVStar1483;
+    % Set to regularly firing model... CVStar0265
+    simClass_all{1,nAxonGroups*(i-1)+1+3*nBandSCC+2*nBandUS} = AxonSimulate_G_AHPAxon_CVStar0265;
     paramToSolMap(nAxonGroups*(i-1)+1+3*nBandSCC+2*nBandUS) = i + 5*nSol;
 
     % cochlear
     param_all{1,nAxonGroups*(i-1)+2+3*nBandSCC+2*nBandUS} = paramCellCoch;
-    simClass_all{1,nAxonGroups*(i-1)+2+3*nBandSCC+2*nBandUS} = AxonSimulate_SENN_AxonI;
+    simClass_all{1,nAxonGroups*(i-1)+2+3*nBandSCC+2*nBandUS} = AxonSimulate_G_AHPAxon_CVStar5082;
     paramToSolMap(nAxonGroups*(i-1)+2+3*nBandSCC+2*nBandUS) = i + 6*nSol;
 
 end
@@ -347,16 +344,17 @@ parfor i = 1:nSims
     % something doesn't like the simClass_all array that I made... so I
     % will just use a single variable for the simClass. This includes some
     % hardcoding in the axonGroups that take each fiber type
+    % 0 is cochlear,
     axonGroup = mod(i,nAxonGroups) + 1;
-    if any(axonGroup == [1 3 7 9 13 15 19 22])
+    if any(axonGroup == [1 3 7 9 13 15 19 22 25]) % regularly firing
         simClass = AxonSimulate_G_AHPAxon_CVStar0265;
-    elseif any(axonGroup == [2 4 5 8 10 11 14 16 17 20 21 23 24 25])
+    elseif any(axonGroup == [2 4 5 8 10 11 14 16 17 20 21 23 24]) % intermediately firing
         % 25 corresponds to facial fibers. remove 25 if you want to set
         % them to a different axon class (like SENN_AxonI)
         simClass = AxonSimulate_G_AHPAxon_CVStar1483;
-    elseif any(axonGroup == [6 12 18])
+    elseif any(axonGroup == [0 6 12 18]) % irregularly firing
         simClass = AxonSimulate_G_AHPAxon_CVStar5082;
-    else
+    else % passive insulated axon
         simClass = AxonSimulate_SENN_AxonI;
     end
     % run neuromorphic model thresholding function - I left out traj input
@@ -389,7 +387,27 @@ parfor i = 1:nSims
 end
 tNeuromorphic_parfor = toc;
 fprintf('Full neuromorphic model computational time with 16 parallel workers: %f \n', tNeuromorphic_parfor)
+beep
 
+%% Just facial and cochlear nerves
+errorObjs_fac_coch = cell(nSol*2,1);
+resultsThresh_fac_coch = cell(nSol*2,1);
+% param_fac_coch = [param]
+% facial_simCell = cell(nSol,1);
+parfor i = 1:nSol*2
+    try
+        if i/nSol > 1 % cochlear
+            simClass = AxonSimulate_G_AHPAxon_CVStar0265;
+            resultsThresh_fac_coch{i} = findThresholdWaveform(paramCellCoch,sol_coch{i},waveForm,[],simClass,errorFileTest);
+        else % facial
+            simClass = AxonSimulate_G_AHPAxon_CVStar0265;
+            resultsThresh_fac_coch{i} = findThresholdWaveform(paramCellFac,sol_fac{i},waveForm,[],simClass,errorFileTest);
+        end
+    catch ME
+        errorObjs_fac_coch{i} =  ME;
+        warning(['Error encountered in axonGroup ', num2str(i),'.\n',errorObjsFac{i}.message])
+    end
+end
 %% Pack results back into original sol_all format for whole nerves
 resultsThresh_all = cell(1,nSol*nNerve);
 for i = 1:nSims
@@ -522,16 +540,16 @@ for i = 1:numEl % for every electrode combo
     antSumNorm{i} = 100*antSum{i}/size(antSCC_SimCell{i}{4,1},1);
     saccSumNorm{i} = 100*saccSum{i}/size(saccule_SimCell{i}{4,1},1);
     utrSumNorm{i} = 100*utrSum{i}/size(utricle_SimCell{i}{4,1},1);
-%     facSumNorm{i} = 100*facSum{i}/size(facial_SimCell{i}{4,1},1);
+    facSumNorm{i} = 100*facSum{i}/size(facial_SimCell{i}{4,1},1);
     cochSumNorm{i} = 100*cochSum{i}/size(cochlear_SimCell{i}{4,1},1);
 end
 
 % Plot activation curves by electrode
 % all of these electrodes were referenced to electrode 2 in the common crus
+trajColors = {'r','g','b',[0.8500 0.3250 0.0980],[165,42,42]/245,'y',[0.4940 0.1840 0.5560]};
 electrode_names_full = {'1 (post. canal)','3 (ant. canal)','4 (ant. canal)','5 (lat. canal)','6 (post. canal)','7 (lat. canal)'};
 electrode_names = {'1','3','4','5','6','7'};
 nerve_names = {'Anterior Canal','Lateral Canal','Posterior Canal','Saccule','Utricle','Facial','Cochlear'};
-% nerve_names = {'Anterior Canal','Lateral Canal','Posterior Canal','Saccule','Utricle','Cochlear'};
 currVector = currentRange*current*1e6; % uA
 normalCurrentRange = [currVector(2) 300]; % uA, used to plot a shaded region indicating standard range of currents used in monkeys
 maxNum = 100; % sets y-axis limit in plots (max activation)
@@ -566,15 +584,16 @@ th = tiledlayout(2,3);
 for i = 1:numEl
     nexttile
 
-    ph{1} = plot(currVector,  antSumNorm{el2TileMap(i)}, 'g','LineWidth',1); 
+    ph{1} = plot(currVector,  antSumNorm{el2TileMap(i)},'LineWidth',1,'Color',trajColors{1}); 
     hold on
-    ph{2} = plot(currVector,  latSumNorm{el2TileMap(i)}, 'r','LineWidth',1); 
-    ph{3} = plot(currVector,  postSumNorm{el2TileMap(i)}, 'b','LineWidth',1); 
-    ph{4} = plot(currVector,  saccSumNorm{el2TileMap(i)}, '--','LineWidth',1); 
-    ph{5} = plot(currVector,  utrSumNorm{el2TileMap(i)}, '--','LineWidth',1); 
-%     ph{6} = plot(currVector,  facSumNorm{el2TileMap(i)}, ':','LineWidth',1); 
-    ph{8} = area(normalCurrentRange, [1 1]*maxNum, 'FaceColor', [1 1 1]*0.9, 'LineStyle','none');
-%     ph{8} = plot(normalCurrentRange, [1 1]*.97*maxNum, 'Color', [1 1 1]*0.7, 'LineWidth', 3); 
+    ph{2} = plot(currVector,  latSumNorm{el2TileMap(i)},'LineWidth',1,'Color',trajColors{2}); 
+    ph{3} = plot(currVector,  postSumNorm{el2TileMap(i)},'LineWidth',1,'Color',trajColors{3}); 
+    ph{4} = plot(currVector,  saccSumNorm{el2TileMap(i)}, '--','LineWidth',1,'Color',trajColors{4}); 
+    ph{5} = plot(currVector,  utrSumNorm{el2TileMap(i)}, '--','LineWidth',1,'Color',trajColors{5}); 
+    ph{6} = plot(currVector,  facSumNorm{el2TileMap(i)}, ':','LineWidth',1,'Color',trajColors{6}); 
+    ph{7} = plot(currVector,  cochSumNorm{el2TileMap(i)}, ':','LineWidth',1,'Color',trajColors{7});
+%     ph{8} = area(normalCurrentRange, [1 1]*maxNum, 'FaceColor', [1 1 1]*0.9, 'LineStyle','none');
+    ph{8} = plot(normalCurrentRange, [1 1]*.97*maxNum, 'Color', [1 1 1]*0.7, 'LineWidth', 3); 
     uistack(ph{8},'bottom')
     set(gca,'Layer','top')
 
@@ -593,7 +612,7 @@ for i = 1:numEl
 %     axis([0 max(currVector)/2 0 maxNum])
 
 end
-legend(ph([1:5 7]), nerve_names([1:5 7]),'Location','northwest','NumColumns',2) % apply legend to last plot
+legend([ph{1} ph{2} ph{3} ph{4} ph{5} ph{6} ph{7}], nerve_names([1:5 7]),'Location','northwest','NumColumns',2) % apply legend to last plot
 legend('boxoff')
 
 % add title and axis labels to entire tiledlayout
@@ -640,7 +659,7 @@ for i = 1:numEl
     axis([0 max(currVector) 0 maxNum])
 
 end
-legend(ph([1:5 7]), nerve_names([1:5 7]),'Location','northwest','NumColumns',2) % apply legend to last plot
+legend([ph{1} ph{2} ph{3} ph{4} ph{5} ph{7}], nerve_names([1:5 7]),'Location','northwest','NumColumns',2) % apply legend to last plot
 legend('boxoff')
 
 % add title and axis labels to entire tiledlayout
