@@ -64,6 +64,8 @@ areas = sqrt(cProd(1,:).^2 + cProd(2,:).^2 + cProd(3,:).^2)/2;
 % centroids, weighted by triangle area)
 trueSurfCentroid = centroids*areas'/sum(areas);
 
+
+%% NEXT TO DO - check if distance calculation is wrong, or if the triangulation was created wrong (?)
 % check if surfCentroid is in the nerve
 indv_nerve = V_nerve.t + int32(ones(4,size(V_nerve.t,2)));
 verts3d_nerve = V_nerve.p;

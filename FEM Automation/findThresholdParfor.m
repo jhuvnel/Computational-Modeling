@@ -456,7 +456,7 @@ cochlear_SimCell = resultsThresh_all(1+6*nSol:7*nSol);
 
 %% Save results
 fileDate = date;
-save([saveDir,'threshResultsFull_',fileDate],'postSCC_SimCell','latSCC_SimCell','antSCC_SimCell','utricle_SimCell','saccule_SimCell', 'errorObjs','tNeuromorphic_parfor')
+save([saveDir,'threshResultsFull_',fileDate],'postSCC_SimCell','latSCC_SimCell','antSCC_SimCell','utricle_SimCell','saccule_SimCell','facial_SimCell','cochlear_SimCell', 'errorObjs','tNeuromorphic_parfor')
 
 %% Post Processing - Find Recruitment
 currentRange = linspace(0,10,500); % this is the range of current scaling to threshold values for
@@ -523,15 +523,15 @@ for i = 1:numEl % for every electrode combo
                 utrSum{i}(j) = utrSum{i}(j) - size(find(utricle_SimCell{i}{4,1} <= 0),1);
             end
 
-            if ~isempty(facial_SimCell{i})
-                facSum{i}(j) = facSum{i}(j) + size(find(facial_SimCell{i}{4,1} < currentRange(j)),1);
-                facSum{i}(j) = facSum{i}(j) - size(find(facial_SimCell{i}{4,1} <= 0),1);
-            end
-
-            if ~isempty(cochlear_SimCell{i})
-                cochSum{i}(j) = cochSum{i}(j) + size(find(cochlear_SimCell{i}{4,1} < currentRange(j)),1);
-                cochSum{i}(j) = cochSum{i}(j) - size(find(cochlear_SimCell{i}{4,1} <= 0),1);
-            end
+%             if ~isempty(facial_SimCell{i})
+%                 facSum{i}(j) = facSum{i}(j) + size(find(facial_SimCell{i}{4,1} < currentRange(j)),1);
+%                 facSum{i}(j) = facSum{i}(j) - size(find(facial_SimCell{i}{4,1} <= 0),1);
+%             end
+% 
+%             if ~isempty(cochlear_SimCell{i})
+%                 cochSum{i}(j) = cochSum{i}(j) + size(find(cochlear_SimCell{i}{4,1} < currentRange(j)),1);
+%                 cochSum{i}(j) = cochSum{i}(j) - size(find(cochlear_SimCell{i}{4,1} <= 0),1);
+%             end
         end
     
     % normalize by total number of axons for that nerve
@@ -540,8 +540,8 @@ for i = 1:numEl % for every electrode combo
     antSumNorm{i} = 100*antSum{i}/size(antSCC_SimCell{i}{4,1},1);
     saccSumNorm{i} = 100*saccSum{i}/size(saccule_SimCell{i}{4,1},1);
     utrSumNorm{i} = 100*utrSum{i}/size(utricle_SimCell{i}{4,1},1);
-    facSumNorm{i} = 100*facSum{i}/size(facial_SimCell{i}{4,1},1);
-    cochSumNorm{i} = 100*cochSum{i}/size(cochlear_SimCell{i}{4,1},1);
+%     facSumNorm{i} = 100*facSum{i}/size(facial_SimCell{i}{4,1},1);
+%     cochSumNorm{i} = 100*cochSum{i}/size(cochlear_SimCell{i}{4,1},1);
 end
 
 % Plot activation curves by electrode
@@ -549,7 +549,7 @@ end
 trajColors = {'r','g','b',[0.8500 0.3250 0.0980],[165,42,42]/245,'c',[0.4940 0.1840 0.5560]};
 electrode_names_full = {'1 (post. canal)','3 (ant. canal)','4 (ant. canal)','5 (lat. canal)','6 (post. canal)','7 (lat. canal)'};
 electrode_names = {'1','3','4','5','6','7'};
-nerve_names = {'Anterior Canal','Lateral Canal','Posterior Canal','Saccule','Utricle','Facial','Cochlear'};
+nerve_names = {'Lateral Canal','Anterior Canal','Posterior Canal','Saccule','Utricle','Facial','Cochlear'};
 currVector = currentRange*current*1e6; % uA
 normalCurrentRange = [currVector(2) 300]; % uA, used to plot a shaded region indicating standard range of currents used in monkeys
 maxNum = 100; % sets y-axis limit in plots (max activation)
@@ -621,8 +621,12 @@ maxNum = 100; % sets y-axis limit in plots (max activation)
 % ylabel(th, '% Fibers Activated');
 % 
 % saveas(gcf,[saveDir,'recruitmentTiles_',fileDate])
-
+%%
 % Subplot format with log current scale
+
+el2TileMap = ...
+    [2, 1, 4;
+    3, 5, 6]';
 
 figure('Units','Inches','Position',[1 0.5 14 8])
 ph = cell(7,1);

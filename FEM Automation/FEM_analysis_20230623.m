@@ -30,10 +30,10 @@ mphsave(model,[save_path,'\FEM_20220623_Nancy_fascicles'])
 % - Anterior 1, electrodes1_4 - Anterior 2, electrodes1_5 - Horizontal 1,
 % electrodes1_6 - Posterior 2, electrodes1_7 - Horizontal 2
 % ModelUtil.showProgress(true); %activates progress bar
-RefElectrodes = [{'electrodes1_2'}];
-RefElectrodeNames = [{'CC'}];
-StimElectrodes = [{'electrodes1_1'}, {'electrodes1_3'}, {'electrodes1_4'}, {'electrodes1_5'}, {'electrodes1_6'}, {'electrodes1_7'}];
-StimElectrodeNames = [{'Posterior1'}, {'Anterior1'}, {'Anterior2'},{'Horizontal1'},{'Posterior2'},{'Horizontal2'}];
+RefElectrodes = [{'geom1_sel46'},{'geom1_sel47'},{'geom1_sel48'},{'geom1_sel49'}];
+RefElectrodeNames = [{'El CC Shallow'},{'El CC Middle'},{'El CC Deep'},{'Distant Reference'}];
+StimElectrodes = [{'geom1_sel35'}, {'geom1_sel36'}, {'geom1_sel37'}, {'geom1_sel38'}, {'geom1_sel39'}, {'geom1_sel40'},{'geom1_sel41'}, {'geom1_sel42'}, {'geom1_sel43'}, {'geom1_sel44'}, {'geom1_sel45'}];
+StimElectrodeNames = [{'Ant Shallow'}, {'Ant Middle Outside'}, {'Ant Middle Inside'},{'Ant Deep'},{'Lat Shallow'}, {'Lat Middle Outside'}, {'Lat Middle Inside'},{'Lat Deep'},{'Pos Shallow'},{'Pos Middle'},{'Pos Deep'}];
 nRef = length(RefElectrodes);
 nStim = length(StimElectrodes);
 voltageTags = cell(1,nStim*nRef);
@@ -43,19 +43,23 @@ kk = 0;
 for i = 1:nRef
     for j = 1:nStim
         kk = kk + 1;
-        voltageTags{kk} = ['V',RefElectrodes{i}(end),'_',StimElectrodes{j}(end)];
+%         voltageTags{kk} = ['V',RefElectrodes{i}(end),'_',StimElectrodes{j}(end)];
+        voltageTags{kk} = ['V',num2str(i),'_',num2str(j)];
         % create ec physics for each electrode combination. Naming is
         % 'ec#_#' where first # is ref electrode, 2nd # is stim electrode
-        ECs{i,j} = model.component('comp1').physics.create(['ec',RefElectrodes{i}(end),'_',StimElectrodes{j}(end)], 'ConductiveMedia', 'geom1');
+%         ECs{i,j} = model.component('comp1').physics.create(['ec',RefElectrodes{i}(end),'_',StimElectrodes{j}(end)], 'ConductiveMedia', 'geom1');
+        ECs{i,j} = model.component('comp1').physics.create(['ec',num2str(i),'_',num2str(j)], 'ConductiveMedia', 'geom1');
         ECs{i,j}.field('electricpotential').field(voltageTags{kk}); % name output variable
         ECs{i,j}.label(['Electric Currents ',StimElectrodeNames{j},' ',RefElectrodeNames{i},' ref']);
         % Set stimulating electrode as voltage source
         ECs{i,j}.create('pot1', 'ElectricPotential', 2);
-        ECs{i,j}.feature('pot1').selection.named(['geom1_imp1_',StimElectrodes{j},'_bnd']);
+%         ECs{i,j}.feature('pot1').selection.named(['geom1_',StimElectrodes{j}]);
+        ECs{i,j}.feature('pot1').selection.named([StimElectrodes{j}]);
         ECs{i,j}.feature('pot1').set('V0', 1);
         % Set reference electrode as ground
         ECs{i,j}.create('gnd1', 'Ground', 2);
-        ECs{i,j}.feature('gnd1').selection.named(['geom1_imp1_',RefElectrodes{i},'_bnd']);   
+%         ECs{i,j}.feature('gnd1').selection.named(['geom1_',RefElectrodes{i}]);   
+        ECs{i,j}.feature('gnd1').selection.named([RefElectrodes{i}]);   
     end
 end
 
@@ -68,47 +72,19 @@ model.component('comp1').mesh('mesh1').run;
 %% Studies
 model.study.create('std1');
 model.study('std1').create('stat', 'Stationary');
-model.study('std1').label('Study 1 - Facial CC');
-model.study('std1').feature('stat').setEntry('activate', 'cc2', false);
-model.study('std1').feature('stat').setEntry('activate', 'cc3', false);
+model.study('std1').label('Study 1');
 
+fprintf('Study created. \n')
 
-model.study.create('std2');
-model.study('std2').create('stat', 'Stationary');
-model.study('std2').label('Study 2 - Cochlear CC');
-model.study('std2').feature('stat').setEntry('activate', 'cc', false);
-model.study('std2').feature('stat').setEntry('activate', 'cc3', false);
-
-
-model.study.create('std3');
-model.study('std3').create('stat', 'Stationary');
-model.study('std3').label('Study 3 - Vestibular CC');
-model.study('std3').feature('stat').setEntry('activate', 'cc', false);
-model.study('std3').feature('stat').setEntry('activate', 'cc2', false);
-
-stdEC = model.study.create('std4');
-model.study('std4').create('stat', 'Stationary');
-model.study('std4').label('Study 4 - Electric Currents');
-model.study('std4').feature('stat').setEntry('activate', 'cc', false);
-model.study('std4').feature('stat').setEntry('activate', 'cc2', false);
-model.study('std4').feature('stat').setEntry('activate', 'cc3', false);
-
-% Set CC studies not to solve for EC
-for i = 1:nRef
-    for j = 1:nStim
-        model.study('std1').feature('stat').setEntry('activate', ECs{i,j}.tag, false);
-        model.study('std2').feature('stat').setEntry('activate', ECs{i,j}.tag, false);
-        model.study('std3').feature('stat').setEntry('activate', ECs{i,j}.tag, false);
-    end
-end
 %%
 % run the studies. Since no solution nodes were created, it just uses the
 % default solver and computes results for each study
+tic
+fprintf('Running study... \n')
 model.study('std1').run;
-model.study('std2').run;
-model.study('std3').run;
-stdEC.run;
 
+fprintf('Study done running. \n')
+toc
 %% Results - Derived values (surface integration of current delivered by electrodes)
 
 
