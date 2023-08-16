@@ -71,6 +71,12 @@ indv_nerve = V_nerve.t + int32(ones(4,size(V_nerve.t,2)));
 verts3d_nerve = V_nerve.p;
 TR3d = triangulation(double(indv_nerve)',verts3d_nerve');
 centroidTet = pointLocation(TR3d, trueSurfCentroid');
+% %% Plot nerve mesh
+% [Flist, freeP] = freeBoundary(TR3d); % finds free boundaries of tets (outside surface of mesh)
+% trimesh(Flist, freeP(:,1), freeP(:,2), freeP(:,3), 'FaceColor', 'cyan', 'FaceAlpha',0.65) % plot free boundary surface mesh
+
+
+%%
 if isnan(centroidTet) % if the centroid is outside the nerve
     nearestCentroid = nearestNeighbor(TR3d, trueSurfCentroid');
     neighbor = verts3d_nerve(:, nearestCentroid); % neighbor vertice coords
@@ -368,8 +374,8 @@ step_stream_in = [50e-3; -1];
 % at this point, step_out is the same as hardcoded step
 
 %% Plot 3d points and streamlines
-% % plot3d(f1.CurrentAxes, seedNodes3d(1,:), seedNodes3d(2,:), seedNodes3d(3,:), '*')
-% 
+% plot3d(f1.CurrentAxes, seedNodes3d(1,:), seedNodes3d(2,:), seedNodes3d(3,:), '*')
+
 % f5 = plotFlow(V_nerve, V_crista, 'p0', seedNodes3d, 'plotFlow', false);
 % title('3D Crista with Seed Nodes')
 % for i = 1:numGen

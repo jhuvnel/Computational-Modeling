@@ -166,9 +166,9 @@ locIndex_SCC = [3*rand(numAxons_1to3,1); 3*rand(numAxons_2to5,1) + 2; 2*rand(num
 
 [traj_post_pre, p0_post] = fiberGenComsolv2(flow_IVN_fixed, flow_post_crista, locIndex_SCC, step, basisVecTagsIVN, model, dset_IVN);
 disp('Trajs done with posterior canal.')
-[traj_lat_pre, p0_lat] = fiberGenComsolv2(flow_IVN_fixed, flow_lat_crista, locIndex_SCC, step, basisVecTagsSVN, model, dset_SVN);
+[traj_lat_pre, p0_lat] = fiberGenComsolv2(flow_SVN_fixed, flow_lat_crista, locIndex_SCC, step, basisVecTagsSVN, model, dset_SVN);
 disp('Trajs done with lateral canal.')
-[traj_ant_pre, p0_ant] = fiberGenComsolv2(flow_IVN_fixed, flow_ant_crista, locIndex_SCC, step, basisVecTagsSVN, model, dset_SVN);
+[traj_ant_pre, p0_ant] = fiberGenComsolv2(flow_SVN_fixed, flow_ant_crista, locIndex_SCC, step, basisVecTagsSVN, model, dset_SVN);
 disp('Trajs done with anterior canal.')
 
 toc
@@ -184,7 +184,7 @@ numAxons_utr_sacc = sum([numAxons_1to4, numAxons_3to7, numAxons_6to10]);
 locIndex_utr_sacc = [4*rand(numAxons_1to4,1); 4*rand(numAxons_3to7,1) + 3; 4*rand(numAxons_6to10,1) + 6];
 
 [traj_sacc_pre, p0_sacc] = fiberGenComsolv2(flow_IVN_fixed, flow_sacc_crista, locIndex_utr_sacc, step, basisVecTagsIVN, model, dset_IVN);
-[traj_utr_pre, p0_utr] = fiberGenComsolv2(flow_IVN_fixed, flow_utr_crista, locIndex_utr_sacc, step, basisVecTagsSVN, model, dset_SVN);
+[traj_utr_pre, p0_utr] = fiberGenComsolv2(flow_SVN_fixed, flow_utr_crista, locIndex_utr_sacc, step, basisVecTagsSVN, model, dset_SVN);
 disp('Utricle and saccule fibers done.')
 
 toc
@@ -203,7 +203,7 @@ disp('Trajs done with facial nerve.')
 
 step = [(parameterCellSCC_6to10{3}([1 2]) + (parameterCellSCC_6to10{4}(1)*[1;1]))*1000/2; -1];
 numAxons_coch = 1000; 
-[traj_coch_pre, fiberType1, p0_coch] = fiberGenComsol(flow_coch_fixed,flow_coch_outlet,numAxons_coch,step); % unclear whether axial or distal origin is better
+[traj_coch_pre, fiberType1, p0_coch] = fiberGenComsol(flow_coch_fixed,flow_coch_inlet,numAxons_coch,step); % unclear whether axial or distal origin is better
 disp('Trajs done with cochlear nerve.')
 
 toc
@@ -635,14 +635,14 @@ for i = 1:sum(~toKeep{1})
     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
 end
 title(gca,'Post. Crista Origin')
-f22 = plotFlow(flow_IVN_fixed,flow_lat_crista,traj_lat_pre(toKeep{2},3));
+f22 = plotFlow(flow_SVN_fixed,flow_lat_crista,traj_lat_pre(toKeep{2},3));
 f22.Position = [200 200 560 420];
 badTraj = traj_lat_pre(~toKeep{2},3);
 for i = 1:sum(~toKeep{2})
     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
 end
 title(gca,'Lat. Crista Origin')
-f32 = plotFlow(flow_IVN_fixed,flow_ant_crista,traj_ant_pre(toKeep{3},3));
+f32 = plotFlow(flow_SVN_fixed,flow_ant_crista,traj_ant_pre(toKeep{3},3));
 f32.Position = [200 200 560 420];
 badTraj = traj_ant_pre(~toKeep{3},3);
 for i = 1:sum(~toKeep{3})
@@ -656,7 +656,7 @@ for i = 1:sum(~toKeep{4})
     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
 end
 title(gca,'Sacc. Macula Origin')
-f52 = plotFlow(flow_IVN_fixed,flow_utr_crista,traj_utr_pre(toKeep{5},3));
+f52 = plotFlow(flow_SVN_fixed,flow_utr_crista,traj_utr_pre(toKeep{5},3));
 f52.Position = [200 200 560 420];
 badTraj = traj_utr_pre(~toKeep{5},3);
 for i = 1:sum(~toKeep{5})
@@ -678,13 +678,13 @@ for i = 1:sum(~toKeep{7})
     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
 end
 title(gca,'Cochlear Nerve')
-f82 = plotFlow(flow_IVN,flow_IVN_inlet,traj_vestinlet_pre(toKeep{8},3));
-f82.Position = [200 200 560 420];
-badTraj = traj_vestinlet_pre(~toKeep{8},3);
-for i = 1:sum(~toKeep{8})
-    plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
-end
-title(gca,'Axial Vestibular Origin')
+% f82 = plotFlow(flow_IVN,flow_IVN_inlet,traj_vestinlet_pre(toKeep{8},3));
+% f82.Position = [200 200 560 420];
+% badTraj = traj_vestinlet_pre(~toKeep{8},3);
+% for i = 1:sum(~toKeep{8})
+%     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
+% end
+% title(gca,'Axial Vestibular Origin')
 
 
 %% Plot incomplete trajectories
