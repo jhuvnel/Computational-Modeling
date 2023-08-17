@@ -22,7 +22,7 @@ model.modelPath(model_path);
 mphlaunch(model)
 pause(5)
 save_path = model_path;
-mphsave(model,[save_path,'\FEM_20220623_Nancy_fascicles'])
+mphsave(model,[save_path,'\FEM_20220623_Nancy_fascicles_testing'])
 
 %% Electric Currents Physics
 
@@ -30,39 +30,107 @@ mphsave(model,[save_path,'\FEM_20220623_Nancy_fascicles'])
 % - Anterior 1, electrodes1_4 - Anterior 2, electrodes1_5 - Horizontal 1,
 % electrodes1_6 - Posterior 2, electrodes1_7 - Horizontal 2
 % ModelUtil.showProgress(true); %activates progress bar
-RefElectrodes = [{'geom1_sel46'},{'geom1_sel47'},{'geom1_sel48'},{'geom1_sel49'}];
-RefElectrodeNames = [{'El CC Shallow'},{'El CC Middle'},{'El CC Deep'},{'Distant Reference'}];
-StimElectrodes = [{'geom1_sel35'}, {'geom1_sel36'}, {'geom1_sel37'}, {'geom1_sel38'}, {'geom1_sel39'}, {'geom1_sel40'},{'geom1_sel41'}, {'geom1_sel42'}, {'geom1_sel43'}, {'geom1_sel44'}, {'geom1_sel45'}];
-StimElectrodeNames = [{'Ant Shallow'}, {'Ant Middle Outside'}, {'Ant Middle Inside'},{'Ant Deep'},{'Lat Shallow'}, {'Lat Middle Outside'}, {'Lat Middle Inside'},{'Lat Deep'},{'Pos Shallow'},{'Pos Middle'},{'Pos Deep'}];
-nRef = length(RefElectrodes);
-nStim = length(StimElectrodes);
+CommonRefElectrodes = [{'geom1_sel46'},{'geom1_sel47'},{'geom1_sel48'},{'geom1_sel49'}];
+CommonRefElectrodeNames = [{'El CC Shallow'},{'El CC Middle'},{'El CC Deep'},{'Distant Reference'}];
+CommonStimElectrodes = [{'geom1_sel35'}, {'geom1_sel36'}, {'geom1_sel37'}, {'geom1_sel38'}, {'geom1_sel39'}, {'geom1_sel40'},{'geom1_sel41'}, {'geom1_sel42'}, {'geom1_sel43'}, {'geom1_sel44'}, {'geom1_sel45'}];
+CommonStimElectrodeNames = [{'Ant Shallow'}, {'Ant Middle Outside'}, {'Ant Middle Inside'},{'Ant Deep'},{'Lat Shallow'}, {'Lat Middle Outside'}, {'Lat Middle Inside'},{'Lat Deep'},{'Pos Shallow'},{'Pos Middle'},{'Pos Deep'}];
+
+AntElectrodes = [{'geom1_sel35'}, {'geom1_sel36'}, {'geom1_sel37'}, {'geom1_sel38'}];
+AntElectrodeNames = [{'Ant Shallow'}, {'Ant Middle Outside'}, {'Ant Middle Inside'},{'Ant Deep'}];
+LatElectrodes = [{'geom1_sel39'}, {'geom1_sel40'},{'geom1_sel41'}, {'geom1_sel42'}];
+LatElectrodeNames = [{'Lat Shallow'}, {'Lat Middle Outside'}, {'Lat Middle Inside'},{'Lat Deep'}];
+PosElectrodes = [{'geom1_sel43'}, {'geom1_sel44'}, {'geom1_sel45'}];
+PosElectrodeNames = [{'Pos Shallow'},{'Pos Middle'},{'Pos Deep'}];
+CCElectrodes = [{'geom1_sel46'},{'geom1_sel47'},{'geom1_sel48'}];
+CCElectrodeNames = [{'El CC Shallow'},{'El CC Middle'},{'El CC Deep'}];
+
+RefElectrodes = [];
+RefElectrodeNames = [];
+StimElectrodes = [];
+StimElectrodeNames = [];
+nRef = length(CommonRefElectrodes);
+nStim = length(CommonStimElectrodes);
 voltageTags = cell(1,nStim*nRef);
-ECs = cell(length(RefElectrodes),length(StimElectrodes));
+ECs = [];
 
 kk = 0;
+% Common Crus and Distant Reference Pairs
 for i = 1:nRef
     for j = 1:nStim
         kk = kk + 1;
-%         voltageTags{kk} = ['V',RefElectrodes{i}(end),'_',StimElectrodes{j}(end)];
         voltageTags{kk} = ['V',num2str(i),'_',num2str(j)];
         % create ec physics for each electrode combination. Naming is
         % 'ec#_#' where first # is ref electrode, 2nd # is stim electrode
-%         ECs{i,j} = model.component('comp1').physics.create(['ec',RefElectrodes{i}(end),'_',StimElectrodes{j}(end)], 'ConductiveMedia', 'geom1');
-        ECs{i,j} = model.component('comp1').physics.create(['ec',num2str(i),'_',num2str(j)], 'ConductiveMedia', 'geom1');
-        ECs{i,j}.field('electricpotential').field(voltageTags{kk}); % name output variable
-        ECs{i,j}.label(['Electric Currents ',StimElectrodeNames{j},' ',RefElectrodeNames{i},' ref']);
+        ECs{kk} = model.component('comp1').physics.create(['ec',num2str(kk)], 'ConductiveMedia', 'geom1');
+        ECs{kk}.field('electricpotential').field(voltageTags{kk}); % name output variable
+        ECs{kk}.label(['Electric Currents ',CommonStimElectrodeNames{j},' ',CommonRefElectrodeNames{i},' ref']);
         % Set stimulating electrode as voltage source
-        ECs{i,j}.create('pot1', 'ElectricPotential', 2);
-%         ECs{i,j}.feature('pot1').selection.named(['geom1_',StimElectrodes{j}]);
-        ECs{i,j}.feature('pot1').selection.named([StimElectrodes{j}]);
-        ECs{i,j}.feature('pot1').set('V0', 1);
+        ECs{kk}.create('pot1', 'ElectricPotential', 2);
+        ECs{kk}.feature('pot1').selection.named([CommonStimElectrodes{j}]);
+        ECs{kk}.feature('pot1').set('V0', 1);
         % Set reference electrode as ground
-        ECs{i,j}.create('gnd1', 'Ground', 2);
-%         ECs{i,j}.feature('gnd1').selection.named(['geom1_',RefElectrodes{i}]);   
-        ECs{i,j}.feature('gnd1').selection.named([RefElectrodes{i}]);   
+        ECs{kk}.create('gnd1', 'Ground', 2);
+        ECs{kk}.feature('gnd1').selection.named([CommonRefElectrodes{i}]);   
+
+        RefElectrodes{kk} = CommonRefElectrodes{i};
+        RefElectrodeNames{kk} = CommonRefElectrodeNames{i};
+        StimElectrodes{kk} = CommonStimElectrodes{j};
+        StimElectrodeNames{kk} = CommonStimElectrodeNames{j};
     end
 end
+%%
+% Intracanal Pairs
+% Anterior Canal
+[ECs, voltageTags, electrodeList, namesList, kk] = electrodeCombos(AntElectrodes,AntElectrodeNames,ECs,voltageTags,kk,model);
+RefElectrodes = [RefElectrodes, electrodeList(2,:)];
+RefElectrodeNames = [RefElectrodeNames, namesList(2,:)];
+StimElectrodes = [StimElectrodes, electrodeList(1,:)];
+StimElectrodeNames = [StimElectrodeNames, namesList(1,:)];
+% Lateral Canal
+[ECs, voltageTags, electrodeList, namesList, kk] = electrodeCombos(LatElectrodes,LatElectrodeNames,ECs,voltageTags,kk,model);
+RefElectrodes = [RefElectrodes, electrodeList(2,:)];
+RefElectrodeNames = [RefElectrodeNames, namesList(2,:)];
+StimElectrodes = [StimElectrodes, electrodeList(1,:)];
+StimElectrodeNames = [StimElectrodeNames, namesList(1,:)];
+% Posterior Canal
+[ECs, voltageTags, electrodeList, namesList, kk] = electrodeCombos(PosElectrodes,PosElectrodeNames,ECs,voltageTags,kk,model);
+RefElectrodes = [RefElectrodes, electrodeList(2,:)];
+RefElectrodeNames = [RefElectrodeNames, namesList(2,:)];
+StimElectrodes = [StimElectrodes, electrodeList(1,:)];
+StimElectrodeNames = [StimElectrodeNames, namesList(1,:)];
+% Common Crus
+[ECs, voltageTags, electrodeList, namesList, kk] = electrodeCombos(CCElectrodes,CCElectrodeNames,ECs,voltageTags,kk,model);
+RefElectrodes = [RefElectrodes, electrodeList(2,:)];
+RefElectrodeNames = [RefElectrodeNames, namesList(2,:)];
+StimElectrodes = [StimElectrodes, electrodeList(1,:)];
+StimElectrodeNames = [StimElectrodeNames, namesList(1,:)];
 
+fprintf('All EC nodes created.\n')
+
+% kk = 0;
+% for i = 1:nRef
+%     for j = 1:nStim
+%         kk = kk + 1;
+% %         voltageTags{kk} = ['V',RefElectrodes{i}(end),'_',StimElectrodes{j}(end)];
+%         voltageTags{kk} = ['V',num2str(i),'_',num2str(j)];
+%         % create ec physics for each electrode combination. Naming is
+%         % 'ec#_#' where first # is ref electrode, 2nd # is stim electrode
+% %         ECs{i,j} = model.component('comp1').physics.create(['ec',RefElectrodes{i}(end),'_',StimElectrodes{j}(end)], 'ConductiveMedia', 'geom1');
+%         ECs{i,j} = model.component('comp1').physics.create(['ec',num2str(i),'_',num2str(j)], 'ConductiveMedia', 'geom1');
+%         ECs{i,j}.field('electricpotential').field(voltageTags{kk}); % name output variable
+%         ECs{i,j}.label(['Electric Currents ',StimElectrodeNames{j},' ',RefElectrodeNames{i},' ref']);
+%         % Set stimulating electrode as voltage source
+%         ECs{i,j}.create('pot1', 'ElectricPotential', 2);
+% %         ECs{i,j}.feature('pot1').selection.named(['geom1_',StimElectrodes{j}]);
+%         ECs{i,j}.feature('pot1').selection.named([StimElectrodes{j}]);
+%         ECs{i,j}.feature('pot1').set('V0', 1);
+%         % Set reference electrode as ground
+%         ECs{i,j}.create('gnd1', 'Ground', 2);
+% %         ECs{i,j}.feature('gnd1').selection.named(['geom1_',RefElectrodes{i}]);   
+%         ECs{i,j}.feature('gnd1').selection.named([RefElectrodes{i}]);   
+%     end
+% end
+%%
 % not sure if it matters if the mesh is run before or after the physics
 % nodes are created - to be safe, run it after
 model.component('comp1').mesh('mesh1').run;
@@ -72,19 +140,61 @@ model.component('comp1').mesh('mesh1').run;
 %% Studies
 model.study.create('std1');
 model.study('std1').create('stat', 'Stationary');
-model.study('std1').label('Study 1');
+model.study('std1').label('Study 1 - Curvilinear Coordinates');
+% deactivate EC nodes for the CC study
+for i = 1:kk
+    model.study('std1').feature('stat').setEntry('activate', ECs{i}.tag, false);
+end
 
-fprintf('Study created. \n')
+%% Break EC nodes into multiple studies
+maxNumECNodes = 5;
+numECStudy = ceil(length(ECs)/maxNumECNodes);
+stdTag = cell(numECStudy,1);
+for i = 1:numECStudy
+    stdTag{i} = ['std',num2str(i + 1)];
+    model.study.create(stdTag{i});
+    model.study(stdTag{i}).create('stat', 'Stationary');
+    model.study(stdTag{i}).label(['Study ',num2str(i + 1),' - Electric Currents']);
+    
+    % deactivate other EC nodes and all CC nodes
+    model.study(stdTag{i}).feature('stat').setEntry('activate', 'cc', false);
+    model.study(stdTag{i}).feature('stat').setEntry('activate', 'cc2', false);
+    model.study(stdTag{i}).feature('stat').setEntry('activate', 'cc3', false);
+    model.study(stdTag{i}).feature('stat').setEntry('activate', 'cc4', false);
+
+    for j = 1:length(ECs)
+        if (j > i*maxNumECNodes) || (j < (i-1)*maxNumECNodes + 1)
+            model.study(stdTag{i}).feature('stat').setEntry('activate',ECs{j}.tag, false);
+        end
+    end
+
+end
+
+fprintf('Studies created. \n')
 
 %%
 % run the studies. Since no solution nodes were created, it just uses the
 % default solver and computes results for each study
+% mphsave(model)
 tic
-fprintf('Running study... \n')
-model.study('std1').run;
+fprintf('Running Study 1... \n')
+% model.study('std1').run;
 
-fprintf('Study done running. \n')
+fprintf('Study 1 done running. \n')
 toc
+
+for i = 1:numECStudy
+    tic
+    fprintf('Running Study %d... \n',i+1)
+    model.study(stdTag{i}).run;
+    
+    fprintf('Study %d done running. \n',i+1)
+    toc
+end
+
+fprintf('Saving model... \n')
+mphsave(model)
+fprintf('Model saved! \n')
 %% Results - Derived values (surface integration of current delivered by electrodes)
 
 
@@ -124,7 +234,7 @@ model.result('pg3').label('Vector Field (cc2)');
 model.result('pg3').set('titlecolor', 'black');
 model.result('pg3').set('edgecolor', 'black');
 model.result('pg3').set('legendcolor', 'black');
-model.result('pg3').set('data', 'dset2');
+model.result('pg3').set('data', 'dset1');
 model.result('pg3').feature.create('str1', 'Streamline');
 model.result('pg3').feature('str1').set('expr', {'cc2.vX' 'cc2.vY' 'cc2.vZ'});
 model.result('pg3').feature('str1').set('posmethod', 'uniform');
@@ -143,7 +253,7 @@ model.result('pg3').feature('str1').set('maxlen', Inf);
 model.result('pg3').feature('str1').set('maxtime', Inf);
 model.result('pg3').feature('str1').set('data', 'parent');
 model.result.create('pg4', 'PlotGroup3D');
-model.result('pg4').set('data', 'dset2');
+model.result('pg4').set('data', 'dset1');
 model.result('pg4').label('Coordinate system (cc2)');
 model.result('pg4').create('sys1', 'CoordSysVolume');
 model.result('pg4').feature('sys1').set('sys', 'cc2_cs');
@@ -153,7 +263,7 @@ model.result('pg5').label('Vector Field (cc3)');
 model.result('pg5').set('titlecolor', 'black');
 model.result('pg5').set('edgecolor', 'black');
 model.result('pg5').set('legendcolor', 'black');
-model.result('pg5').set('data', 'dset3');
+model.result('pg5').set('data', 'dset1');
 model.result('pg5').feature.create('str1', 'Streamline');
 model.result('pg5').feature('str1').set('expr', {'cc3.vX' 'cc3.vY' 'cc3.vZ'});
 model.result('pg5').feature('str1').set('posmethod', 'uniform');
@@ -172,7 +282,7 @@ model.result('pg5').feature('str1').set('maxlen', Inf);
 model.result('pg5').feature('str1').set('maxtime', Inf);
 model.result('pg5').feature('str1').set('data', 'parent');
 model.result.create('pg6', 'PlotGroup3D');
-model.result('pg6').set('data', 'dset3');
+model.result('pg6').set('data', 'dset1');
 model.result('pg6').label('Coordinate system (cc3)');
 model.result('pg6').create('sys1', 'CoordSysVolume');
 model.result('pg6').feature('sys1').set('sys', 'cc3_cs');
@@ -314,8 +424,8 @@ for i = 1:nRef
 end
 
 %% Save Model
-% open Comsol window and open the new model
-mphlaunch(model)
-pause(5)
 save_path = 'R:\Computational Modeling\Model as of 20220908';
 mphsave(model,[save_path,'\FEM_20221013_solved'])
+pause(5)
+% open Comsol window and open the new model
+mphlaunch(model)

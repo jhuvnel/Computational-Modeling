@@ -382,7 +382,7 @@ beep
 
 %%
 % save(['trajs_',fileDate],"traj_vestinlet","traj_post","traj_lat","traj_ant","traj_sacc","traj_utr")
-save_dir = 'R:\Computational Modeling\Model as of 20230104\19-April-2023\';
+save_dir = 'R:\Computational Modeling\Model as of 20230623\Results 20230816\';
 % save([save_dir,'trajs_',fileDate],"traj_post","traj_lat","traj_ant","traj_sacc","traj_utr","traj_fac","traj_coch")
 save([save_dir,'trajs_',fileDate],"traj_post","traj_lat","traj_ant",...
     "traj_sacc","traj_utr", "traj_post_pre","traj_lat_pre",...
@@ -394,12 +394,12 @@ tic
 % sol_post = []; sol_lat = []; sol_ant = []; sol_sacc = []; sol_utr = []; solf_fac = []; sol_coch = [];
 
 
-% sol_post = sampleFEM(model,vTags,ecTags,dset_ec,traj_post,currents);
-% sol_lat = sampleFEM(model,vTags,ecTags,dset_ec,traj_lat,currents);
-% sol_ant = sampleFEM(model,vTags,ecTags,dset_ec,traj_ant,currents);
-% sol_sacc = sampleFEM(model,vTags,ecTags,dset_ec,traj_sacc,currents);
-% sol_utr = sampleFEM(model,vTags,ecTags,dset_ec,traj_utr,currents);
-% sol_fac = sampleFEM(model,vTags,ecTags,dset_ec,traj_fac,currents);
+sol_post = sampleFEM(model,vTags,ecTags,dset_ec,traj_post,currents);
+sol_lat = sampleFEM(model,vTags,ecTags,dset_ec,traj_lat,currents);
+sol_ant = sampleFEM(model,vTags,ecTags,dset_ec,traj_ant,currents);
+sol_sacc = sampleFEM(model,vTags,ecTags,dset_ec,traj_sacc,currents);
+sol_utr = sampleFEM(model,vTags,ecTags,dset_ec,traj_utr,currents);
+sol_fac = sampleFEM(model,vTags,ecTags,dset_ec,traj_fac,currents);
 sol_coch = sampleFEM(model,vTags,ecTags,dset_ec,traj_coch,currents);
 
 %
@@ -631,52 +631,52 @@ save([save_dir,'params',fileDate],'bigParamCellSCC','bigParamCellUS','paramCellF
 f12 = plotFlow(flow_IVN_fixed,flow_post_crista,traj_post_pre(toKeep{1},3));
 f12.Position = [200 200 560 420];
 badTraj = traj_post_pre(~toKeep{1},3);
-for i = 1:sum(~toKeep{1})
-    plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
-end
+% for i = 1:sum(~toKeep{1})
+%     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
+% end
 title(gca,'Post. Crista Origin')
 f22 = plotFlow(flow_SVN_fixed,flow_lat_crista,traj_lat_pre(toKeep{2},3));
 f22.Position = [200 200 560 420];
 badTraj = traj_lat_pre(~toKeep{2},3);
-for i = 1:sum(~toKeep{2})
-    plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
-end
+% for i = 1:sum(~toKeep{2})
+%     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
+% end
 title(gca,'Lat. Crista Origin')
 f32 = plotFlow(flow_SVN_fixed,flow_ant_crista,traj_ant_pre(toKeep{3},3));
 f32.Position = [200 200 560 420];
 badTraj = traj_ant_pre(~toKeep{3},3);
-for i = 1:sum(~toKeep{3})
-    plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
-end
+% for i = 1:sum(~toKeep{3})
+%     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
+% end
 title(gca,'Ant. Crista Origin')
 f42 = plotFlow(flow_IVN_fixed,flow_sacc_crista,traj_sacc_pre(toKeep{4},3));
 f42.Position = [200 200 560 420];
 badTraj = traj_sacc_pre(~toKeep{4},3);
-for i = 1:sum(~toKeep{4})
-    plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
-end
+% for i = 1:sum(~toKeep{4})
+%     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
+% end
 title(gca,'Sacc. Macula Origin')
 f52 = plotFlow(flow_SVN_fixed,flow_utr_crista,traj_utr_pre(toKeep{5},3));
 f52.Position = [200 200 560 420];
 badTraj = traj_utr_pre(~toKeep{5},3);
-for i = 1:sum(~toKeep{5})
-    plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
-end
+% for i = 1:sum(~toKeep{5})
+%     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
+% end
 title(gca,'Utr. Macula Origin')
 
 f62 = plotFlow(flow_fac,flow_facial_inlet,traj_fac_pre(toKeep{6},3));
 f62.Position = [200 200 560 420];
 badTraj = traj_fac_pre(~toKeep{6},3);
-for i = 1:sum(~toKeep{6})
-    plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
-end
+% for i = 1:sum(~toKeep{6})
+%     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
+% end
 title(gca,'Facial Nerve')
 f72 = plotFlow(flow_coch_fixed,flow_coch_outlet,traj_coch_pre(toKeep{7},3));
 f72.Position = [200 200 560 420];
 badTraj = traj_coch_pre(~toKeep{7},3);
-for i = 1:sum(~toKeep{7})
-    plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
-end
+% for i = 1:sum(~toKeep{7})
+%     plot3(badTraj{i}(1,:), badTraj{i}(2,:), badTraj{i}(3,:), '-r.')
+% end
 title(gca,'Cochlear Nerve')
 % f82 = plotFlow(flow_IVN,flow_IVN_inlet,traj_vestinlet_pre(toKeep{8},3));
 % f82.Position = [200 200 560 420];
@@ -724,7 +724,7 @@ zlabel('z [mm]')
 
 clear flows_crista trajs_crista
 
-%%
+%% Dummy figure with proper legend
 figure('Units','inches','Position',[1 1 6 6])
 % red green blue orange brown yellow purple
 trajColors = {'r','g','b',[0.8500 0.3250 0.0980],[165,42,42]/245,'c',[0.4940 0.1840 0.5560]};
