@@ -69,9 +69,9 @@ for i = 1:nRef
 %         voltageTags{kk} = ['V',num2str(i),'_',num2str(j)];
         % create ec physics for each electrode combination
         if kk == 1
-            ecTags{kk} = 'ec';
+            ECs{kk} = model.component('comp1').physics.create('ec', 'ConductiveMedia', 'geom1');
         else
-            ecTags{kk} = ['ec',num2str(kk)];
+            
         end
         ECs{kk} = model.component('comp1').physics.create(ecTags{kk}, 'ConductiveMedia', 'geom1');
         ECs{kk}.field('electricpotential').field(voltageTags{kk}); % name output variable
@@ -90,7 +90,6 @@ for i = 1:nRef
         StimElectrodeNames{kk} = CommonStimElectrodeNames{j};
     end
 end
-
 %%
 % Intracanal Pairs
 % % Anterior Canal
@@ -492,7 +491,7 @@ end
 %% Save Model
 % Save Matlab workspace variables
 FEM_solved_date = date;
-save([model_path,'\FEM_tags'], 'dset_IVN', 'dset_SVN', 'dset_coch', 'dset_fac', 'dset_ec', 'ecTags', 'voltageTags', 'RefElectrodes', 'RefElectrodeNames', 'StimElectrodes', 'StimElectrodeNames', 'model_path', 'model_name')
+save([model_path,'\FEM_tags'], dset_IVN, dset_SVN, dset_coch, dset_fac, dset_ec, ECs, Stds, Ints, Tbl, PG_EC, surf, RefElectrodes, RefElectrodeNames, StimElectrodes, StimElectrodeNames, model_path, model_name)
 % Save Comsol Model
 mphsave(model)
 pause(5)

@@ -9,6 +9,7 @@
 % Should also have the voltage tags saved as a cell array in case the
 % number of electrode pairs is not always the same.
 % January 2023, Evan Vesper, VNEL
+tic
 
 %% Define Comsol tags
 geom_tag = 'geom1';
@@ -83,11 +84,10 @@ fileDate = date;
 % load tags
 data_path = 'R:\Computational Modeling\Model as of 20230623\Results 20230816\';
 tag_file = 'FEM_tags.mat';
-load([data_path,tag_file])
 
 % Import total current delivered to electrodes
-ITable_file = [model_name(1:end-4),'_delivered_currents.txt'];
-currents = readmatrix([data_path,ITable_file],'NumHeaderLines',5,'OutputType','double','Delimiter','    ');
+ITable_file = 'delivered_currents.txt';
+currents = readmatrix(ITable_file,'NumHeaderLines',5,'OutputType','double','Delimiter','    ');
 
 % add paths of arclength and interparc functions for fiberGenComsolv2
 addpath('C:\Users\Evan\Documents\GitHub\Computational-Modeling\FEM Automation\Utility Scripts\arclength','C:\Users\Evan\Documents\GitHub\Computational-Modeling\FEM Automation\Utility Scripts\interparc');
