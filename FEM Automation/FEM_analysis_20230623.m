@@ -225,6 +225,7 @@ Tbl = model.result.table.create('tbl1', 'Table'); % create table to store delive
 numECs = length(ECs); % number of EC nodes
 Ints = cell(1,numECs); % preallocate cell array to store numerical integration nodes
 dset_ec = cell(1,numECs);
+currents = zeros(1,numECs);
 
 for i = 1:length(ECs)
     Ints{i} = model.result.numerical.create(['int',num2str(i)], 'IntSurface'); % create surface integral node
@@ -240,7 +241,10 @@ for i = 1:length(ECs)
     else
         Ints{i}.setIndex('expr', [char(ECs{i}.tag),'.Jx*nx+',char(ECs{i}.tag),'.Jy*ny+',char(ECs{i}.tag),'.Jz*nz'], 0); % expression for value we are calculating
         Ints{i}.appendResult; % append result to table
-    end   
+    end
+    % store the currents directly in a matlab array
+    temp = Ints{i}.computeResult;
+    currents(i) = temp(1);
 end
 
 model_name = char(model.name); % filename of the model
@@ -492,7 +496,7 @@ end
 %% Save Model
 % Save Matlab workspace variables
 FEM_solved_date = date;
-save([model_path,'\FEM_tags'], 'dset_IVN', 'dset_SVN', 'dset_coch', 'dset_fac', 'dset_ec', 'ecTags', 'voltageTags', 'RefElectrodes', 'RefElectrodeNames', 'StimElectrodes', 'StimElectrodeNames', 'model_path', 'model_name')
+save([model_path,'\FEM_tags'], 'dset_IVN', 'dset_SVN', 'dset_coch', 'dset_fac', 'dset_ec', 'ecTags', 'voltageTags', 'currents', 'RefElectrodes', 'RefElectrodeNames', 'StimElectrodes', 'StimElectrodeNames', 'model_path', 'model_name')
 % Save Comsol Model
 mphsave(model)
 pause(5)

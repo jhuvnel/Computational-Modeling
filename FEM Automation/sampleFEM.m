@@ -36,9 +36,9 @@ for i = 1:nVars
     for j = 1:nTraj
 %         fprintf('Sampling along axon %d of %d.\n',j,nTraj)
         % extract solution data
-        var = mphinterp(model, vTags{i},'coord', traj{j,3},'dataset',dsetTag);
+        var = mphinterp(model, vTags{i},'coord', traj{j,3},'dataset',dsetTag{i});
         % extract current density data
-        [Jx, Jy, Jz] = mphinterp(model, JTags,'coord', traj{j,3},'dataset',dsetTag);
+        [Jx, Jy, Jz] = mphinterp(model, JTags,'coord', traj{j,3},'dataset',dsetTag{i});
         solution{i}{j,1} = traj{j,1}; % locIndex
         solution{i}{j,2} = traj{j,2}*1e-3; % internode distance vector (and convert from mm to m!)
         solution{i}{j,3} = (var')/currents(i); % extracellular voltage vector, also transpose so it is a column vector

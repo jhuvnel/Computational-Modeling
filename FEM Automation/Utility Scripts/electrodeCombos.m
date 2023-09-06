@@ -1,6 +1,8 @@
 function [ECs, voltageTags, electrodeList, namesList, kk] = electrodeCombos(electrodes,electrodeNames,ECs,voltageTags,kk,model)
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
+%ELECTRODECOMBOS This function creates EC nodes for all combinations of the
+%inputted electrodes for the Comsol model.
+%   Use this function to create all combinations of stimulating/reference
+%   electrodes in a Comsol model.
 N = length(electrodes); 
 K=2;
 Plist = nchoosek(1:N,K);

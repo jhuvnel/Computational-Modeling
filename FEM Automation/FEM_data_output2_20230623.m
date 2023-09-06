@@ -86,8 +86,9 @@ tag_file = 'FEM_tags.mat';
 load([data_path,tag_file])
 
 % Import total current delivered to electrodes
-ITable_file = [model_name(1:end-4),'_delivered_currents.txt'];
-currents = readmatrix([data_path,ITable_file],'NumHeaderLines',5,'OutputType','double','Delimiter','    ');
+% ITable_file = [model_name(1:end-4),'_delivered_currents.txt'];
+% currents = readmatrix([data_path,ITable_file],'NumHeaderLines',5,'OutputType','double','Delimiter','    ');
+currents = abs(currents); % take abs value of currents since they should all be positive. If Comsol thinks the surfaces are facing the other direction it would flip the sign on the current
 
 % add paths of arclength and interparc functions for fiberGenComsolv2
 addpath('C:\Users\Evan\Documents\GitHub\Computational-Modeling\FEM Automation\Utility Scripts\arclength','C:\Users\Evan\Documents\GitHub\Computational-Modeling\FEM Automation\Utility Scripts\interparc');
@@ -413,7 +414,7 @@ save([save_dir,'fullSolution',fileDate],'sol_post','sol_lat','sol_ant','sol_sacc
     'sol_utr','sol_fac','sol_coch','waveForm','currents')
 toc
 %% Create parameter cells for aggregated traj cell arrays
-Vthresh = 0.085; % aactivation threshold relative to resting membrane potential, V
+Vthresh = 0.085; % activation threshold relative to resting membrane potential, V
 % SCCs
 numAxons_1to3 = parameterCellSCC_1to3{1}(1);
 numAxons_2to5 = parameterCellSCC_2to5{1}(1);
