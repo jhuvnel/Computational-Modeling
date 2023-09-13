@@ -413,6 +413,12 @@ sol_coch = sampleFEM(model,vTags,ecTags,dset_ec,traj_coch,currents);
 save([save_dir,'fullSolution',fileDate],'sol_post','sol_lat','sol_ant','sol_sacc',...
     'sol_utr','sol_fac','sol_coch','waveForm','currents')
 toc
+
+%% Create electrode combinations by superimposing voltage fields
+sol_test = electrodeSuperposition(sol_post{15}, sol_post{16});
+
+
+
 %% Create parameter cells for aggregated traj cell arrays
 Vthresh = 0.085; % activation threshold relative to resting membrane potential, V
 % SCCs

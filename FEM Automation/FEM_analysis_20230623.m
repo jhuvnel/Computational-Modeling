@@ -94,25 +94,25 @@ end
 %%
 % Intracanal Pairs
 % % Anterior Canal
-% [ECs, voltageTags, electrodeList, namesList, kk] = electrodeCombos(AntElectrodes,AntElectrodeNames,ECs,voltageTags,kk,model);
+% [ECs, voltageTags, electrodeList, namesList, kk] = ecCombos(AntElectrodes,AntElectrodeNames,ECs,voltageTags,kk,model);
 % RefElectrodes = [RefElectrodes, electrodeList(2,:)];
 % RefElectrodeNames = [RefElectrodeNames, namesList(2,:)];
 % StimElectrodes = [StimElectrodes, electrodeList(1,:)];
 % StimElectrodeNames = [StimElectrodeNames, namesList(1,:)];
 % % Lateral Canal
-% [ECs, voltageTags, electrodeList, namesList, kk] = electrodeCombos(LatElectrodes,LatElectrodeNames,ECs,voltageTags,kk,model);
+% [ECs, voltageTags, electrodeList, namesList, kk] = ecCombos(LatElectrodes,LatElectrodeNames,ECs,voltageTags,kk,model);
 % RefElectrodes = [RefElectrodes, electrodeList(2,:)];
 % RefElectrodeNames = [RefElectrodeNames, namesList(2,:)];
 % StimElectrodes = [StimElectrodes, electrodeList(1,:)];
 % StimElectrodeNames = [StimElectrodeNames, namesList(1,:)];
 % Posterior Canal
-[ECs, voltageTags, electrodeList, namesList, kk] = electrodeCombos(PosElectrodes,PosElectrodeNames,ECs,voltageTags,kk,model);
+[ECs, voltageTags, electrodeList, namesList, kk] = ecCombos(PosElectrodes,PosElectrodeNames,ECs,voltageTags,kk,model);
 RefElectrodes = [RefElectrodes, electrodeList(2,:)];
 RefElectrodeNames = [RefElectrodeNames, namesList(2,:)];
 StimElectrodes = [StimElectrodes, electrodeList(1,:)];
 StimElectrodeNames = [StimElectrodeNames, namesList(1,:)];
 % % Common Crus
-% [ECs, voltageTags, electrodeList, namesList, kk] = electrodeCombos(CCElectrodes,CCElectrodeNames,ECs,voltageTags,kk,model);
+% [ECs, voltageTags, electrodeList, namesList, kk] = ecCombos(CCElectrodes,CCElectrodeNames,ECs,voltageTags,kk,model);
 % RefElectrodes = [RefElectrodes, electrodeList(2,:)];
 % RefElectrodeNames = [RefElectrodeNames, namesList(2,:)];
 % StimElectrodes = [StimElectrodes, electrodeList(1,:)];
