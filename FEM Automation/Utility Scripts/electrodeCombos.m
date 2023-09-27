@@ -3,6 +3,8 @@ function [fullSolCell, namesList, kk] = electrodeCombos(solCells,electrodeNames,
 %electrodes. Take solution cells as inputs.
 %   Use this function to create all combinations of stimulating/reference
 %   electrodes electric potential fields.
+
+% Determine all possible combinations of inputted electrodes
 N = length(solCells); 
 K=2;
 Plist = nchoosek(1:N,K);
@@ -12,14 +14,14 @@ stim = Plist(:,1);
 ref = Plist(:,2);
 P = length(stim);
 
-% UNFINISHED?
+% Preallocate space
 fullSolCell = cell(1,P);
 namesList = cell(1,P);
 
 for i = 1:P
     kk = kk + 1;
-    
-    superSolCell = electrodeSuperposition(solCells{stim{i}},solCells{ref{i}});
+    % Superimpose solutions
+    superSolCell = electrodeSuperposition(solCells{stim(i)},solCells{ref(i)});
     
     % return electrode tags and names in order
     fullSolCell{1,i} = superSolCell;

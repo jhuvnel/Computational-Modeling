@@ -11,7 +11,7 @@ nAxon = size(superSolCell,1);
 
 for i = 1:nAxon
     superSolCell{i,3} = stimSolCell{i,3} - refSolCell{i,3}; % subtract ref electrode Ve from stim electrode Ve
-    superSolCell{i,4} = stimSolCell{i,4} - refSolCell{i,4}; % same for current desnity vector
+    superSolCell{i,4} = stimSolCell{i,4} - refSolCell{i,4}; % same for current density vector
 end
 
 
