@@ -394,7 +394,7 @@ save_dir = 'R:\Computational Modeling\Model as of 20230623\Results 20230816\';
 save([save_dir,'trajs_',fileDate],"traj_post","traj_lat","traj_ant",...
     "traj_sacc","traj_utr", "traj_post_pre","traj_lat_pre",...
     "traj_ant_pre","traj_sacc_pre","traj_utr_pre","traj_fac",...
-    "traj_coch","traj_fac_pre","traj_coch_pre")
+    "traj_coch","traj_fac_pre","traj_coch_pre", "toKeep")
 
 %% Full FEM sampling along all trajectories
 tic
@@ -434,25 +434,51 @@ sol_test = electrodeSuperposition(sol_post{15}, sol_post{16});
 
 %% Create parameter cells for aggregated traj cell arrays
 Vthresh = 0.085; % activation threshold relative to resting membrane potential, V
+% Make generic template for an individual parameter cell
+parameterCellTemplate = cell(10,1);
+parameterCellTemplate{1} = [0; 0; 0]; % [number of axons, first axon, last axon]
+parameterCellTemplate{2} = 1e-7; % timestep, s
+parameterCellTemplate{3} = [2e-6; 1e-6;-1]; % active node (nodes of Ranvier) lengths, m
+parameterCellTemplate{4} = [300e-6; -1]; % passive node (internode) lengths, m
+parameterCellTemplate{5} = []; % fiber diameters at each node, m
+parameterCellTemplate{6} = []; % initial state array
+parameterCellTemplate{7} = Vthresh; % activation threshold voltage, V
+parameterCellTemplate{8} = [100; 300]; % limit on fine threshold
+parameterCellTemplate{9} = 0.01; % precision for finding thresholds, i.e. 0.01 = 1%
+parameterCellTemplate{10} = [];
+
+
 % SCCs
-numAxons_1to3 = parameterCellSCC_1to3{1}(1);
-numAxons_2to5 = parameterCellSCC_2to5{1}(1);
-numAxons_3to5 = parameterCellSCC_3to5{1}(1);
-numAxons_4to7 = parameterCellSCC_4to7{1}(1);
-numAxons_5to8 = parameterCellSCC_5to8{1}(1);
-numAxons_6to10 = parameterCellSCC_6to10{1}(1);
-tempSCC = cumsum([numAxons_1to3, numAxons_2to5, numAxons_3to5, numAxons_4to7, numAxons_5to8, numAxons_6to10]);
+% numAxons_1to3 = parameterCellSCC_1to3{1}(1);
+% numAxons_2to5 = parameterCellSCC_2to5{1}(1);
+% numAxons_3to5 = parameterCellSCC_3to5{1}(1);
+% numAxons_4to7 = parameterCellSCC_4to7{1}(1);
+% numAxons_5to8 = parameterCellSCC_5to8{1}(1);
+% numAxons_6to10 = parameterCellSCC_6to10{1}(1);
+% tempSCC = cumsum([numAxons_1to3, numAxons_2to5, numAxons_3to5, numAxons_4to7, numAxons_5to8, numAxons_6to10]);
+
+% Define number of axons in each band
+% [1to3, 2to5, 3to5, 4to7, 5to8, 6to10]
+numAxons_SCC = [50, 150, 50, 150, 50, 55];
+tempSCC = cumsum(numAxons_SCC);
+
+% Define fiber diameters for each band
+fiberDiams_SCC = [1.4, 2.21, 1.4, 2.23, 2.49, 2.81]*1e-6; % m
 
 bigParamCellSCC = cell(3,6); % create a new cell array to hold all the parameter cells... nCanal x nBandSCC size
 for i = 1:3
-    % first copy parameter cells
-    bigParamCellSCC{i,1} = parameterCellSCC_1to3;
-    bigParamCellSCC{i,2} = parameterCellSCC_2to5;
-    bigParamCellSCC{i,3} = parameterCellSCC_3to5;
-    bigParamCellSCC{i,4} = parameterCellSCC_4to7;
-    bigParamCellSCC{i,5} = parameterCellSCC_5to8;
-    bigParamCellSCC{i,6} = parameterCellSCC_6to10;
-%     % now put in the correct axons this parameter cell will refer to
+
+    for j = 1:6
+        % first copy parameter cells
+        bigParamCellSCC{i,j} = parameterCellTemplate;
+        
+        % assign fiber diameters
+        bigParamCellSCC{i,j}{5} = ones(numAxons_SCC(j), 1)*[fiberDiams_SCC(j), -1];
+    end
+
+    % now put in the correct axons this parameter cell will refer to
+    % the 10th cell keeps track of total number of axons in all bands as
+    % you count up
     bigParamCellSCC{i,1}{10} = [sum(toKeep{i}(1:tempSCC(1))); 1; tempSCC(1) - sum(~toKeep{i}(1:tempSCC(1)))];
     bigParamCellSCC{i,2}{10} = [sum(toKeep{i}(tempSCC(1)+1 : tempSCC(2))); bigParamCellSCC{i,1}{10}(3) + 1; bigParamCellSCC{i,1}{10}(3) + sum(toKeep{i}(tempSCC(1)+1 : tempSCC(2)))];
     bigParamCellSCC{i,3}{10} = [sum(toKeep{i}(tempSCC(2)+1 : tempSCC(3))); bigParamCellSCC{i,2}{10}(3) + 1; bigParamCellSCC{i,2}{10}(3) + sum(toKeep{i}(tempSCC(2)+1 : tempSCC(3)))];
@@ -467,29 +493,31 @@ for i = 1:3
     bigParamCellSCC{i,5}{1} = [sum(toKeep{i}(tempSCC(4)+1 : tempSCC(5))); 1; sum(toKeep{i}(tempSCC(4)+1 : tempSCC(5)))];
     bigParamCellSCC{i,6}{1} = [sum(toKeep{i}(tempSCC(5)+1 : tempSCC(6))); 1; sum(toKeep{i}(tempSCC(5)+1 : tempSCC(6)))];
 
-    % now put in random initial conditions
-    bigParamCellSCC{i,1}{6} = rand(bigParamCellSCC{i,1}{1}(1),1);
-    bigParamCellSCC{i,2}{6} = rand(bigParamCellSCC{i,2}{1}(1),1);
-    bigParamCellSCC{i,3}{6} = rand(bigParamCellSCC{i,3}{1}(1),1);
-    bigParamCellSCC{i,4}{6} = rand(bigParamCellSCC{i,4}{1}(1),1);
-    bigParamCellSCC{i,5}{6} = rand(bigParamCellSCC{i,5}{1}(1),1);
-    bigParamCellSCC{i,6}{6} = rand(bigParamCellSCC{i,6}{1}(1),1);
+    for j = 1:6
+        % now put in random initial conditions
+        bigParamCellSCC{i,j}{6} = rand(bigParamCellSCC{i,j}{1}(1),1);
+    end
+
 end
 
-% US
-numAxons_1to4 = parameterCellUS_1to4{1}(1);
-numAxons_3to7 = parameterCellUS_3to7{1}(1);
-numAxons_6to10 = parameterCellUS_6to10{1}(1);
-tempUS = cumsum([numAxons_1to4, numAxons_3to7, numAxons_6to10]);
+%% US
+numAxons_US = [150, 150, 150];
+tempUS = cumsum(numAxons_US);
+
+% Define fiber diameters for each band
+fiberDiams_US = [1.4, 2.21, 2.23]*1e-6; % m
 
 bigParamCellUS = cell(2,3); % nOtolith x nBandUS
 
 for i = 4:5 % iterator for toKeep
     ii = i - 3; % iterator for bigParamCellUS
-    % first copy parameter cells
-    bigParamCellUS{ii,1} = parameterCellUS_1to4;
-    bigParamCellUS{ii,2} = parameterCellUS_3to7;
-    bigParamCellUS{ii,3} = parameterCellUS_6to10;
+
+    for j = 1:3
+        % first copy parameter cells
+        bigParamCellUS{ii,j} = parameterCellTemplate;
+
+    end
+
     % now put in the correct axons this parameter cell will refer to
     bigParamCellUS{ii,1}{10} = [sum(toKeep{i}(1:tempUS(1))); 1; tempUS(1) - sum(~toKeep{i}(1:tempUS(1)))];
     bigParamCellUS{ii,2}{10} = [sum(toKeep{i}(tempUS(1)+1 : tempUS(2))); bigParamCellUS{ii,1}{10}(3) + 1; bigParamCellUS{ii,1}{10}(3) + sum(toKeep{i}(tempUS(1)+1 : tempUS(2)))];
@@ -499,10 +527,12 @@ for i = 4:5 % iterator for toKeep
     bigParamCellUS{ii,2}{1} = [sum(toKeep{i}(tempUS(1)+1 : tempUS(2))); 1; sum(toKeep{i}(tempUS(1)+1 : tempUS(2)))];
     bigParamCellUS{ii,3}{1} = [sum(toKeep{i}(tempUS(2)+1 : tempUS(3))); 1; sum(toKeep{i}(tempUS(2)+1 : tempUS(3)))];
 
-    % now put in random initial conditions
-    bigParamCellUS{ii,1}{6} = rand(bigParamCellUS{ii,1}{1}(1),1);
-    bigParamCellUS{ii,2}{6} = rand(bigParamCellUS{ii,2}{1}(1),1);
-    bigParamCellUS{ii,3}{6} = rand(bigParamCellUS{ii,3}{1}(1),1);
+    for j = 1:3
+        % assign fiber diameters
+        bigParamCellUS{ii,j}{5} = ones(numAxons_US(j), 1)*[fiberDiams_US(j), -1];
+        % now put in random initial conditions
+        bigParamCellUS{ii,j}{6} = rand(bigParamCellUS{ii,j}{1}(1),1);
+    end
 end
 
 %% US with 7 bands
