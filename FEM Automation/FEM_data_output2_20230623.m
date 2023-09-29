@@ -410,8 +410,8 @@ sol_fac = sampleFEM(model,vTags,ecTags,dset_ec,traj_fac,currents);
 sol_coch = sampleFEM(model,vTags,ecTags,dset_ec,traj_coch,currents);
 
 %
-save([save_dir,'fullSolution',fileDate],'sol_post','sol_lat','sol_ant','sol_sacc',...
-    'sol_utr','sol_fac','sol_coch','waveForm','currents')
+save([save_dir,'MonopolarSolution',fileDate],'sol_post','sol_lat','sol_ant','sol_sacc',...
+    'sol_utr','sol_fac','sol_coch','waveForm','currents', 'StimElectrodeNames', 'RefElectrodeNames')
 toc
 
 %% Create electrode combinations by superimposing voltage fields
@@ -422,15 +422,22 @@ toc
 sol_bipolar_comsol = [sol_post(15:16); sol_lat(15:16); sol_ant(15:16); sol_sacc(15:16); sol_utr(15:16); sol_fac(15:16); sol_coch(15:16)];
 sol_test = electrodeSuperposition(sol_post{15}, sol_post{16});
 
-% Generating all electrode combinations
-[sol_post2, StimElectrodeNames2, RefElectrodeNames2] = electrodeCombosNancy(sol_post, StimElectrodeNames, RefElectrodeNames);
-[sol_lat2, ~, ~] = electrodeCombosNancy(sol_lat, StimElectrodeNames, RefElectrodeNames);
-[sol_ant2, ~, ~] = electrodeCombosNancy(sol_ant, StimElectrodeNames, RefElectrodeNames);
-[sol_sacc2, ~, ~] = electrodeCombosNancy(sol_sacc, StimElectrodeNames, RefElectrodeNames);
-[sol_utr2, ~, ~] = electrodeCombosNancy(sol_utr, StimElectrodeNames, RefElectrodeNames);
-[sol_fac2, ~, ~] = electrodeCombosNancy(sol_fac, StimElectrodeNames, RefElectrodeNames);
-[sol_coch2, ~, ~] = electrodeCombosNancy(sol_coch, StimElectrodeNames, RefElectrodeNames);
+% Save bipolar test results
+save([save_dir,'BipolarComsolSolution',fileDate],'sol_bipolar_comsol','sol_test',...
+    'waveForm','currents', 'StimElectrodeNames', 'RefElectrodeNames')
 
+% Generating all electrode combinations
+[sol_post, ~, ~] = electrodeCombosNancy(sol_post, StimElectrodeNames, RefElectrodeNames);
+[sol_lat, ~, ~] = electrodeCombosNancy(sol_lat, StimElectrodeNames, RefElectrodeNames);
+[sol_ant, ~, ~] = electrodeCombosNancy(sol_ant, StimElectrodeNames, RefElectrodeNames);
+[sol_sacc, ~, ~] = electrodeCombosNancy(sol_sacc, StimElectrodeNames, RefElectrodeNames);
+[sol_utr, ~, ~] = electrodeCombosNancy(sol_utr, StimElectrodeNames, RefElectrodeNames);
+[sol_fac, ~, ~] = electrodeCombosNancy(sol_fac, StimElectrodeNames, RefElectrodeNames);
+[sol_coch, StimElectrodeNames, RefElectrodeNames] = electrodeCombosNancy(sol_coch, StimElectrodeNames, RefElectrodeNames);
+
+% Save results
+save([save_dir,'AllComboSolution',fileDate],'sol_post','sol_lat','sol_ant','sol_sacc',...
+    'sol_utr','sol_fac','sol_coch','waveForm','currents', 'StimElectrodeNames', 'RefElectrodeNames')
 
 %% Create parameter cells for aggregated traj cell arrays
 Vthresh = 0.085; % activation threshold relative to resting membrane potential, V

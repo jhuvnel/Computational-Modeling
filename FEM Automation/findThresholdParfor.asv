@@ -33,7 +33,7 @@ javaclasspath('-dynamic') % display dynamic path (optional)
 % choose a save location for .mat files and error log
 % saveDir = 'C:\Users\Evan\OneDrive - Johns Hopkins\VNEL1DRV\_Vesper\Modeling Results\Matlab Data'; % Matlab can't access 1Drive I think
 fileDate = date;
-saveDir = 'R:\Computational Modeling\Model as of 20230104\19-April-2023\';
+saveDir = 'R:\Computational Modeling\Model as of 20230623\Results 20230816\';
 errorFileTest = [saveDir,'\ErrorFileThresh',fileDate,'new.txt'];
 
 %% Testing for one FEM solution
@@ -195,17 +195,33 @@ delete(poolobj); % shut down parallel pool
 % save([saveDir,'threshResultsTest_',fileDate],'resultsTestThresh','resultsThresh','parameterTestThresh')
 
 %% Run threshold finding for all FEM solution sets w/ Bands
+%%% ALL NERVES %%%
+% nBandSCC = 6;
+% nBandUS = 3;
+% nSol = length(sol_post);
+% nNerve = 7; % number of nerves - 5 vestibular + 1 facial + 1 cochlear
+% nAxonGroups = (3*nBandSCC + 2*nBandUS + 2); % update based on how many nerves are being simulated - 3 SCC, 2 oto, 1 facial, 1 cochlear
+% nSims = nAxonGroups*nSol;
+% % set up all cells for parfor
+% % resultsThresh_all_parfor = cell(1,nSims);
+% simClass_all = cell(1,nSims);
+% 
+% sol_all = [sol_post, sol_lat, sol_ant, sol_sacc, sol_utr, sol_fac, sol_coch];
+% paramToSolMap = zeros(1,nSims);
+% % sol_all = cell(1,nSims);
+
+%%% ONLY VESTIBULAR NERVES %%%
 nBandSCC = 6;
 nBandUS = 3;
 nSol = length(sol_post);
-nNerve = 7; % number of nerves - 5 vestibular + 1 facial + 1 cochlear
-nAxonGroups = (3*nBandSCC + 2*nBandUS + 2); % update based on how many nerves are being simulated - 3 SCC, 2 oto, 1 facial, 1 cochlear
+nNerve = 5; % number of nerves - 5 vestibular 
+nAxonGroups = (3*nBandSCC + 2*nBandUS); % update based on how many nerves are being simulated - 3 SCC, 2 oto, 1 facial, 1 cochlear
 nSims = nAxonGroups*nSol;
 % set up all cells for parfor
 % resultsThresh_all_parfor = cell(1,nSims);
 simClass_all = cell(1,nSims);
 
-sol_all = [sol_post, sol_lat, sol_ant, sol_sacc, sol_utr, sol_fac, sol_coch];
+sol_all = [sol_post, sol_lat, sol_ant, sol_sacc, sol_utr];
 paramToSolMap = zeros(1,nSims);
 % sol_all = cell(1,nSims);
 
@@ -339,8 +355,8 @@ F = parfevalOnAll(poolobj,@javaaddpath,0,javaPath); % set the pool to add java d
 tic
 errorObjs = cell(1,nSims);
 resultsThresh_all_parfor = cell(1,nSims);
-
 parfor i = 1:nSims
+% parfor i = 1:48
     % something doesn't like the simClass_all array that I made... so I
     % will just use a single variable for the simClass. This includes some
     % hardcoding in the axonGroups that take each fiber type
@@ -389,26 +405,26 @@ tNeuromorphic_parfor = toc;
 fprintf('Full neuromorphic model computational time with 16 parallel workers: %f \n', tNeuromorphic_parfor)
 beep
 
-%% Just facial and cochlear nerves
-errorObjs_fac_coch = cell(nSol*2,1);
-resultsThresh_fac_coch = cell(nSol*2,1);
-% param_fac_coch = [param]
-% facial_simCell = cell(nSol,1);
-parfor i = 1:nSol*2
-    try
-        if i/nSol > 1 % cochlear
-            simClass = AxonSimulate_G_AHPAxon_CVStar0265;
-            resultsThresh_fac_coch{i} = findThresholdWaveform(paramCellCoch,sol_coch{i},waveForm,[],simClass,errorFileTest);
-        else % facial
-            simClass = AxonSimulate_G_AHPAxon_CVStar0265;
-            resultsThresh_fac_coch{i} = findThresholdWaveform(paramCellFac,sol_fac{i},waveForm,[],simClass,errorFileTest);
-        end
-    catch ME
-        errorObjs_fac_coch{i} =  ME;
-        warning(['Error encountered in axonGroup ', num2str(i),'.\n',errorObjsFac{i}.message])
-    end
-end
-%% Pack results back into original sol_all format for whole nerves
+% %% Just facial and cochlear nerves
+% errorObjs_fac_coch = cell(nSol*2,1);
+% resultsThresh_fac_coch = cell(nSol*2,1);
+% % param_fac_coch = [param]
+% % facial_simCell = cell(nSol,1);
+% parfor i = 1:nSol*2
+%     try
+%         if i/nSol > 1 % cochlear
+%             simClass = AxonSimulate_G_AHPAxon_CVStar0265;
+%             resultsThresh_fac_coch{i} = findThresholdWaveform(paramCellCoch,sol_coch{i},waveForm,[],simClass,errorFileTest);
+%         else % facial
+%             simClass = AxonSimulate_G_AHPAxon_CVStar0265;
+%             resultsThresh_fac_coch{i} = findThresholdWaveform(paramCellFac,sol_fac{i},waveForm,[],simClass,errorFileTest);
+%         end
+%     catch ME
+%         errorObjs_fac_coch{i} =  ME;
+%         warning(['Error encountered in axonGroup ', num2str(i),'.\n',errorObjsFac{i}.message])
+%     end
+% end
+% %% Pack results back into original sol_all format for whole nerves
 resultsThresh_all = cell(1,nSol*nNerve);
 for i = 1:nSims
     if ~isempty(resultsThresh_all_parfor{i})
@@ -445,8 +461,8 @@ latSCC_SimCell = resultsThresh_all(1+nSol:2*nSol);
 antSCC_SimCell = resultsThresh_all(1+2*nSol:3*nSol);
 saccule_SimCell = resultsThresh_all(1+3*nSol:4*nSol);
 utricle_SimCell = resultsThresh_all(1+4*nSol:5*nSol);
-facial_SimCell = resultsThresh_all(1+5*nSol:6*nSol);
-cochlear_SimCell = resultsThresh_all(1+6*nSol:7*nSol);
+% facial_SimCell = resultsThresh_all(1+5*nSol:6*nSol);
+% cochlear_SimCell = resultsThresh_all(1+6*nSol:7*nSol);
 
 
 
@@ -454,8 +470,9 @@ cochlear_SimCell = resultsThresh_all(1+6*nSol:7*nSol);
 % clear simClass_all sol_all param_all resultsThresh_all
  
 
-%% Save results
+% %% Save results
 fileDate = date;
+% save([saveDir,'threshResultsFull_',fileDate],'postSCC_SimCell','latSCC_SimCell','antSCC_SimCell','utricle_SimCell','saccule_SimCell','facial_SimCell','cochlear_SimCell', 'errorObjs','tNeuromorphic_parfor')
 save([saveDir,'threshResultsFull_',fileDate],'postSCC_SimCell','latSCC_SimCell','antSCC_SimCell','utricle_SimCell','saccule_SimCell', 'errorObjs','tNeuromorphic_parfor')
 
 %% Post Processing - Find Recruitment
@@ -523,15 +540,15 @@ for i = 1:numEl % for every electrode combo
                 utrSum{i}(j) = utrSum{i}(j) - size(find(utricle_SimCell{i}{4,1} <= 0),1);
             end
 
-            if ~isempty(facial_SimCell{i})
-                facSum{i}(j) = facSum{i}(j) + size(find(facial_SimCell{i}{4,1} < currentRange(j)),1);
-                facSum{i}(j) = facSum{i}(j) - size(find(facial_SimCell{i}{4,1} <= 0),1);
-            end
-
-            if ~isempty(cochlear_SimCell{i})
-                cochSum{i}(j) = cochSum{i}(j) + size(find(cochlear_SimCell{i}{4,1} < currentRange(j)),1);
-                cochSum{i}(j) = cochSum{i}(j) - size(find(cochlear_SimCell{i}{4,1} <= 0),1);
-            end
+%             if ~isempty(facial_SimCell{i})
+%                 facSum{i}(j) = facSum{i}(j) + size(find(facial_SimCell{i}{4,1} < currentRange(j)),1);
+%                 facSum{i}(j) = facSum{i}(j) - size(find(facial_SimCell{i}{4,1} <= 0),1);
+%             end
+% 
+%             if ~isempty(cochlear_SimCell{i})
+%                 cochSum{i}(j) = cochSum{i}(j) + size(find(cochlear_SimCell{i}{4,1} < currentRange(j)),1);
+%                 cochSum{i}(j) = cochSum{i}(j) - size(find(cochlear_SimCell{i}{4,1} <= 0),1);
+%             end
         end
     
     % normalize by total number of axons for that nerve
@@ -540,13 +557,13 @@ for i = 1:numEl % for every electrode combo
     antSumNorm{i} = 100*antSum{i}/size(antSCC_SimCell{i}{4,1},1);
     saccSumNorm{i} = 100*saccSum{i}/size(saccule_SimCell{i}{4,1},1);
     utrSumNorm{i} = 100*utrSum{i}/size(utricle_SimCell{i}{4,1},1);
-    facSumNorm{i} = 100*facSum{i}/size(facial_SimCell{i}{4,1},1);
-    cochSumNorm{i} = 100*cochSum{i}/size(cochlear_SimCell{i}{4,1},1);
+%     facSumNorm{i} = 100*facSum{i}/size(facial_SimCell{i}{4,1},1);
+%     cochSumNorm{i} = 100*cochSum{i}/size(cochlear_SimCell{i}{4,1},1);
 end
 
 % Plot activation curves by electrode
 % all of these electrodes were referenced to electrode 2 in the common crus
-trajColors = {'r','g','b',[0.8500 0.3250 0.0980],[165,42,42]/245,'y',[0.4940 0.1840 0.5560]};
+trajColors = {'g','r','b',[0.8500 0.3250 0.0980],[165,42,42]/245,'c',[0.4940 0.1840 0.5560]};
 electrode_names_full = {'1 (post. canal)','3 (ant. canal)','4 (ant. canal)','5 (lat. canal)','6 (post. canal)','7 (lat. canal)'};
 electrode_names = {'1','3','4','5','6','7'};
 nerve_names = {'Anterior Canal','Lateral Canal','Posterior Canal','Saccule','Utricle','Facial','Cochlear'};
@@ -574,29 +591,223 @@ maxNum = 100; % sets y-axis limit in plots (max activation)
 % 
 % end
 
-% Subplot format
+% % Subplot format
+% el2TileMap = ...
+%     [2, 1, 4;
+%     3, 5, 6]';
+% figure('Units','Inches','Position',[2 2 14 8])
+% ph = cell(7,1);
+% th = tiledlayout(2,3);
+% for i = 1:numEl
+%     nexttile
+% 
+%     ph{1} = plot(currVector,  antSumNorm{el2TileMap(i)},'LineWidth',1,'Color',trajColors{1}); 
+%     hold on
+%     ph{2} = plot(currVector,  latSumNorm{el2TileMap(i)},'LineWidth',1,'Color',trajColors{2}); 
+%     ph{3} = plot(currVector,  postSumNorm{el2TileMap(i)},'LineWidth',1,'Color',trajColors{3}); 
+%     ph{4} = plot(currVector,  saccSumNorm{el2TileMap(i)}, '--','LineWidth',1,'Color',trajColors{4}); 
+%     ph{5} = plot(currVector,  utrSumNorm{el2TileMap(i)}, '--','LineWidth',1,'Color',trajColors{5}); 
+%     ph{6} = plot(currVector,  facSumNorm{el2TileMap(i)}, ':','LineWidth',1,'Color',trajColors{6}); 
+%     ph{7} = plot(currVector,  cochSumNorm{el2TileMap(i)}, ':','LineWidth',1,'Color',trajColors{7});
+% %     ph{8} = area(normalCurrentRange, [1 1]*maxNum, 'FaceColor', [1 1 1]*0.9, 'LineStyle','none');
+% %     ph{8} = plot(normalCurrentRange, [1 1]*.97*maxNum, 'Color', [1 1 1]*0.7, 'LineWidth', 3); 
+% %     uistack(ph{8},'bottom')
+%     set(gca,'Layer','top')
+% 
+%     switch i
+%         case {1,4}
+%             ph{1}.LineWidth = 3; % bold target canal
+%         case {2,5}
+%             ph{3}.LineWidth = 3; % bold target canal
+%         case {3,6}
+%             ph{2}.LineWidth = 3; % bold target canal
+%     end
+% 
+%     title(['Electrode ', electrode_names{el2TileMap(i)}]);
+% 
+%     axis([0 max(currVector) 0 maxNum])
+% %     axis([0 max(currVector)/2 0 maxNum])
+% 
+% end
+% legend([ph{1} ph{2} ph{3} ph{4} ph{5} ph{6} ph{7}], nerve_names,'Location','northwestoutside','NumColumns',2) % apply legend to last plot
+% legend('boxoff')
+% 
+% % add title and axis labels to entire tiledlayout
+% title(th, 'Recruitment by Electrode')
+% xlabel(th, 'Current Amplitude [uA]');
+% ylabel(th, '% Fibers Activated');
+% 
+% saveas(gcf,[saveDir,'recruitmentTiles_',fileDate])
+%% Separate figure for each electrode
+% Creates activation curves (all nerves on same axis). Each electrode has
+% its own figure.
+
+
+
+fMonopolar = figure('Units','Inches','Position',[1 0.5 14 8]);
+for i = 1:11
+    ph = cell(7,1);
+    subplot(3,4)
+
+    %%% Log x-axis
+%     ph{1} = semilogx(currVector,  antSumNorm{i},'LineWidth',1,'Color',trajColors{1}); 
+%     hold on
+%     ph{2} = semilogx(currVector,  latSumNorm{i},'LineWidth',1,'Color',trajColors{2}); 
+%     ph{3} = semilogx(currVector,  postSumNorm{i},'LineWidth',1,'Color',trajColors{3}); 
+%     ph{4} = semilogx(currVector,  saccSumNorm{i}, '--','LineWidth',1,'Color',trajColors{4}); 
+%     ph{5} = semilogx(currVector,  utrSumNorm{i}, '--','LineWidth',1,'Color',trajColors{5}); 
+% %     ph{6} = semilogx(currVector,  facSumNorm{i}, ':','LineWidth',1,'Color',trajColors{6}); 
+% %     ph{7} = semilogx(currVector,  cochSumNorm{i}, ':','LineWidth',1,'Color',trajColors{7});
+% 
+%     % plot standard range of used current
+% %     ph{8} = area(normalCurrentRange, [1 1]*maxNum, 'FaceColor', [1 1 1]*0.9, 'LineStyle','none');
+% %     ph{8} = semilogx(normalCurrentRange, [1 1]*.97*maxNum, 'Color', [1 1 1]*0.7, 'LineWidth', 3); 
+% %     uistack(ph{8},'bottom')
+
+    %%% Linear x-axis
+    ph{1} = plot(currVector,  antSumNorm{i},'LineWidth',1,'Color',trajColors{1}); 
+    hold on
+    ph{2} = plot(currVector,  latSumNorm{i},'LineWidth',1,'Color',trajColors{2}); 
+    ph{3} = plot(currVector,  postSumNorm{i},'LineWidth',1,'Color',trajColors{3}); 
+    ph{4} = plot(currVector,  saccSumNorm{i}, '--','LineWidth',1,'Color',trajColors{4}); 
+    ph{5} = plot(currVector,  utrSumNorm{i}, '--','LineWidth',1,'Color',trajColors{5}); 
+%     ph{6} = plot(currVector,  facSumNorm{i}, ':','LineWidth',1,'Color',trajColors{6}); 
+%     ph{7} = plot(currVector,  cochSumNorm{i}, ':','LineWidth',1,'Color',trajColors{7});
+
+    % plot standard range of used current
+%     ph{8} = area(normalCurrentRange, [1 1]*maxNum, 'FaceColor', [1 1 1]*0.9, 'LineStyle','none');
+%     ph{8} = plot(normalCurrentRange, [1 1]*.97*maxNum, 'Color', [1 1 1]*0.7, 'LineWidth', 3); 
+%     uistack(ph{8},'bottom')
+    set(gca,'Layer','top')
+
+
+    % axis limits
+    axis([0 200 0 maxNum])
+%     axis([0 max(currVector) 0 maxNum])
+%     ylim([0 200])
+    % legend
+    legend([ph{1} ph{2} ph{3} ph{4} ph{5}], nerve_names(1:5),'Location','northwest','NumColumns',2) % apply legend to last plot
+    % legend([ph{1} ph{2} ph{3} ph{4} ph{5} ph{6} ph{7}], nerve_names,'Location','northwest','NumColumns',2) % apply legend to last plot
+    legend('boxoff')
+    
+    % add title and axis labels
+    title(['Stim: ',StimElectrodeNames{i},'    Return: ',RefElectrodeNames{i}]);
+    xlabel('Current Amplitude [uA]');
+    ylabel('% Fibers Activated');
+    
+    % save figure
+    saveas(gcf,[saveDir,'Stim_',StimElectrodeNames{i},'_Return_',RefElectrodeNames{i},'_',fileDate])
+end
+%% Separate figure for each electrode
+% Creates activation curves (all nerves on same axis). Each electrode has
+% its own figure.
+
+
+
+figs = cell(numEl,1);
+for i = 1:numEl
+% for i = 1:3
+    figs{i} = figure;
+    ph = cell(7,1);
+
+    %%% Log x-axis
+%     ph{1} = semilogx(currVector,  antSumNorm{i},'LineWidth',1,'Color',trajColors{1}); 
+%     hold on
+%     ph{2} = semilogx(currVector,  latSumNorm{i},'LineWidth',1,'Color',trajColors{2}); 
+%     ph{3} = semilogx(currVector,  postSumNorm{i},'LineWidth',1,'Color',trajColors{3}); 
+%     ph{4} = semilogx(currVector,  saccSumNorm{i}, '--','LineWidth',1,'Color',trajColors{4}); 
+%     ph{5} = semilogx(currVector,  utrSumNorm{i}, '--','LineWidth',1,'Color',trajColors{5}); 
+% %     ph{6} = semilogx(currVector,  facSumNorm{i}, ':','LineWidth',1,'Color',trajColors{6}); 
+% %     ph{7} = semilogx(currVector,  cochSumNorm{i}, ':','LineWidth',1,'Color',trajColors{7});
+% 
+%     % plot standard range of used current
+% %     ph{8} = area(normalCurrentRange, [1 1]*maxNum, 'FaceColor', [1 1 1]*0.9, 'LineStyle','none');
+% %     ph{8} = semilogx(normalCurrentRange, [1 1]*.97*maxNum, 'Color', [1 1 1]*0.7, 'LineWidth', 3); 
+% %     uistack(ph{8},'bottom')
+
+    %%% Linear x-axis
+    ph{1} = plot(currVector,  antSumNorm{i},'LineWidth',1,'Color',trajColors{1}); 
+    hold on
+    ph{2} = plot(currVector,  latSumNorm{i},'LineWidth',1,'Color',trajColors{2}); 
+    ph{3} = plot(currVector,  postSumNorm{i},'LineWidth',1,'Color',trajColors{3}); 
+    ph{4} = plot(currVector,  saccSumNorm{i}, '--','LineWidth',1,'Color',trajColors{4}); 
+    ph{5} = plot(currVector,  utrSumNorm{i}, '--','LineWidth',1,'Color',trajColors{5}); 
+%     ph{6} = plot(currVector,  facSumNorm{i}, ':','LineWidth',1,'Color',trajColors{6}); 
+%     ph{7} = plot(currVector,  cochSumNorm{i}, ':','LineWidth',1,'Color',trajColors{7});
+
+    % plot standard range of used current
+%     ph{8} = area(normalCurrentRange, [1 1]*maxNum, 'FaceColor', [1 1 1]*0.9, 'LineStyle','none');
+%     ph{8} = plot(normalCurrentRange, [1 1]*.97*maxNum, 'Color', [1 1 1]*0.7, 'LineWidth', 3); 
+%     uistack(ph{8},'bottom')
+    set(gca,'Layer','top')
+    
+    
+%     switch i
+%         case {1,4}
+%             ph{1}.LineWidth = 3; % bold target canal
+%         case {2,5}
+%             ph{3}.LineWidth = 3; % bold target canal
+%         case {3,6}
+%             ph{2}.LineWidth = 3; % bold target canal
+%     end
+
+    % axis limits
+    axis([0 200 0 maxNum])
+%     axis([0 max(currVector) 0 maxNum])
+%     ylim([0 200])
+    % legend
+    legend([ph{1} ph{2} ph{3} ph{4} ph{5}], nerve_names(1:5),'Location','northwest','NumColumns',2) % apply legend to last plot
+    % legend([ph{1} ph{2} ph{3} ph{4} ph{5} ph{6} ph{7}], nerve_names,'Location','northwest','NumColumns',2) % apply legend to last plot
+    legend('boxoff')
+    
+    % add title and axis labels
+    title(['Stim: ',StimElectrodeNames{i},'    Return: ',RefElectrodeNames{i}]);
+    xlabel('Current Amplitude [uA]');
+    ylabel('% Fibers Activated');
+    
+    % save figure
+    saveas(gcf,[saveDir,'Stim_',StimElectrodeNames{i},'_Return_',RefElectrodeNames{i},'_',fileDate])
+end
+
+%%
+% Subplot format with log current scale
+
 el2TileMap = ...
     [2, 1, 4;
     3, 5, 6]';
-figure('Units','Inches','Position',[2 2 14 8])
+
+figure('Units','Inches','Position',[1 0.5 14 8])
 ph = cell(7,1);
 th = tiledlayout(2,3);
 for i = 1:numEl
     nexttile
+    
 
-    ph{1} = plot(currVector,  antSumNorm{el2TileMap(i)},'LineWidth',1,'Color',trajColors{1}); 
+    ph{1} = semilogx(currVector,  antSumNorm{el2TileMap(i)},'LineWidth',1,'Color',trajColors{1}); 
     hold on
-    ph{2} = plot(currVector,  latSumNorm{el2TileMap(i)},'LineWidth',1,'Color',trajColors{2}); 
-    ph{3} = plot(currVector,  postSumNorm{el2TileMap(i)},'LineWidth',1,'Color',trajColors{3}); 
-    ph{4} = plot(currVector,  saccSumNorm{el2TileMap(i)}, '--','LineWidth',1,'Color',trajColors{4}); 
-    ph{5} = plot(currVector,  utrSumNorm{el2TileMap(i)}, '--','LineWidth',1,'Color',trajColors{5}); 
-    ph{6} = plot(currVector,  facSumNorm{el2TileMap(i)}, ':','LineWidth',1,'Color',trajColors{6}); 
-    ph{7} = plot(currVector,  cochSumNorm{el2TileMap(i)}, ':','LineWidth',1,'Color',trajColors{7});
+    ph{2} = semilogx(currVector,  latSumNorm{el2TileMap(i)},'LineWidth',1,'Color',trajColors{2}); 
+    ph{3} = semilogx(currVector,  postSumNorm{el2TileMap(i)},'LineWidth',1,'Color',trajColors{3}); 
+    ph{4} = semilogx(currVector,  saccSumNorm{el2TileMap(i)}, '--','LineWidth',1,'Color',trajColors{4}); 
+    ph{5} = semilogx(currVector,  utrSumNorm{el2TileMap(i)}, '--','LineWidth',1,'Color',trajColors{5}); 
+    ph{6} = semilogx(currVector,  facSumNorm{el2TileMap(i)}, ':','LineWidth',1,'Color',trajColors{6}); 
+%     ph{6} = semilogx(currVector,  facSumNorm{el2TileMap(i)}, ':','LineWidth',1); 
+    ph{7} = semilogx(currVector,  cochSumNorm{el2TileMap(i)}, ':','LineWidth',1,'Color',trajColors{7});
+
+%     ph{1} = semilogx(currVector,  antSumNorm{el2TileMap(i)}, 'g','LineWidth', 1); 
+%     hold on
+%     ph{2} = semilogx(currVector,  latSumNorm{el2TileMap(i)}, 'r','LineWidth', 1); 
+%     ph{3} = semilogx(currVector,  postSumNorm{el2TileMap(i)}, 'b','LineWidth',1); 
+%     ph{4} = semilogx(currVector,  saccSumNorm{el2TileMap(i)}, '--','LineWidth',1); 
+%     ph{5} = semilogx(currVector,  utrSumNorm{el2TileMap(i)}, '--','LineWidth',1); 
+%     ph{6} = semilogx(currVector,  facSumNorm{el2TileMap(i)}, ':','LineWidth',1); 
+%     ph{7} = semilogx(currVector,  cochSumNorm{el2TileMap(i)}, ':','LineWidth',1); 
+    % plot standard range of used current
 %     ph{8} = area(normalCurrentRange, [1 1]*maxNum, 'FaceColor', [1 1 1]*0.9, 'LineStyle','none');
-    ph{8} = plot(normalCurrentRange, [1 1]*.97*maxNum, 'Color', [1 1 1]*0.7, 'LineWidth', 3); 
+    ph{8} = semilogx(normalCurrentRange, [1 1]*.97*maxNum, 'Color', [1 1 1]*0.7, 'LineWidth', 3); 
     uistack(ph{8},'bottom')
     set(gca,'Layer','top')
-
+    
+    
     switch i
         case {1,4}
             ph{1}.LineWidth = 3; % bold target canal
@@ -609,61 +820,14 @@ for i = 1:numEl
     title(['Electrode ', electrode_names{el2TileMap(i)}]);
 
     axis([0 max(currVector) 0 maxNum])
-%     axis([0 max(currVector)/2 0 maxNum])
 
 end
-legend([ph{1} ph{2} ph{3} ph{4} ph{5} ph{6} ph{7}], nerve_names([1:5 7]),'Location','northwest','NumColumns',2) % apply legend to last plot
+ylim([0 200])
+legend([ph{1} ph{2} ph{3} ph{4} ph{5} ph{6} ph{7}], nerve_names,'Location','northwest','NumColumns',2) % apply legend to last plot
 legend('boxoff')
 
 % add title and axis labels to entire tiledlayout
 title(th, 'Recruitment by Electrode')
-xlabel(th, 'Current Amplitude [uA]');
-ylabel(th, '% Fibers Activated');
-
-saveas(gcf,[saveDir,'recruitmentTiles_',fileDate])
-
-% Subplot format with log current scale
-
-figure('Units','Inches','Position',[2 2 14 8])
-ph = cell(7,1);
-th = tiledlayout(2,3);
-for i = 1:numEl
-    nexttile
-    
-    ph{1} = semilogx(currVector,  antSumNorm{el2TileMap(i)}, 'g','LineWidth', 1); 
-    hold on
-    ph{2} = semilogx(currVector,  latSumNorm{el2TileMap(i)}, 'r','LineWidth', 1); 
-    ph{3} = semilogx(currVector,  postSumNorm{el2TileMap(i)}, 'b','LineWidth',1); 
-    ph{4} = semilogx(currVector,  saccSumNorm{el2TileMap(i)}, '--','LineWidth',1); 
-    ph{5} = semilogx(currVector,  utrSumNorm{el2TileMap(i)}, '--','LineWidth',1); 
-%     ph{6} = semilogx(currVector,  facSumNorm{el2TileMap(i)}, ':','LineWidth',1); 
-    ph{7} = semilogx(currVector,  cochSumNorm{el2TileMap(i)}, ':','LineWidth',1); 
-    % plot standard range of used current
-    ph{8} = area(normalCurrentRange, [1 1]*maxNum, 'FaceColor', [1 1 1]*0.9, 'LineStyle','none');
-%     ph{8} = semilogx(normalCurrentRange, [1 1]*.97*maxNum, 'Color', [1 1 1]*0.7, 'LineWidth', 3); 
-    uistack(ph{8},'bottom')
-    set(gca,'Layer','top')
-    
-    
-    switch i
-        case {1,4}
-            ph{1}.LineWidth = 3; % bold target canal
-        case {2,5}
-            ph{3}.LineWidth = 3; % bold target canal
-        case {3,6}
-            ph{2}.LineWidth = 3; % bold target canal
-    end
-
-    title(['Electrode ', electrode_names{el2TileMap(i)}]);
-
-    axis([0 max(currVector) 0 maxNum])
-
-end
-legend([ph{1} ph{2} ph{3} ph{4} ph{5} ph{7}], nerve_names([1:5 7]),'Location','northwest','NumColumns',2) % apply legend to last plot
-legend('boxoff')
-
-% add title and axis labels to entire tiledlayout
-title(th, 'Recruitment by Electrode - Log x axis')
 xlabel(th, 'Current Amplitude [uA]');
 ylabel(th, '% Fibers Activated');
 
